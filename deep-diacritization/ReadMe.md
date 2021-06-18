@@ -94,6 +94,11 @@ bash scripts/train.sh d2
 bash scripts/evaluate.sh d2
 ```
 
+#### 7. Diacritize data with model
+```shell
+bash scripts/evaluate.sh d2 infile_relative_path outfile_relative_path
+```
+
 ## Pretrained Models
 - [D2 Pretrained Model](https://drive.google.com/file/d/1FGelqImFkESbTyRsx_elkKIOZ9VbhRuo/view?usp=sharing)
 - [D3 Pretrained Model](https://drive.google.com/file/d/1T2Qsm_eIzl30JamxlyqJRCCg_bBMm8y0/view?usp=sharing)
