@@ -13,5 +13,4 @@ fi
 
 # run python code
 python predict_$1.py -c configs/config_$1_diacritize.yaml
-python utils/evaluator.py -ofp $2 -tfp $3
 
