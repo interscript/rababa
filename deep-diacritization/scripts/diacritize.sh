@@ -11,6 +11,10 @@ if test "$#" -ne 3; then
 fi
 
 
+cp $1 dataset/tashkeela/test/test.txt
+
 # run python code
 python predict_$1.py -c configs/config_$1_diacritize.yaml
+
+cp dataset/tashkeela/preds/predictions_$1.txt $2
 
