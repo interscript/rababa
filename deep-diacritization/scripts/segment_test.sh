@@ -1,1 +1,0 @@
-python ./utils/segment.py -c configs/segment_test.yaml
