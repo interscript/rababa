@@ -41,7 +41,7 @@ class CBHGModel(nn.Module):
         post_cbhg_layers_units: List[int] = [256, 256],
         post_cbhg_use_batch_norm: bool = True
     ):
-        super().__init__()
+        super(CBHGModel, self).__init__()
         self.use_prenet = use_prenet
         self.embedding = nn.Embedding(inp_vocab_size, embedding_dim)
         if self.use_prenet:
@@ -79,7 +79,7 @@ class CBHGModel(nn.Module):
         self,
         src: torch.Tensor,
         lengths: Optional[torch.Tensor] = None,
-        target: Optional[torch.Tensor] = None,  # not required in this model
+        target: Optional[torch.Tensor] = None  # not required in this model
     ):
         """Compute forward propagation"""
 
@@ -93,7 +93,6 @@ class CBHGModel(nn.Module):
         cbhg_input = embedding_out
         if self.use_prenet:
             cbhg_input = self.prenet(embedding_out)
-
             # cbhg_input = [batch_size, src_len, prenet_sizes[-1]]
 
         outputs = self.cbhg(cbhg_input, lengths)
@@ -111,9 +110,7 @@ class CBHGModel(nn.Module):
             else:
                 outputs, (hn, cn) = layer(outputs)
 
-
         predictions = self.projections(outputs)
-
         # predictions = [batch_size, src len, targ_vocab_size]
 
         output = {"diacritics": predictions}

@@ -2,6 +2,8 @@
 Some custom modules that are used by the TTS model
 """
 from typing import List
+from copy import deepcopy
+
 import torch
 from torch import nn
 
@@ -98,14 +100,27 @@ class CBHG(nn.Module):
         out_dim (int): the output size
         k (int): number of filters
         """
-        super().__init__()
+        super(CBHG, self).__init__()
 
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.relu = nn.ReLU()
         self.conv1d_banks = nn.ModuleList(
             [
-                BatchNormConv1d(
+                deepcopy(
+                    BatchNormConv1d(
+                    in_dim,
+                    in_dim,
+                    kernel_size=k,
+                    stride=1,
+                    padding=k // 2,
+                    activation=self.relu,
+                ))
+                for k in range(1, K + 1)
+            ]
+        )
+        k = 2
+        self.trafo_test = BatchNormConv1d(
                     in_dim,
                     in_dim,
                     kernel_size=k,
@@ -113,18 +128,29 @@ class CBHG(nn.Module):
                     padding=k // 2,
                     activation=self.relu,
                 )
-                for k in range(1, K + 1)
-            ]
-        )
+        
+        self.trafo = deepcopy(self.trafo_test)
+        
+        #self.conv1d = nn.Conv1d(
+        #    in_dim,
+        #    out_dim,
+        #    kernel_size=k,
+        #    stride=1,
+        #    padding=k // 2,
+        #    bias=False,
+        #)
+        #self.trafo = deepcopy(self.conv1d)
+        #
+        
         self.max_pool1d = nn.MaxPool1d(kernel_size=2, stride=1, padding=1)
 
         in_sizes = [K * in_dim] + projections[:-1]
         activations = [self.relu] * (len(projections) - 1) + [None]
         self.conv1d_projections = nn.ModuleList(
             [
-                BatchNormConv1d(
+                deepcopy(BatchNormConv1d(
                     in_size, out_size, kernel_size=3, stride=1, padding=1, activation=ac
-                )
+                ))
                 for (in_size, out_size, ac) in zip(in_sizes, projections, activations)
             ]
         )
@@ -152,7 +178,7 @@ class CBHG(nn.Module):
         # (B, T_in, in_dim)
         # Back to the original shape
         x = x.transpose(1, 2)
-
+        
         if x.size(-1) != self.in_dim:
             x = self.pre_highway(x)
 
@@ -160,7 +186,7 @@ class CBHG(nn.Module):
         x += inputs
         for highway in self.highways:
             x = highway(x)
-
+            
         if input_lengths is not None:
             x = nn.utils.rnn.pack_padded_sequence(x, input_lengths, batch_first=True)
 
@@ -170,5 +196,5 @@ class CBHG(nn.Module):
 
         if input_lengths is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs, batch_first=True)
-
+        
         return outputs

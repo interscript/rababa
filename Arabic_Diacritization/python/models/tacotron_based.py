@@ -20,7 +20,7 @@ class Encoder(nn.Module):
         cbhg_projections: List[int] = [128, 128],
         padding_idx: int = 0,
     ):
-        super().__init__()
+        super(Encoder, self).__init__()
         self.use_prenet = use_prenet
 
         self.embedding = nn.Embedding(

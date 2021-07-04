@@ -12,7 +12,7 @@ class BaseLineModel(nn.Module):
         layers_units: List[int] = [256, 256, 256],
         use_batch_norm: bool = False,
     ):
-        super().__init__()
+        super(BaseLineModel, self).__init__()
         self.targ_vocab_size = targ_vocab_size
         self.embedding = nn.Embedding(inp_vocab_size, embedding_dim)
 
