@@ -12,7 +12,7 @@ from tqdm import trange
 
 from config_manager import ConfigManager
 from dataset import load_iterators
-from diacritizer import CBHGDiacritizer, Seq2SeqDiacritizer
+from diacritizer import CBHGDiacritizer
 from util.learning_rates import LearningRateDecay
 from options import OptimizerType
 from util.utils import (
@@ -79,8 +79,9 @@ class GeneralTrainer(Trainer):
     def load_diacritizer(self):
         if self.model_kind in ["cbhg", "baseline"]:
             self.diacritizer = CBHGDiacritizer(self.config_path, self.model_kind)
-        elif self.model_kind in ["seq2seq", "tacotron_based"]:
-            self.diacritizer = Seq2SeqDiacritizer(self.config_path, self.model_kind)
+        else:
+            print('model not found')
+            exit()
 
     def initialize_model(self):
         if self.global_step > 1:
@@ -400,21 +401,6 @@ class GeneralTrainer(Trainer):
 
     def report(self, results, tqdm):
         pass
-
-
-class Seq2SeqTrainer(GeneralTrainer):
-    def plot_attention(self, results):
-        plot_alignment(
-            results["attention"][0],
-            str(self.config_manager.plot_dir),
-            self.global_step,
-        )
-
-        self.summary_manager.add_image(
-            "Train/attention",
-            results["attention"][0].unsqueeze(0),
-            global_step=self.global_step,
-        )
 
 
 class CBHGTrainer(GeneralTrainer):

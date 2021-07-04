@@ -10,12 +10,7 @@ import torch
 
 from models.baseline import BaseLineModel
 from models.cbhg import CBHGModel
-from models.seq2seq import Decoder as Seq2SeqDecoder, Encoder as Seq2SeqEncoder, Seq2Seq
-from models.tacotron_based import (
-    Decoder as TacotronDecoder,
-    Encoder as TacotronEncoder,
-    Tacotron,
-)
+
 
 from options import AttentionType, LossType, OptimizerType
 from util.text_encoders import (
@@ -26,14 +21,12 @@ from util.text_encoders import (
 
 
 class ConfigManager:
-    """Co/home/almodhfer/Projects/daicritization/temp_results/CA_MSA/cbhg-new/model-10.ptnfig Manager"""
+    """Config Manager"""
 
     def __init__(self, config_path: str, model_kind: str):
         available_models = [
             "baseline",
             "cbhg",
-            "seq2seq",
-            "tacotron_based",
         ]
         if model_kind not in available_models:
             raise TypeError(f"model_kind must be in {available_models}")
@@ -164,6 +157,7 @@ class ConfigManager:
         checkpoint (str): the path where models are saved
         """
         models = os.listdir(self.models_dir)
+        print(models)
         models = [model for model in models if model[-3:] == ".pt"]
         if len(models) == 0:
             return None
@@ -194,10 +188,12 @@ class ConfigManager:
                 return model, 1
         else:
             last_model_path = model_path
-
-        saved_model = torch.load(last_model_path)
+        
+        print('last_model_path: ', last_model_path)
+        saved_model = torch.load(last_model_path) if torch.cuda.is_available() else torch.load(last_model_path, map_location=torch.device('cpu'))
+            
+        #print(saved_model["model_state_dict"])
         out = model.load_state_dict(saved_model["model_state_dict"])
-        print(out)
         global_step = saved_model["global_step"] + 1
         return model, global_step
 
@@ -206,12 +202,6 @@ class ConfigManager:
             self._check_hash()
         if self.model_kind == "cbhg":
             return self.get_cbhg()
-
-        elif self.model_kind == "seq2seq":
-            return self.get_seq2seq()
-
-        elif self.model_kind == "tacotron_based":
-            return self.get_tacotron_based()
 
         elif self.model_kind == "baseline":
             return self.get_baseline()
@@ -240,63 +230,6 @@ class ConfigManager:
             post_cbhg_layers_units=self.config["post_cbhg_layers_units"],
             post_cbhg_use_batch_norm=self.config["post_cbhg_use_batch_norm"],
         )
-
-        return model
-
-    def get_seq2seq(self):
-        encoder = Seq2SeqEncoder(
-            embedding_dim=self.config["encoder_embedding_dim"],
-            inp_vocab_size=self.config["len_input_symbols"],
-            layers_units=self.config["encoder_units"],
-            use_batch_norm=self.config['use_batch_norm']
-        )
-
-        decoder = TacotronDecoder(
-            self.config["len_target_symbols"],
-            start_symbol_id=self.text_encoder.start_symbol_id,
-            embedding_dim=self.config["decoder_embedding_dim"],
-            encoder_dim=self.config["encoder_dim"],
-            decoder_units=self.config["decoder_units"],
-            decoder_layers=self.config["decoder_layers"],
-            attention_type=self.config["attention_type"],
-            attention_units=self.config["attention_units"],
-            is_attention_accumulative=self.config["is_attention_accumulative"],
-            use_prenet=self.config["use_decoder_prenet"],
-            prenet_depth=self.config["decoder_prenet_depth"],
-            teacher_forcing_probability=self.config["teacher_forcing_probability"],
-        )
-
-        model = Tacotron(encoder=encoder, decoder=decoder)
-
-        return model
-
-    def get_tacotron_based(self):
-        encoder = TacotronEncoder(
-            embedding_dim=self.config["encoder_embedding_dim"],
-            inp_vocab_size=self.config["len_input_symbols"],
-            prenet_sizes=self.config["prenet_sizes"],
-            use_prenet=self.config["use_encoder_prenet"],
-            cbhg_gru_units=self.config["cbhg_gru_units"],
-            cbhg_filters=self.config["cbhg_filters"],
-            cbhg_projections=self.config["cbhg_projections"],
-        )
-
-        decoder = TacotronDecoder(
-            self.config["len_target_symbols"],
-            start_symbol_id=self.text_encoder.start_symbol_id,
-            embedding_dim=self.config["decoder_embedding_dim"],
-            encoder_dim=self.config["encoder_dim"],
-            decoder_units=self.config["decoder_units"],
-            decoder_layers=self.config["decoder_layers"],
-            attention_type=self.config["attention_type"],
-            attention_units=self.config["attention_units"],
-            is_attention_accumulative=self.config["is_attention_accumulative"],
-            use_prenet=self.config["use_decoder_prenet"],
-            prenet_depth=self.config["decoder_prenet_depth"],
-            teacher_forcing_probability=self.config["teacher_forcing_probability"],
-        )
-
-        model = Tacotron(encoder=encoder, decoder=decoder)
 
         return model
 
@@ -330,7 +263,9 @@ class ConfigManager:
         return loss_type
 
 
-if __name__ == "__main__":
+"""
+    if __name__ == "__main__":
     config_path = "config/tacotron-base-config.yml"
     model_kind = "tacotron"
     config = ConfigManager(config_path=config_path, model_kind=model_kind)
+"""

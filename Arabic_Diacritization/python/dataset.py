@@ -7,6 +7,7 @@ import os
 from diacritization_evaluation import util
 import pandas as pd
 import torch
+import random
 from torch.utils.data import DataLoader, Dataset
 
 from config_manager import ConfigManager
@@ -41,11 +42,21 @@ class DiacritizationDataset(Dataset):
                 )
             )
             return inputs, targets, data[0]
+        
+        encoding_failed = True
+        while encoding_failed:
+            try:
+                data = self.data[id]
+                data = self.text_encoder.clean(data)
+                text, inputs, diacritics = util.extract_haraqat(data)
+                encoding_failed = False
+            except:
+                print('dataset.py :: error with that data')
+                print('id: ', id)
+                print('data: ', data)
+                # text, inputs, diacritics = util.extract_haraqat(data[0])
+                id = random.randint(0, len(data)) 
 
-        data = self.data[id]
-        data = self.text_encoder.clean(data)
-
-        text, inputs, diacritics = util.extract_haraqat(data)
         inputs = torch.Tensor(self.text_encoder.input_to_sequence("".join(inputs)))
         diacritics = torch.Tensor(self.text_encoder.target_to_sequence(diacritics))
 

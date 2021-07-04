@@ -1,3 +1,4 @@
+
 import argparse
 import random
 
@@ -5,8 +6,7 @@ import numpy as np
 import torch
 
 from trainer import (
-    CBHGTrainer,
-    Seq2SeqTrainer,
+    CBHGTrainer
 )
 
 SEED = 1234
@@ -35,11 +35,7 @@ parser = train_parser()
 args = parser.parse_args()
 
 
-if args.model_kind in ["seq2seq"]:
-    trainer = Seq2SeqTrainer(args.config, args.model_kind)
-elif args.model_kind in ["tacotron_based"]:
-    trainer = Seq2SeqTrainer(args.config, args.model_kind)
-elif args.model_kind in ['baseline',"cbhg"]:
+if args.model_kind in ['baseline',"cbhg"]:
     trainer = CBHGTrainer(args.config, args.model_kind)
 else:
     raise ValueError("The model kind is not supported")

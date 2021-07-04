@@ -1,5 +1,6 @@
 import argparse
-from diacritizer import TransformerDiacritizer
+#from diacritizer import TransformerDiacritizer
+from diacritizer import Diacritizer
 from itertools import repeat
 import random
 
@@ -29,7 +30,8 @@ args = parser.parse_args()
 
 
 if args.model_kind in ["transformer"]:
-    diacirtizer = TransformerDiacritizer(args.config, args.model_kind)
+    #diacirtizer = TransformerDiacritizer(args.config, args.model_kind)
+    diacirtizer = Diacritizer(args.config, args.model_kind)
 else:
     raise ValueError("The model kind is not supported")
 

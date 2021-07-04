@@ -14,10 +14,8 @@ class Diacritizer:
         )
         self.config = self.config_manager.config
         self.text_encoder = self.config_manager.text_encoder
-        if self.config.get("device"):
-            self.device = self.config["device"]
-        else:
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         if load_model:
             self.model, self.global_step = self.config_manager.load_model()
