@@ -131,17 +131,6 @@ class CBHG(nn.Module):
         
         self.trafo = deepcopy(self.trafo_test)
         
-        #self.conv1d = nn.Conv1d(
-        #    in_dim,
-        #    out_dim,
-        #    kernel_size=k,
-        #    stride=1,
-        #    padding=k // 2,
-        #    bias=False,
-        #)
-        #self.trafo = deepcopy(self.conv1d)
-        #
-        
         self.max_pool1d = nn.MaxPool1d(kernel_size=2, stride=1, padding=1)
 
         in_sizes = [K * in_dim] + projections[:-1]
