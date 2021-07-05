@@ -48,5 +48,3 @@ This repository contains the dataset, helpers, and systems comparison from [AliO
 3. [Bara' Al-Jawarneh](https://github.com/baraajaw).<br/>
 4. [Mahmoud Al-Ayyoub](https://github.com/malayyoub).<br/>
 
-## License
-The project is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
