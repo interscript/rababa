@@ -7,7 +7,7 @@ We are refering here to the [code](https://github.com/almodhfer/Arabic_Diacritiz
 
 Out of the four models that [almodhfer](https://github.com/almodhfer) has implemented, we selected the simplest and most performant ones:
 
-- The baseline model (baselin): consists of 3 bidirectional LSTM layers with optional batch norm layers.
+- The baseline model (baseline): consists of 3 bidirectional LSTM layers with optional batch norm layers.
 - The CBHG model (cbhg): uses only the encoder of the Tacotron based model with optional post LSTM, and batch norm layers.
 
 
@@ -62,14 +62,3 @@ The model will load the last saved model unless you specified it in the config:
 test_data_path. If the test file name is different than test.csv, you
 can add it to the config: test_file_name.
 
-### Issues 
-If you find any problem with the code or have any suggestion please submit an issue and I will resolve it as soon as possible.
-
-### Citation
-
-Please cite our paper if you use this repository:
-
-```text
-M. A. H. Madhfar and A. M. Qamar, "Effective Deep Learning Models for Automatic Diacritization of Arabic Text," in IEEE Access, vol. 9, pp. 273-288, 2021, doi: 10.1109/ACCESS.2020.3041676.
-
-```
