@@ -8,6 +8,7 @@ This repository contains everything to train a diacritization model in python an
 This library was built for the [Interscript project](https://www.interscript.com) ([at GitHub](https://github.com/secryst/secryst)).
 
 Diacritization strategy is following several steps with at heart a deep learning model:
+	
 	1. text preprocessing (cutting long sentences into pieces)
 	2. neural networks model prediction
 	3. rules based solution and search for edge cases (single words like person or geographic names)
