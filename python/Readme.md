@@ -74,3 +74,19 @@ The last model stored during traing is automatically chosen and the onnx model i
 ```bash
 python diacritization_model_to_onnx.py
 ```
+
+## Preprocessing in Python
+
+
+## Postprocessing in Python
+
+
+## Search for single strings in Python & Business rules
+
+
+## Python to Ruby
+
+* We are using the following libraries:
+* We rewrote the following components:
+
+
