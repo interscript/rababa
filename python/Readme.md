@@ -1,6 +1,9 @@
 # Diacritization Model
 
-## Core: Implementation of several deep learning models for recovering Arabic language diacritics
+
+
+
+## Core: Python Implementation of several deep learning models for recovering Arabic language diacritics
 
 We are refering here to the [code](https://github.com/almodhfer/Arabic_Diacritization) and 
 [Effective Deep Learning Models for Automatic Diacritization of Arabic Text](https://ieeexplore.ieee.org/document/9274427) that we have selected for this project from a list of alternatives listed in the docs readme.
@@ -11,9 +14,9 @@ Out of the four models that [almodhfer](https://github.com/almodhfer) has implem
 - The CBHG model (cbhg): uses only the encoder of the Tacotron based model with optional post LSTM, and batch norm layers.
 
 
-# Datasets
+### Datasets
 
-- Tashkeela corpus ~2800000 sentences:
+- We have chosen the Tashkeela corpus ~2800000 sentences:
     * [huggingface](https://huggingface.co/datasets/tashkeela)
     * [sourceforge](https://sourceforge.net/projects/tashkeela-processed/)
 ```bash
@@ -26,7 +29,7 @@ Out of the four models that [almodhfer](https://github.com/almodhfer) has implem
 ```
     
 
-# Data Preprocessing
+### Data Preprocessing
 
 - The data can either be processed before training or when loading each batch.
 - If you decide to process the corpus before training, then the corpus must have test.csv, train.csv, and valid.csv. Each file must contain three columns: text (the original text), text without diacritics, and diacritics. You have to define the column separator and diacritics separator in the config file.
@@ -38,7 +41,7 @@ Out of the four models that [almodhfer](https://github.com/almodhfer) has implem
   Moreover, we have one cleaning function: valid_arabic_cleaners, which clean all characters except valid Arabic characters,
   which include Arabic letters, punctuations, and diacritics.
 
-# Training
+### Training
 
 All models config are placed in the config directory.
 
@@ -50,9 +53,9 @@ The model will report the WER and DER while training using the
 diacritization_evaluation package. The frequency of calculating WER and
 DER can be specified in the config file.
 
-# Testing
+### Testing
 
-The testing is done in the same way as training:
+The testing is done in the same way as the training:
 
 ```bash
 python test.py --model model_name --config config/config_name.yml
@@ -62,3 +65,12 @@ The model will load the last saved model unless you specified it in the config:
 test_data_path. If the test file name is different than test.csv, you
 can add it to the config: test_file_name.
 
+
+### Conversion of CBHG to ONNX
+
+The last model stored during traing is automatically chosen and the onnx model is saved into a hardcoded location:
+"../models-data/diacritization_model.onnx"
+
+```bash
+python diacritization_model_to_onnx.py
+```
