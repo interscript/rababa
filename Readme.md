@@ -23,3 +23,4 @@ This very recent solution allows for efficient predictions on CPU's with a reaso
 	* tests are are taken from [diacritization benchmarking](https://github.com/AliOsm/arabic-text-diacritization)
 	* we have added own, realistic datasets for the problem of diacritization
 
+- [docs](https://github.com/interscript/arabic-diacritization/tree/master/docs) contains an application focused summary of latest relevant papers and solutions.
