@@ -1,21 +1,30 @@
+# Diacritization Model
 
-## Implementation of several deep learning models for recovering Arabic language diacritics
+## Core: Implementation of several deep learning models for recovering Arabic language diacritics
 
-This is the Pytorch implementation of the models as described in my paper 
-[Effective Deep Learning Models for Automatic Diacritization of Arabic Text](https://ieeexplore.ieee.org/document/9274427).
-This work was done as part of my thesis 
-(Developing a High-Quality Tool for Arabic Text-To-Speech Using Deep Learning Techniques) at Computer Science department, Qassim University.
+We are refering here to the [code](https://github.com/almodhfer/Arabic_Diacritization) and 
+[Effective Deep Learning Models for Automatic Diacritization of Arabic Text](https://ieeexplore.ieee.org/document/9274427) that we have selected for this project from a list of alternatives listed in the docs readme.
 
-There are four models as follows:
+Out of the four models that [almodhfer](https://github.com/almodhfer) has implemented, we selected the simplest and most performant ones:
 
 - The baseline model (baselin): consists of 3 bidirectional LSTM layers with optional batch norm layers.
-- The seq2seq with attention model (seq2seq): uses the baseline model as an encoder and the location-sensitive attention.
-- The Tacotron based seq2seq model (tacotron_based): uses the same encoder as Tacotron,
-  but the decoder and the attention are the same as the seq2seq model.
 - The CBHG model (cbhg): uses only the encoder of the Tacotron based model with optional post LSTM, and batch norm layers.
 
-The CBHG model achieves the best WER and DER with and without
-case_ending.
+
+# Datasets
+
+- Tashkeela corpus ~2800000 sentences:
+    * [huggingface](https://huggingface.co/datasets/tashkeela)
+    * [sourceforge](https://sourceforge.net/projects/tashkeela-processed/)
+```bash
+    mkdir data
+    mkdir data/CA_MSA
+    unzip data.zip
+    mv ~* data/CA_MSA/.
+    > ls data/CA_MSA/*
+        --> data/CA_MSA/eval.csv  data/CA_MSA/train.csv  data/CA_MSA/test.csv
+```
+    
 
 # Data Preprocessing
 
