@@ -43,26 +43,10 @@ class TextEncoder:
         self.start_symbol_id = None
 
     def input_to_sequence(self, text: str) -> List[int]:
-        ### print(1234)
         if self.reverse_input:
             text = "".join(list(reversed(text)))
         
-        #print(self.pad)
-        #print("text::", text)
-        """
-        ll = [s for s in text if s not in [self.pad]]
-        for s in ll:
-            if s in self.input_symbol_to_id:    
-                print("e: ", s)
-                print("f: ", self.input_symbol_to_id[s])
-            else:
-                print('error: ', s)
-        """
-        #print('ll:', len([s for s in text if s not in [self.pad]]))
-        
-        
         sequence = [self.input_symbol_to_id[s] for s in text if s not in [self.pad]]
-        #print('sequence:', sequence)
         return sequence
 
     def target_to_sequence(self, text: str) -> List[int]:
