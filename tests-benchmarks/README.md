@@ -31,18 +31,8 @@ This repository contains the dataset, helpers, and systems comparison from [AliO
 - transliteration.py - Converts a file from Arabic text to Buckwalter transliteration and vice-versa
 - pre_process_tashkeela_corpus.ipynb - Pre-process Tashkeela Corpus data
 
-### [existing_systems](/existing_systems)
-- ali-soft - Contains some bugs that exist in [Ali-Soft](http://www.ali-soft.com) system
-- farasa - Contains [Farasa](http://alt.qcri.org/farasa) system output, fixed output, and DER/WER statistics
-- harakat - Contains [Harakat](https://harakat.ae) system testing script, output, fixed output, and DER/WER statistics
-- madamira - Contains [MADAMIRA](https://camel.abudhabi.nyu.edu/madamira) system output, fixed output, and DER/WER statistics
-- mishkal - Contains [Mishkal](https://tahadz.com/mishkal) system output, fixed output, and DER/WER statistics
-- shakkala - Contains [Shakkala](https://ahmadai.com/shakkala) system data splitting script, output, fixed output, and DER/WER statistics
-- tashkeela_model - Contains [Tashkeela-Model](https://github.com/Anwarvic/Tashkeela-Model) system output, fixed output, and DER/WER statistics for each n-gram model provided by them
 
-#### Note: All codes in this repository tested on [Ubuntu 18.04](http://releases.ubuntu.com/18.04)
-
-## Contributors
+## Original Contributors of helpers code
 1. [Ali Hamdi Ali Fadel](https://github.com/AliOsm).<br/>
 2. [Ibraheem Tuffaha](https://github.com/IbraheemTuffaha).<br/>
 3. [Bara' Al-Jawarneh](https://github.com/baraajaw).<br/>
