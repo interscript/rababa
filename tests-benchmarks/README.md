@@ -1,16 +1,20 @@
 # Arabic Text Diacritization
 
-This repository contains the dataset, helpers, and systems comparison for our paper on Arabic Text Diacritization:
+This repository contains the dataset, helpers, and systems comparison from [AliOsm](https://github.com/AliOsm/arabic-text-diacritization):
 
-"[Arabic Text Diacritization Using Deep Neural Networks](https://arxiv.org/abs/1905.01965)", Ali Fadel, Ibraheem Tuffaha, Bara' Al-Jawarneh, and Mahmoud Al-Ayyoub, [ICCAIS 2019](http://www.iccais.tech).
 
 ## Files
 
 ### [dataset](/dataset)
 
-- train.txt - Contains 50,000 lines of diacritized Arabic text which can be used as training dataset
-- val.txt - Contains 2,500 lines of diacritized Arabic text which can be used as validation dataset
-- test.txt - Contains 2,500 lines of diacritized Arabic text which can be used as testing dataset
+- tashkeela (original data from AliOsm):
+	- train.txt - Contains 50,000 lines of diacritized Arabic text which can be used as training dataset
+	- val.txt - Contains 2,500 lines of diacritized Arabic text which can be used as validation dataset
+	- test.txt - Contains 2,500 lines of diacritized Arabic text which can be used as testing dataset
+
+- business-cases: realistic data for diacritization business cases
+- data-arabic-pointing: data for single words with/without "collisions"
+
 
 ### [helpers](/helpers)
 - constants
