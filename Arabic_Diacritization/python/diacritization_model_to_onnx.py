@@ -32,7 +32,6 @@ dia.model.eval()
 batch_data = pickle.load( open('../data/batch_data.pkl', 'rb') )
 
 
-
 """
     Load ONNX libs and export models into onnx
 """
@@ -50,7 +49,6 @@ src, lengths, target = (batch_data["src"], batch_data["lengths"], batch_data["ta
 # export model
 torch.onnx.export(dia.model, (src, lengths, target), onnx_model_filename, verbose=False, opset_version=11, input_names=['src', 'lengths'])
 print('Model printed in rel. path:', onnx_model_filename)
-
 
 
 """
@@ -89,3 +87,4 @@ np.testing.assert_allclose(torch_out['diacritics'][1].detach().numpy(), ort_outs
 np.testing.assert_allclose(torch_out['diacritics'][2].detach().numpy(), ort_outs[0][2], rtol=1e-05, atol=1e-05)
 
 print("Exported model has been tested with ONNXRuntime, and the result looks good!!!")
+
