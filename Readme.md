@@ -15,13 +15,15 @@ Diacritization strategy is following several steps with at heart a deep learning
 4. text postprocessing
  
 This repository contains: 
-- [Arabic_Diacritization](https://github.com/interscript/arabic-diacritization/tree/master/Arabic_Diacritization "Arabic_Diacritization")  
-	- A **neural network solution** for automatised diacritization based on the work of [almodhfer](https://github.com/almodhfer/Arabic_Diacritization), from which we overtook the baseline and more advanced and efficient CBHG models only. 
-This very recent solution allows for efficient predictions on CPU's with a reasonable sized model.
-	* **Strings Pre-/Post-processing**, also from [almodhfer](https://github.com/almodhfer/Arabic_Diacritization)
-	* **Strings search** within a corpus for single words. Even though NNets capture some understanding of arabic lexicography, single words without contexts can be easily interpreted wrongly. 
-* [tests and benchmarking utilities](https://github.com/interscript/arabic-diacritization/tree/master/tests-benchmarks), allowing to compare with other implementations. 
-	* tests are are taken from [diacritization benchmarking](https://github.com/AliOsm/arabic-text-diacritization)
-	* we have added own, realistic datasets for the problem of diacritization
 
 - [docs](https://github.com/interscript/arabic-diacritization/tree/master/docs) contains an application focused summary of latest (06.2021) relevant papers and solutions.
+- [python](https://github.com/interscript/arabic-diacritization/tree/master/python)  
+	- A **neural network solution** for automatised diacritization based on the work of [almodhfer](https://github.com/almodhfer/Arabic_Diacritization), from which we overtook the baseline and more advanced and efficient CBHG models only. 
+This very recent solution allows for efficient predictions on CPU's with a reasonable sized model.
+	* **Pytorch to ONNX** conversion of pytorch to ONNX format
+	* **Strings Pre-/Post-processing**, also from [almodhfer](https://github.com/almodhfer/Arabic_Diacritization)
+	* **Strings search** within a corpus for single words. Even though NNets capture some understanding of arabic lexicography, single words without contexts can be easily interpreted wrongly. 
+- [tests and benchmarking utilities](https://github.com/interscript/arabic-diacritization/tree/master/tests-benchmarks), allowing to compare with other implementations. 
+	* tests are are taken from [diacritization benchmarking](https://github.com/AliOsm/arabic-text-diacritization)
+	* we have added own, realistic datasets for the problem of diacritization
+- **models-data** directory to store models and embeddings in various formats
