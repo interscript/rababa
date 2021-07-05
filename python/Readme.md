@@ -66,7 +66,7 @@ test_data_path. If the test file name is different than test.csv, you
 can add it to the config: test_file_name.
 
 
-### Conversion of CBHG to ONNX
+### Convert CBHG, python model to ONNX
 
 The last model stored during traing is automatically chosen and the onnx model is saved into a hardcoded location:
 "../models-data/diacritization_model.onnx"
@@ -89,4 +89,4 @@ python diacritization_model_to_onnx.py
 * We are using the following libraries:
 * We rewrote the following components:
 
-
+...
