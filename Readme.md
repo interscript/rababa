@@ -9,10 +9,10 @@ This library was built for the [Interscript project](https://www.interscript.com
 
 Diacritization strategy is following several steps with at heart a deep learning model:
 	
-	1. text preprocessing (cutting long sentences into pieces)
-	2. neural networks model prediction
-	3. rules based solution and search for edge cases (single words like person or geographic names)
-	4. text postprocessing
+1. text preprocessing (cutting long sentences into pieces)
+2. neural networks model prediction
+3. rules based solution and search for edge cases (single words like person or geographic names)
+4. text postprocessing
  
 This repository contains: 
 - [Arabic_Diacritization](https://github.com/interscript/arabic-diacritization/tree/master/Arabic_Diacritization "Arabic_Diacritization")  
