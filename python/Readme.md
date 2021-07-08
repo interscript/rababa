@@ -27,7 +27,9 @@ Out of the four models that [almodhfer](https://github.com/almodhfer) has implem
     > ls data/CA_MSA/*
         --> data/CA_MSA/eval.csv  data/CA_MSA/train.csv  data/CA_MSA/test.csv
 ```
-    
+
+### Load Model
+
 
 ### Data Preprocessing
 
@@ -83,6 +85,12 @@ The last model stored during traing is automatically chosen and the onnx model i
 python diacritization_model_to_onnx.py
 ```
 
+# TODO List
+
+
+## Bug with diacritics combination
+
+
 ## Preprocessing in Python
 
 
@@ -91,6 +99,7 @@ python diacritization_model_to_onnx.py
 
 ## Search for single strings in Python & Business rules
 
+## Full code in ruby + onnx
 
 ## Python to Ruby
 
