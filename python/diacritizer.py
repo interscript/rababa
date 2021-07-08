@@ -1,6 +1,11 @@
 from typing import Dict
 import torch
 from config_manager import ConfigManager
+from dataset import (DiacritizationDataset, 
+                     collate_fn)
+from torch.utils.data import (DataLoader, 
+                              Dataset)
+
 
 
 class Diacritizer:
