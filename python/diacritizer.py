@@ -19,7 +19,6 @@ class Diacritizer:
 
         if load_model:
             self.model, self.global_step = self.config_manager.load_model()
-            print('self.device', self.device)
             self.model = self.model.to(self.device)
 
         self.start_symbol_id = self.text_encoder.start_symbol_id
@@ -31,11 +30,9 @@ class Diacritizer:
         # convert string into indices
         seq = self.text_encoder.input_to_sequence(text)
         # transform indices into "batch data"
-        batch_data = {
-                      'original': text, 
+        batch_data = {'original': text, 
                       'src': torch.Tensor([seq]).long(),
-                      'lengths': torch.Tensor([len(seq)]).long()
-                      }
+                      'lengths': torch.Tensor([len(seq)]).long()}
         
         return self.diacritize_batch(batch_data)[0]
 

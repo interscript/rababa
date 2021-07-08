@@ -30,9 +30,10 @@ args = parser.parse_args()
 
 
 if args.model_kind == "cbhg":
-    diacritizer = CBHGDiacritizer(args.config, args.model_kind)
+    diacritizer = CBHGDiacritizer(args.config, args.model_kind, 'log_dir')
+
 elif args.model_kind == "baseline":
-    diacritizer = Seq2SeqDiacritizer(args.config, args.model_kind)
+    diacritizer = Seq2SeqDiacritizer(args.config, args.model_kind, 'log_dir')
 else:
     raise ValueError("The model kind is not supported")
 
