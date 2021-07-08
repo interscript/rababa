@@ -31,8 +31,8 @@ args = parser.parse_args()
 
 if args.model_kind in ["transformer"]:
     #diacirtizer = TransformerDiacritizer(args.config, args.model_kind)
-    diacirtizer = Diacritizer(args.config, args.model_kind)
+    diacritizer = Diacritizer(args.config, args.model_kind)
 else:
     raise ValueError("The model kind is not supported")
 
-diacirtizer.diacritize_text(args.text)
+diacritizer.diacritize_text(args.text)
