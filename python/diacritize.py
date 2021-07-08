@@ -39,5 +39,9 @@ elif args.model_kind == "baseline":
 else:
     raise ValueError("The model kind is not supported")
 
-if 
-diacritizer.diacritize_text(args.text)
+if args.text_file is None:
+    txt = diacritizer.diacritize_text(args.text)
+    print(txt)
+else: 
+    for txt in diacritizer.diacritize_file(args.text_file):
+        print(txt)
