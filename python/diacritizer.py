@@ -14,11 +14,12 @@ class Diacritizer:
         )
         self.config = self.config_manager.config
         self.text_encoder = self.config_manager.text_encoder
-
+        
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         if load_model:
             self.model, self.global_step = self.config_manager.load_model()
+            print('self.device', self.device)
             self.model = self.model.to(self.device)
 
         self.start_symbol_id = self.text_encoder.start_symbol_id
@@ -27,8 +28,16 @@ class Diacritizer:
         self.model = model
 
     def diacritize_text(self, text: str):
+        # convert string into indices
         seq = self.text_encoder.input_to_sequence(text)
-        output = self.diacritize_batch(torch.LongTensor([seq]).to(self.device))
+        # transform indices into "batch data"
+        batch_data = {
+                      'original': text, 
+                      'src': torch.Tensor([seq]).long(),
+                      'lengths': torch.Tensor([len(seq)]).long()
+                      }
+        
+        return self.diacritize_batch(batch_data)[0]
 
     def diacritize_batch(self, batch):
         raise NotImplementedError()
@@ -38,7 +47,9 @@ class Diacritizer:
 
 
 class CBHGDiacritizer(Diacritizer):
+    
     def diacritize_batch(self, batch):
+        #print('batch: ',batch)
         self.model.eval()
         inputs = batch["src"]
         lengths = batch["lengths"]
@@ -58,6 +69,7 @@ class CBHGDiacritizer(Diacritizer):
 
 
 class Seq2SeqDiacritizer(Diacritizer):
+    
     def diacritize_batch(self, batch):
         self.model.eval()
         inputs = batch["src"]

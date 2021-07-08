@@ -1,6 +1,6 @@
 import argparse
 #from diacritizer import TransformerDiacritizer
-from diacritizer import Diacritizer
+from diacritizer import (Diacritizer, CBHGDiacritizer)
 from itertools import repeat
 import random
 
@@ -29,9 +29,10 @@ parser = diacritization_parser()
 args = parser.parse_args()
 
 
-if args.model_kind in ["transformer"]:
-    #diacirtizer = TransformerDiacritizer(args.config, args.model_kind)
-    diacritizer = Diacritizer(args.config, args.model_kind)
+if args.model_kind == "cbhg":
+    diacritizer = CBHGDiacritizer(args.config, args.model_kind)
+elif args.model_kind == "baseline":
+    diacritizer = Seq2SeqDiacritizer(args.config, args.model_kind)
 else:
     raise ValueError("The model kind is not supported")
 
