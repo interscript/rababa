@@ -70,7 +70,7 @@ can add it to the config: test_file_name.
 Single sentences or files can be processed. The code outputs is the diacretized text or lines.
 ```bash
 python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'قطر'
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file path_to_text_file
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file relative_path_to_text_file
 ```
 
 
