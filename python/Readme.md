@@ -70,7 +70,7 @@ The model will load the last saved model unless you specified it in the config:
 test_data_path. If the test file name is different than test.csv, you
 can add it to the config: test_file_name.
 
-### Diacretizing
+### Diacritizing Text or Files
 
 Single sentences or files can be processed. The code outputs is the diacretized text or lines.
 ```bash
