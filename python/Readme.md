@@ -30,6 +30,8 @@ Out of the four models that [almodhfer](https://github.com/almodhfer) has implem
 
 ### Load Model
 
+Models are available under 
+[releases](https://github.com/secryst/arabic-diacritization-deep-learning-models)
 
 ### Data Preprocessing
 
