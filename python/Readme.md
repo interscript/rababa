@@ -33,7 +33,7 @@ so for instance:
 ```bash
 for d in `ls tashkeela_val/*`; do; cat $d >> data/CA_MSA/eval.csv; done
 for d in `ls tashkeela_train/*`; do; cat $d >> data/CA_MSA/train.csv; done
-for d in `ls tashkeela_test/*`; do; echo $d >> data/CA_MSA/test.csv; done
+for d in `ls tashkeela_test/*`; do; cat $d >> data/CA_MSA/test.csv; done
 
 ```
 
