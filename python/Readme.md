@@ -32,6 +32,7 @@ Out of the four models that [almodhfer](https://github.com/almodhfer) has implem
 
 Models are available under 
 [releases](https://github.com/secryst/arabic-diacritization-deep-learning-models)
+Models are to be copied under /log_dir/ as specified in the link just above.
 
 ### Data Preprocessing
 
