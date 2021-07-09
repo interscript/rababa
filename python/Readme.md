@@ -3,7 +3,7 @@
 
 
 
-## Core: Python Implementation of several deep learning models for recovering Arabic language diacritics
+## Core: Python Deep Learning models for recovering Arabic language diacritics
 
 We are refering here to the [code](https://github.com/almodhfer/Arabic_Diacritization) and 
 [Effective Deep Learning Models for Automatic Diacritization of Arabic Text](https://ieeexplore.ieee.org/document/9274427) that we have selected for this project from a list of alternatives listed in the docs readme.
@@ -70,7 +70,7 @@ The model will load the last saved model unless you specified it in the config:
 test_data_path. If the test file name is different than test.csv, you
 can add it to the config: test_file_name.
 
-### Diacritizing Text or Files
+### "Diacritize" Text or Files
 
 Single sentences or files can be processed. The code outputs is the diacretized text or lines.
 ```bash
