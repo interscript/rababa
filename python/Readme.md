@@ -34,6 +34,11 @@ Models are available under
 [releases](https://github.com/secryst/arabic-diacritization-deep-learning-models).
 Models are to be copied under /log_dir/ as specified in the link just above.
 
+### Config Files
+One can adjust the model configurations in the /config repository.
+The model configurations are about the layers but also the dataset to be used and various other options.
+The configuration files are called explicitely in the below applications.
+
 ### Data Preprocessing
 
 - The data can either be processed before training or when loading each batch.
