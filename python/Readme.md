@@ -22,10 +22,19 @@ Out of the four models that [almodhfer](https://github.com/almodhfer) has implem
 ```bash
     mkdir data
     mkdir data/CA_MSA
-    unzip data.zip
-    mv ~* data/CA_MSA/.
+    unzip data.zip 
+```
+for training, data need to be in format:
+```bash
     > ls data/CA_MSA/*
         --> data/CA_MSA/eval.csv  data/CA_MSA/train.csv  data/CA_MSA/test.csv
+```
+so for instance:
+```bash
+for d in `ls tashkeela_val/*`; do; cat $d >> data/CA_MSA/eval.csv; done
+for d in `ls tashkeela_train/*`; do; cat $d >> data/CA_MSA/train.csv; done
+for d in `ls tashkeela_test/*`; do; echo $d >> data/CA_MSA/test.csv; done
+
 ```
 
 ### Load Model
