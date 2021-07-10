@@ -5,36 +5,40 @@ reference:
 https://github.com/almodhfer/diacritization_evaluation/blob/master/diacritization_evaluation/constants.py
 """
 
-HARAQAT = ['ْ', 'ّ', 'ٌ', 'ٍ', 'ِ', 'ً', 'َ', 'ُ']
-PUNCTUATIONS = ['.', '،', ':', '؛', '-', '؟']
-ARAB_CHARS = 'ىعظحرسيشضق ثلصطكآماإهزءأفؤغجئدةخوبذتن'
-ARAB_CHARS_NO_SPACE = 'ىعظحرسيشضقثلصطكآماإهزءأفؤغجئدةخوبذتن'
-ARAB_CHARS_PUNCTUATIONS = ARAB_CHARS + ''.join(PUNCTUATIONS)
-VALID_ARABIC = HARAQAT + list(ARAB_CHARS)
+module arabic_constant
 
-BASIC_HARAQAT = {
-    'َ'=> 'Fatha              ',
-    'ً'=> 'Fathatah           ',
-    'ُ'=> 'Damma              ',
-    'ٌ'=> 'Dammatan           ',
-    'ِ'=> 'Kasra              ',
-    'ٍ'=> 'Kasratan           ',
-    'ْ'=> 'Sukun              ',
-    'ّ'=> 'Shaddah            ',
-}
+    HARAQAT = ['ْ', 'ّ', 'ٌ', 'ٍ', 'ِ', 'ً', 'َ', 'ُ']
+    PUNCTUATIONS = ['.', '،', ':', '؛', '-', '؟']
+    ARAB_CHARS = 'ىعظحرسيشضق ثلصطكآماإهزءأفؤغجئدةخوبذتن'
+    ARAB_CHARS_NO_SPACE = 'ىعظحرسيشضقثلصطكآماإهزءأفؤغجئدةخوبذتن'
+    ARAB_CHARS_PUNCTUATIONS = ARAB_CHARS + ''.join(PUNCTUATIONS)
+    VALID_ARABIC = HARAQAT + list(ARAB_CHARS)
 
-ALL_POSSIBLE_HARAQAT = {''=> 'No Diacritic       ',
-                        'َ'=> 'Fatha              ',
-                        'ً'=> 'Fathatah           ',
-                        'ُ'=> 'Damma              ',
-                        'ٌ'=> 'Dammatan           ',
-                        'ِ'=> 'Kasra              ',
-                        'ٍ'=> 'Kasratan           ',
-                        'ْ'=> 'Sukun              ',
-                        'ّ'=> 'Shaddah            ',
-                        'َّ'=> 'Shaddah + Fatha    ',
-                        'ًّ'=> 'Shaddah + Fathatah ',
-                        'ُّ'=> 'Shaddah + Damma    ',
-                        'ٌّ'=> 'Shaddah + Dammatan ',
-                        'ِّ'=> 'Shaddah + Kasra    ',
-                        'ٍّ'=> 'Shaddah + Kasratan '}
+    BASIC_HARAQAT = {
+        'َ'=> 'Fatha              ',
+        'ً'=> 'Fathatah           ',
+        'ُ'=> 'Damma              ',
+        'ٌ'=> 'Dammatan           ',
+        'ِ'=> 'Kasra              ',
+        'ٍ'=> 'Kasratan           ',
+        'ْ'=> 'Sukun              ',
+        'ّ'=> 'Shaddah            ',
+    }
+
+    ALL_POSSIBLE_HARAQAT = {''=> 'No Diacritic       ',
+                            'َ'=> 'Fatha              ',
+                            'ً'=> 'Fathatah           ',
+                            'ُ'=> 'Damma              ',
+                            'ٌ'=> 'Dammatan           ',
+                            'ِ'=> 'Kasra              ',
+                            'ٍ'=> 'Kasratan           ',
+                            'ْ'=> 'Sukun              ',
+                            'ّ'=> 'Shaddah            ',
+                            'َّ'=> 'Shaddah + Fatha    ',
+                            'ًّ'=> 'Shaddah + Fathatah ',
+                            'ُّ'=> 'Shaddah + Damma    ',
+                            'ٌّ'=> 'Shaddah + Dammatan ',
+                            'ِّ'=> 'Shaddah + Kasra    ',
+                            'ٍّ'=> 'Shaddah + Kasratan '}
+
+end
