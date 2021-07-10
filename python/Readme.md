@@ -13,7 +13,10 @@ Out of the four models that [almodhfer](https://github.com/almodhfer) has implem
 - The baseline model (baseline): consists of 3 bidirectional LSTM layers with optional batch norm layers.
 - The CBHG model (cbhg): uses only the encoder of the Tacotron based model with optional post LSTM, and batch norm layers.
 
-### Python Dependencies
+### Python Version & Dependencies
+
+- version: 3.6
+- dependencies: 
 ```bash
 pip install -r requirement.txt
 ```
