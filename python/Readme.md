@@ -109,9 +109,6 @@ python diacritization_model_to_onnx.py
 # TODO List
 
 
-## Bug with diacritics combination
-
-
 ## Preprocessing in Python
 
 
