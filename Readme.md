@@ -1,4 +1,5 @@
-# Arabic Diacritization Library
+# قيثارة (Kithara) 
+### Arabic Diacritization Library
 Arabic diacritization is useful for several practical business cases like text to speech or romanization of arabic texts or scripts.
 
 ## Purpose
