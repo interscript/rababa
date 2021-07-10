@@ -1,6 +1,8 @@
 
 """
-Constants that are useful for calculating DER and WER
+Constants that are useful for processing arabic diacritics.
+reference:
+https://github.com/almodhfer/diacritization_evaluation/blob/master/diacritization_evaluation/constants.py
 """
 
 HARAQAT = ['ْ', 'ّ', 'ٌ', 'ٍ', 'ِ', 'ً', 'َ', 'ُ']
