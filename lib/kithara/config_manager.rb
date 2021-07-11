@@ -7,12 +7,12 @@ require 'yaml'
 require 'pathname'
 
 
-module config_manager
+module Config_manager
 
     class ConfigManager 
         """Config Manager"""
     
-        attr_accessor 
+        #attr_accessor 
         def initialize(config_path: str, model_kind: str)
         
             available_models = ["baseline", "cbhg"]
