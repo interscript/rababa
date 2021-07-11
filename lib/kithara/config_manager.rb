@@ -21,7 +21,6 @@ module config_manager
             end
             @config_path = Path(config_path)
             @model_kind = model_kind
-            #self.yaml = ruamel.yaml.YAML()
             config: Dict[str, Any] = _load_config()
             #self.git_hash = self._get_git_hash()  # ignore this
             session_name = ["data_type","session_name",f"{model_kind}"].join(".") 

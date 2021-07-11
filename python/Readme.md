@@ -57,13 +57,13 @@ The configuration files are called explicitely in the below applications.
 
 ### Data Preprocessing
 
-- The data can either be processed before training or when loading each batch.
-- If you decide to process the corpus before training, then the corpus must have test.csv, train.csv, and valid.csv. Each file must contain three columns: text (the original text), text without diacritics, and diacritics. You have to define the column separator and diacritics separator in the config file.
-- If the data is not preprocessed, you can specify that in the config.
+The original work cited above allow for both raw and preprocessed. We go for the simplest version here:
+- The corpus must have test.csv, train.csv, and valid.csv. 
+- Specify that the data is not preprocessed in the config.
   In that case,  each batch will be processed and the text and diacritics 
   will be extracted from the original text.
 - You also have to specify the text encoder and the cleaner functions.
-  This work includes two text encoders: BasicArabicEncoder, ArabicEncoderWithStartSymbol.
+  Two text encoders were included: BasicArabicEncoder, ArabicEncoderWithStartSymbol.
   Moreover, we have one cleaning function: valid_arabic_cleaners, which clean all characters except valid Arabic characters,
   which include Arabic letters, punctuations, and diacritics.
 
@@ -81,14 +81,16 @@ DER can be specified in the config file.
 
 ### Testing
 
-The testing is done in the same way as the training:
+The testing is done in the same way as the training, 
+for instance with the cbhg model:
 
 ```bash
-python test.py --model model_name --config config/config_name.yml
+python test.py --model 'cbhg' --config config/cbhg.yml
 ```
 
 The model will load the last saved model unless you specified it in the config:
-test_data_path. If the test file name is different than test.csv, you
+test_data_path. The test file is expected to have the correct diacritization!
+If the test file name is different than test.csv, you
 can add it to the config: test_file_name.
 
 ### "Diacritize" Text or Files
