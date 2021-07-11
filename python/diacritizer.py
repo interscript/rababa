@@ -41,32 +41,31 @@ class Diacritizer:
         
         return self.diacritize_batch(batch_data)[0]
     
-        def get_data_from_file(self, path):
-            """get data from relative path"""
-            loader_params = {"batch_size": self.config_manager.config["batch_size"],
-                             "shuffle": False,
-                             "num_workers": 2}
-            # data processed or not, specs in config file
-            if self.config_manager.config["is_data_preprocessed"]:
-                data = pd.read_csv(path,
-                                   encoding="utf-8",
-                                   sep=self.config_manager.config["data_separator"],
-                                   nrows=self.config_manager.config["n_validation_examples"],
-                                   header=None)
+    def get_data_from_file(self, path):
+        """get data from relative path"""
+        loader_params = {"batch_size": self.config_manager.config["batch_size"],
+                         "shuffle": False,
+                         "num_workers": 2}
+        # data processed or not, specs in config file
+        if self.config_manager.config["is_data_preprocessed"]:
+            data = pd.read_csv(path,
+                               encoding="utf-8",
+                               sep=self.config_manager.config["data_separator"],
+                               nrows=self.config_manager.config["n_validation_examples"],
+                               header=None)
 
-                # data = data[data[0] <= config_manager.config["max_len"]]
-                dataset = DiacritizationDataset(self.config_manager, data.index, data)
-            else:
-                with open(path, encoding="utf8") as file:
-                    data = file.readlines()
-                data = [text for text in data if len(text) <= self.config_manager.config["max_len"]]
-                dataset = DiacritizationDataset(
-                    self.config_manager, [idx for idx in range(len(data))], data
-                    )
+            # data = data[data[0] <= config_manager.config["max_len"]]
+            dataset = DiacritizationDataset(self.config_manager, data.index, data)
+        else:
+            with open(path, encoding="utf8") as file:
+                data = file.readlines()
+            data = [text for text in data if len(text) <= self.config_manager.config["max_len"]]
+            dataset = DiacritizationDataset(
+                self.config_manager, [idx for idx in range(len(data))], data)
 
-            data_iterator = DataLoader(dataset, collate_fn=collate_fn, **loader_params)
-            # print(f"Length of data iterator = {len(valid_iterator)}")
-            return data_iterator 
+        data_iterator = DataLoader(dataset, collate_fn=collate_fn, **loader_params)
+        # print(f"Length of data iterator = {len(valid_iterator)}")
+        return data_iterator 
     
     def diacritize_file(self, path: str):
         """download data from relative path and diacritize it batch by batch"""
