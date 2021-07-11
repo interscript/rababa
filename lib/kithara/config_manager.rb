@@ -3,6 +3,7 @@ reproduces:
 https://github.com/interscript/arabic-diacritization/blob/master/python/config_manager.py
 """
 
+require 'yaml'
 require 'pathname'
 
 
@@ -35,8 +36,7 @@ module config_manager
         end
 
         def _load_config() 
-            with open(@config_path, "rb") as model_yaml:
-                _config = yaml.load(model_yaml)
+            _config = YAML.load_file(@config_path)
             return _config
         end
 
@@ -58,6 +58,7 @@ module config_manager
         end
 
         def load_model()
+            ### from ahmad...
         end
             
     end
