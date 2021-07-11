@@ -5,6 +5,11 @@ needing:
 https://github.com/almodhfer/diacritization_evaluation/blob/master/diacritization_evaluation/constants.py
 """
 
+require_relative "arabic_constant"
+
+include arabic_constant
+
+
 def extract_haraqat(text: str, correct_reversed: bool = true) 
     """
     Args:
@@ -22,7 +27,7 @@ def extract_haraqat(text: str, correct_reversed: bool = true)
     txt_list = []
     text.each do |char| 
         # if chart is a diacritic, then extract the stack and empty it
-        if !BASIC_HARAQAT.keys().include? char  
+        if !arabic_constant::BASIC_HARAQAT.keys().include? char  
             stack_content = extract_stack(stack, correct_reversed=correct_reversed)
             haraqat_list.push(stack_content)
             txt_list.push(char)
@@ -46,11 +51,12 @@ def remove_diacritics(text: str)
         text (str): text to be diacritized
     Returns:
         text: the text as came
-        text_list: all text that are not haraqat
-        haraqat_list: all haraqat_list
+        #? text_list: all text that are not haraqat
+        #? haraqat_list: all haraqat_list
     """
-    for diacritic in BASIC_HARAQAT.keys():
+    for diacritic in arabic_constant::BASIC_HARAQAT.keys()
         text = text.replace(diacritic, "")
+    end
 
     return text
 end
@@ -66,7 +72,7 @@ def combine_txt_and_haraqat(txt_list, haraqat_list)
     
     assert txt_list.length() == haraqat_list.length()
     out = []
-    in enumerate(txt_list).each do |i,|  
+    in enumerate(txt_list).each do |i,char|  
         out.push(char)
         out.push(haraqat_list[i])
     end
