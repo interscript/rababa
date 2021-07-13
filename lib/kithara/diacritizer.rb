@@ -42,28 +42,29 @@ module Diacritizer
                 * ? cpu + gpu & onnx?
             """
 
-            # @start_symbol_id = @text_encoder.start_symbol_id
+            @start_symbol_id = @encoder.start_symbol_id
 
         end
 
         def diacritize_text(text)
 
-          p(text)
-          # remove diacritics
-          text = remove_diacritics(text)
-          p(text)
+            p(text)
+            # remove diacritics
+            text = remove_diacritics(text)
+            p(text)
 
-          seq = @encoder.input_to_sequence(text2)
-          
-            # encoder: string -> hot encoding
-            #     seq = @text_encoder.input_to_sequence(text)
+            seq = @encoder.input_to_sequence(text)
+
+            batch_data = {'original': text,
+                          'src': seq,
+                          'lengths': seq.length}
+
             batch_data = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-              0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-              0, 0, 0]]
+                0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0]]
 
-            text_out = diacritize_batch(batch_data) #[0]
-            # p(text_out)
+            text_out = diacritize_batch(batch_data)
 
             return text # mocked for now...
         end
