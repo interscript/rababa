@@ -5,14 +5,14 @@ reference:
 https://github.com/almodhfer/diacritization_evaluation/blob/master/diacritization_evaluation/constants.py
 """
 
-module arabic_constant
+module Arabic_constant
 
     HARAQAT = ['ْ', 'ّ', 'ٌ', 'ٍ', 'ِ', 'ً', 'َ', 'ُ']
     PUNCTUATIONS = ['.', '،', ':', '؛', '-', '؟']
     ARAB_CHARS = 'ىعظحرسيشضق ثلصطكآماإهزءأفؤغجئدةخوبذتن'
     ARAB_CHARS_NO_SPACE = 'ىعظحرسيشضقثلصطكآماإهزءأفؤغجئدةخوبذتن'
-    ARAB_CHARS_PUNCTUATIONS = ARAB_CHARS + ''.join(PUNCTUATIONS)
-    VALID_ARABIC = HARAQAT + list(ARAB_CHARS)
+    ARAB_CHARS_PUNCTUATIONS = ARAB_CHARS + PUNCTUATIONS.join('')
+    VALID_ARABIC = HARAQAT + ARAB_CHARS.chars()
 
     BASIC_HARAQAT = {
         'َ'=> 'Fatha              ',
