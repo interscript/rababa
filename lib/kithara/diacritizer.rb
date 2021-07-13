@@ -32,6 +32,7 @@ module Diacritizer
             @config = YAML.load_file(config_path)
             @encoder = get_text_encoder()
             p(@config)
+            @vec_length = 197 #@config['max_len']
             # @config_manager = Config_manager::ConfigManager(config_path=config_path, model_kind=model_kind)
             # @config = @config_manager.config
             # @text_encoder = self.config_manager.text_encoder
@@ -54,6 +55,7 @@ module Diacritizer
             p(text)
 
             seq = @encoder.input_to_sequence(text)
+            seq = seq+[0]*(@vec_length-seq.length)
 
             seq = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                   0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
