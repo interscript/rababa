@@ -48,21 +48,20 @@ module Diacritizer
 
         def diacritize_text(text)
 
-            p(text)
             # remove diacritics
+            p(text)
             text = remove_diacritics(text)
             p(text)
 
             seq = @encoder.input_to_sequence(text)
 
-            batch_data = {'original': text,
-                          'src': seq,
-                          'lengths': seq.length}
+            seq = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-            batch_data = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0]]
+            batch_data = {'original': text,
+                          'src': [seq],
+                          'lengths': [seq.length]}
 
             text_out = diacritize_batch(batch_data)
 
@@ -99,10 +98,8 @@ module Diacritizer
 
         def get_data_from_file(path)
             """get data from relative path"""
-
             # data processed or not, specs in config file
             # data = IO.readlines(path, sep=@config_manager.config["data_separator"]) # [, open_args])
-
             # data iterator is just a list
             # batch_size = @config_manager.config["batch_size"]
             # data_iterator = array.each_slice(batch_size).to_a
@@ -116,9 +113,15 @@ module Diacritizer
             # Call onnx model
             p(@onnx_session.inputs)
 
+            # mocked
             ort_inputs = {@onnx_session.inputs[0][:name] => seq}
             out = @onnx_session.run(nil, ort_inputs)
 
+            """ real
+            ort_inputs = {'src' => batch_data['src'],
+                          'lengths' => batch_data['lengths']}
+            out = @onnx_session.run(nil, ort_inputs)
+            """
             return out
         end
 
