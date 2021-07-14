@@ -34,7 +34,7 @@ class ConfigManager:
         self.model_kind = model_kind
         self.yaml = ruamel.yaml.YAML()
         self.config: Dict[str, Any] = self._load_config()
-        self.git_hash = self._get_git_hash()
+        # self.git_hash = self._get_git_hash()
         self.session_name = ".".join(
             [
                 self.config["data_type"],
@@ -196,7 +196,7 @@ class ConfigManager:
         global_step = saved_model["global_step"] + 1
         return model, global_step
 
-    def get_model(self, ignore_hash=False):
+    def get_model(self, ignore_hash=True):
         if not ignore_hash:
             self._check_hash()
         if self.model_kind == "cbhg":
