@@ -9,14 +9,7 @@ require 'onnxruntime'
 require 'yaml'
 
 require_relative "encoders"
-
-#from config_manager import ConfigManager
-#from dataset import (DiacritizationDataset, collate_fn) # we might need collate
-#from torch.utils.data import (DataLoader,
-#                              Dataset)
-
-# require_relative "config_manager"
-# require_relative "text_encoder"
+require_relative "harakats"
 
 
 module Diacritizer
@@ -71,14 +64,14 @@ module Diacritizer
         end
 
         def diacritize_text(self, text: str):
-        # convert string into indices
-        seq = self.text_encoder.input_to_sequence(text)
-        # transform indices into "batch data"
-        batch_data = {'original': text,
-                      'src': torch.Tensor([seq]).long(),
-                      'lengths': torch.Tensor([len(seq)]).long()}
+            # convert string into indices
+            seqs = self.text_encoder.input_to_sequence(text)
+            # transform indices into "batch data"
+            batch_data = {'original': text,
+                          'src': [seqs],
+                          'lengths': [len(seqs)]}
 
-        return self.diacritize_batch(batch_data)[0]
+            return diacritize_batch(batch_data) #[0]
 
         def diacritize_file(path)
             """download data from relative path and diacritize it batch by batch"""
@@ -109,24 +102,29 @@ module Diacritizer
             return data_iterator
         end
 
-
-        def diacritize_batch(seq)
+        def diacritize_batch(seqs)
 
             # Call onnx model
             p(@onnx_session.inputs)
 
             # mocked
-            ort_inputs = {@onnx_session.inputs[0][:name] => seq}
-            out = @onnx_session.run(nil, ort_inputs)
+            ort_inputs = {@onnx_session.inputs[0][:name] => seqs}
+            predictions = @onnx_session.run(nil, ort_inputs)
 
             """ real
             ort_inputs = {'src' => batch_data['src'],
                           'lengths' => batch_data['lengths']}
-            out = @onnx_session.run(nil, ort_inputs)
+            predictions = @onnx_session.run(nil, ort_inputs)
             """
-            return out
-        end
+            sentences = []
+            for i in (0.predictions.length()).to_a
+                # combine cleaned arabic and predicted diacritics
+                sentence = combine_text_and_haraqat(seqs[i], predictions[i])
+                sentences.push(sentence)
+            end
 
+            return sentences
+        end
 
         def get_text_encoder()
             """Initialise text encoder from config params"""
