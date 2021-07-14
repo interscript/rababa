@@ -54,6 +54,7 @@ module Diacritizer
                   0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
+            # batch of size one, for one sentence
             batch_data = {'original': text,
                           'src': [seq],
                           'lengths': [seq.length]}
@@ -63,7 +64,7 @@ module Diacritizer
             return text # mocked for now...
         end
 
-        def diacritize_text(text):
+        def diacritize_text(text)
             # convert string into indices
             seqs = self.text_encoder.input_to_sequence(text)
             # transform indices into "batch data"
@@ -72,6 +73,7 @@ module Diacritizer
                           'lengths': [len(seqs)]}
 
             return diacritize_batch(batch_data) #[0]
+        end
 
         def diacritize_file(path)
             """download data from relative path and diacritize it batch by batch"""
@@ -116,6 +118,7 @@ module Diacritizer
                           'lengths' => batch_data['lengths']}
             predictions = @onnx_session.run(nil, ort_inputs)
             """
+
             sentences = []
             for i in (0.predictions.length()).to_a
                 # combine cleaned arabic and predicted diacritics

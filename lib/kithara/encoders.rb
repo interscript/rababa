@@ -10,7 +10,7 @@ require_relative "encoders"
 module Encoders
 
     class TextEncoder
-
+        attr_accessor :start_symbol_id
         def initialize(input_chars, target_charts, #: List[str]
                        #cleaner_fn, #: Optional[str] = None
                        reverse_input) #: bool = false)
