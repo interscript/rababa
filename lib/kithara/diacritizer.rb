@@ -63,7 +63,7 @@ module Diacritizer
             return text # mocked for now...
         end
 
-        def diacritize_text(self, text: str):
+        def diacritize_text(text):
             # convert string into indices
             seqs = self.text_encoder.input_to_sequence(text)
             # transform indices into "batch data"
@@ -102,7 +102,7 @@ module Diacritizer
             return data_iterator
         end
 
-        def diacritize_batch(seqs)
+        def diacritize_batch(batch_data)
 
             # Call onnx model
             p(@onnx_session.inputs)
