@@ -7,9 +7,12 @@ as well as half of
 
 require 'onnxruntime'
 require 'yaml'
+require 'tqdm'
 
 require_relative "encoders"
 require_relative "harakats"
+
+include Harakats
 
 
 module Diacritizer
@@ -22,111 +25,70 @@ module Diacritizer
 
             # load inference model from model_path
             @onnx_session = OnnxRuntime::InferenceSession.new(onnx_model_path)
+            # load config
             @config = YAML.load_file(config_path)
+            @max_length = @config['max_len']
+            @batch_size = @config['batch_size']
+            # instantiate encoder's class
             @encoder = get_text_encoder()
-            p(@config)
-            @vec_length = 197 #@config['max_len']
-            # @config_manager = Config_manager::ConfigManager(config_path=config_path, model_kind=model_kind)
-            # @config = @config_manager.config
-            # @text_encoder = self.config_manager.text_encoder
-
-            """ Required:
-                * support 2 kind of encodings (encodings and decodings):
-                    ArabicEncoderWithStartSymbol and BasicArabicEncoder
-                * ? cpu + gpu & onnx?
-            """
-
             @start_symbol_id = @encoder.start_symbol_id
+
+            """ TODO:
+                * cleaner fct?
+            """
 
         end
 
         def diacritize_text(text)
 
             # remove diacritics
-            p(text)
-            text = remove_diacritics(text)
-            p(text)
-
+            text = Harakats::remove_diacritics(text)
+            # map input to idces
             seq = @encoder.input_to_sequence(text)
-            seq = seq+[0]*(@vec_length-seq.length)
+            # correct expected lenght for vectors
+            seq = seq+[0]*(@max_length-seq.length)
+            # initialize onnx computation
+            ort_inputs = {'src' => [seq]*@batch_size,
+                          'lengths' => [seq.length]*@batch_size}
+            # onnx predictions
+            predicts = @onnx_session.run(nil, ort_inputs)
+            # network outputs some likelihood for each haraqat:
+            preds = predicts[0][1].map.each{|r| r.each_with_index.max[1]}
 
-            seq = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                  0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-            # batch of size one, for one sentence
-            batch_data = {'original': text,
-                          'src': [seq],
-                          'lengths': [seq.length]}
-
-            text_out = diacritize_batch(batch_data)
-
-            return text # mocked for now...
-        end
-
-        def diacritize_text(text)
-            # convert string into indices
-            seqs = self.text_encoder.input_to_sequence(text)
-            # transform indices into "batch data"
-            batch_data = {'original': text,
-                          'src': [seqs],
-                          'lengths': [len(seqs)]}
-
-            return diacritize_batch(batch_data) #[0]
+            # combine input sequence with predicted harakats
+            return combine_text_and_haraqat(seq, preds)
         end
 
         def diacritize_file(path)
             """download data from relative path and diacritize it batch by batch"""
-            data_iterator = get_data_from_file(path)
-            diacritized_data = []
-
-            data_iterator.each do |batch_inputs|
-                batch_inputs["src"] = batch_inputs["src"].to(self.device)
-                batch_inputs["lengths"] = batch_inputs["lengths"].to('cpu')
-                batch_inputs["target"] = batch_inputs["target"].to(self.device)
-
-                diacritize_batch(batch_inputs).each do |d|
-                    diacritized_data.append(d)
-                end
+            in_texts = []
+            File.open(path).each do |line|
+                in_texts.push(line.chomp)
             end
 
-            return diacritized_data
+            return in_texts.tqdm.map {|t| diacritize_text(t)}
         end
 
-        def get_data_from_file(path)
-            """get data from relative path"""
-            # data processed or not, specs in config file
-            # data = IO.readlines(path, sep=@config_manager.config["data_separator"]) # [, open_args])
-            # data iterator is just a list
-            # batch_size = @config_manager.config["batch_size"]
-            # data_iterator = array.each_slice(batch_size).to_a
+        def combine_text_and_haraqat(vec_txt, vec_haraqat)
 
-            return data_iterator
-        end
-
-        def diacritize_batch(batch_data)
-
-            # Call onnx model
-            p(@onnx_session.inputs)
-
-            # mocked
-            ort_inputs = {@onnx_session.inputs[0][:name] => seqs}
-            predictions = @onnx_session.run(nil, ort_inputs)
-
-            """ real
-            ort_inputs = {'src' => batch_data['src'],
-                          'lengths' => batch_data['lengths']}
-            predictions = @onnx_session.run(nil, ort_inputs)
-            """
-
-            sentences = []
-            for i in (0.predictions.length()).to_a
-                # combine cleaned arabic and predicted diacritics
-                sentence = combine_text_and_haraqat(seqs[i], predictions[i])
-                sentences.push(sentence)
+            if vec_txt.length != vec_haraqat.length
+                raise Exception.new('haraqat.len != txt.len in \
+                                     Harakats::combine_text_and_haraqat')
             end
 
-            return sentences
+            text, i = '', 0
+            loop do
+
+                txt = vec_txt[i]
+                haraq = vec_haraqat[i]
+                i += 1
+                break if (i == vec_txt.length) or \
+                          (txt == @encoder.input_pad_id)
+                text += @encoder.input_id_to_symbol[txt] + \
+                        @encoder.target_id_to_symbol[haraq]
+            end
+
+            return text
         end
 
         def get_text_encoder()
@@ -150,5 +112,4 @@ module Diacritizer
         end
 
     end
-
 end

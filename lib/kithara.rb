@@ -1,6 +1,8 @@
 """
-    run for now:
+    run:
       ruby kithara.rb -t 'قطر' -m '../models-data/diacritization_model.onnx'
+      ruby kithara.rb -f example.csv -m '../models-data/diacritization_model.onnx'
+
 """
 
 require 'onnxruntime'
@@ -31,11 +33,16 @@ end
 
 parser = parser()
 
-config_path = "../python/config/cbhg.yml"
-onnx_model_path = "../models-data/toy_model.onnx"
-# parser[:model]
+config_path = "configs/cbhg.yml"
+# onnx_model_path = "../models-data/diacritization_model.onnx"
+p(parser[:model])
+diacritizer = Diacritizer::Diacritizer.new(parser[:model_path], config_path)
 
-diacritizer = Diacritizer::Diacritizer.new(onnx_model_path, config_path)
+# run diacritize text
+txt = diacritizer.diacritize_text(parser[:text])
+p(txt)
 
-#txt = diacritizer.diacritize_text(parser[:text])
-#p(txt)
+# run diacritize file
+txts = diacritizer.diacritize_file('example.csv')
+# p(txts)
+txts.each {|t| p(t)}

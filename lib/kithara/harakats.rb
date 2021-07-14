@@ -40,7 +40,6 @@ module Harakats
         return out
     end
 
-
     def extract_haraqat(text, correct_reversed)
         """
         Args:
@@ -48,32 +47,32 @@ module Harakats
         Returns:
             text: the text as came
             text_list: all text that are not haraqat
-            haraqat_list: all haraqat_list
+            vec_haraqat: all vec_haraqat
         """
         if text.strip().length() == 0
             return text, [" "] * text.length(), [""] * text.length()
         end
 
         stack = []
-        haraqat_list = []
-        txt_list = []
+        vec_haraqat = []
+        vec_txt = []
         text.chars().each do |char|
             # if chart is a diacritic, then extract the stack and empty it
             if !Arabic_constant::BASIC_HARAQAT.keys().include? char
                 stack_content = extract_stack(stack, correct_reversed)
-                haraqat_list.push(stack_content)
-                txt_list.push(char)
+                vec_haraqat.push(stack_content)
+                vec_txt.push(char)
                 stack = []
             else
                 stack.push(char)
             end
         end
-        if haraqat_list.length() > 0
-            haraqat_list.shift
+        if vec_haraqat.length() > 0
+            vec_haraqat.shift
         end
-        haraqat_list.push(extract_stack(stack, true))
+        vec_haraqat.push(extract_stack(stack, true))
 
-        return text, txt_list, haraqat_list
+        return text, vec_txt, vec_haraqat
     end
 
     def remove_diacritics(text)
@@ -90,26 +89,6 @@ module Harakats
         end
 
         return text
-    end
-
-
-    def combine_txt_and_haraqat(txt_list, haraqat_list)
-        """
-          Rejoins text with its corresponding haraqat
-          Args:
-              txt_list: The text that does !contain any haraqat
-              haraqat_list: The haraqat that are corresponding to the text list
-        """
-        assert_equal(txt_list.length(), haraqat_list.length(), \
-                 failure_message = "haraqat_list.len != txt_list.len")
-
-        out = []
-        for i in (0..txt_list.length).to_a
-            out.push(txt_list[i])
-            out.push(haraqat_list[i])
-        end
-
-        return  out.join("")
     end
 
 end

@@ -10,8 +10,11 @@ require_relative "encoders"
 module Encoders
 
     class TextEncoder
-        attr_accessor :start_symbol_id
-        def initialize(input_chars, target_charts, #: List[str]
+
+        attr_accessor :start_symbol_id, :input_pad_id, \
+                      :input_id_to_symbol, :target_id_to_symbol
+
+        def initialize(input_chars, target_charts,
                        #cleaner_fn, #: Optional[str] = None
                        reverse_input) #: bool = false)
 
@@ -19,16 +22,21 @@ module Encoders
             #    self.cleaner_fn = getattr(text_cleaners, cleaner_fn)
             #else:
             #    self.cleaner_fn = None
+            
             @pad = "P"
             @input_symbols = [@pad] + input_chars
             @target_symbols = [@pad] + target_charts
 
+            # encoding of arabic without diacritics
             @input_symbol_to_id = Hash[*@input_symbols.map.with_index \
                                                   {|s, i| [s, i] }.flatten]
             @input_id_to_symbol = Hash[*@input_symbols.map.with_index \
                                                   {|s, i| [i, s] }.flatten]
+            # encoding of haraqats
             @target_symbol_to_id = Hash[*@target_symbols.map.with_index \
                                                   {|s, i| [s, i] }.flatten]
+            @target_id_to_symbol = Hash[*@target_symbols.map.with_index \
+                                                  {|s, i| [i, s] }.flatten]
 
             @reverse_input = reverse_input
             @input_pad_id = @input_symbol_to_id[@pad]
