@@ -21,9 +21,9 @@ Or files as data/examples.txt:
 * text_encoder corresponding to the [rules](https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_encoders.py):
      * BasicArabicEncoder
      * ArabicEncoderWithStartSymbol
-* text_cleaner:
-     * basic_cleaners
-     * valid_arabic_cleaners
+* text_cleaner corresponding to [logics](https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_cleaners.py):
+     * basic_cleaners : default
+     * valid_arabic_cleaners : the code would need to be massaged at the encoder's instantiation level to activate existing cleaner function.
 
 ### ONNX model
 ONNX model can be generated running the python [code](https://github.com/interscript/arabic-diacritization/blob/master/python/diacritization_model_to_onnx.py) in this library.

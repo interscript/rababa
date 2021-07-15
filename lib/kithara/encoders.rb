@@ -1,6 +1,8 @@
 """
 corresponds to:
 https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_encoders.py
+and
+https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_cleaners.py
 """
 
 require_relative "constant_arabic"
@@ -15,13 +17,17 @@ module Encoders
                       :input_id_to_symbol, :target_id_to_symbol
 
         def initialize(input_chars, target_charts,
-                       #cleaner_fn, #: Optional[str] = None
+                       cleaner_fn, #: Optional[str] = None
                        reverse_input) #: bool = false)
 
-            #if cleaner_fn:
-            #    self.cleaner_fn = getattr(text_cleaners, cleaner_fn)
-            #else:
-            #    self.cleaner_fn = None
+            # cleaner fcts
+            if cleaner_fn == "basic_cleaners"
+                @cleaner = Harakats::basic_cleaners
+            elsif cleaner_fn == "valid_arabic_cleaners"
+                @cleaner = Harakats::valid_arabic_cleaners
+            else
+                @cleaner = nil
+            end
 
             @pad = "P"
             @input_symbols = [@pad] + input_chars
@@ -59,7 +65,7 @@ module Encoders
 
     class BasicArabicEncoder < TextEncoder
 
-        def initialize(#cleaner_fn="basic_cleaners",
+        def initialize(cleaner_fn="basic_cleaners",
                        reverse_input: bool = false,
                        reverse_target: bool = false)
 
@@ -67,14 +73,14 @@ module Encoders
             target_charts = Arabic_constant::ALL_POSSIBLE_HARAQAT.keys()
 
             super(input_chars, target_charts,
-                  #cleaner_fn=cleaner_fn,
+                  cleaner_fn=cleaner_fn,
                   reverse_input=reverse_input)
         end
     end
 
     class ArabicEncoderWithStartSymbol < TextEncoder
 
-        def initialize(#cleaner_fn="basic_cleaners",
+        def initialize(cleaner_fn="basic_cleaners",
                        reverse_input: bool = false,
                        reverse_target: bool = false)
 
@@ -82,7 +88,7 @@ module Encoders
             target_charts = Arabic_constant::ALL_POSSIBLE_HARAQAT.keys()
 
             super(input_chars, target_charts,
-                  #cleaner_fn=cleaner_fn,
+                  cleaner_fn=cleaner_fn,
                   reverse_input=reverse_input)
 
             @start_symbol_id = @target_symbol_to_id["s"]
