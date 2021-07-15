@@ -17,6 +17,7 @@ Diacritization strategy is following several steps with at heart a deep learning
  
 This repository contains: 
 
+- [lib](https://github.com/interscript/arabic-diacritization/tree/master/lib) is the ruby library using nnet model in onnx format.
 - [docs](https://github.com/interscript/arabic-diacritization/tree/master/docs) contains an application focused summary of latest (06.2021) relevant papers and solutions.
 - [python](https://github.com/interscript/arabic-diacritization/tree/master/python)  
 	- A **neural network solution** for automatised diacritization based on the work of [almodhfer](https://github.com/almodhfer/Arabic_Diacritization), from which we overtook the baseline and more advanced and efficient CBHG models only. 

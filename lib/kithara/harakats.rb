@@ -91,4 +91,20 @@ module Harakats
         return text
     end
 
+    def collapse_whitespace(text)
+        text = re.sub(_whitespace_re, " ", text)
+    return text
+    end
+
+    def basic_cleaners(text)
+        text = collapse_whitespace(text)
+        return text.strip()
+    end
+
+    def valid_arabic_cleaners(text)
+        text = filter(lambda char: char in Arabic_constant::VALID_ARABIC, text)
+        text = collapse_whitespace(''.join(list(text)))
+        return text.strip()
+    end
+
 end

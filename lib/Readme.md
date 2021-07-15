@@ -4,9 +4,9 @@
 One can diacritize either single strings:
 
 	ruby kithara.rb -t 'قطر' -m '../models-data/diacritization_model.onnx'
-Or files:
+Or files as data/examples.txt:
 
-	ruby kithara.rb -f 'data/example.csv' -m '../models-data/diacritization_model.onnx'
+	ruby kithara.rb -f 'data/example.txt' -m '../models-data/diacritization_model.onnx'
 
 ### Parameters
 * text to diacritize: "**-t**TEXT", "--text=TEXT",
@@ -18,9 +18,9 @@ Or files:
 #### Players:
 * max_len: 600
 	longer sentences will need to be preprocessed, which can be done for instance using [Hamza5](https://github.com/Hamza5) [code](https://github.com/Hamza5/Pipeline-diacritizer/blob/master/pipeline_diacritizer/pipeline_diacritizer.py).
-* text_encoder:
+* text_encoder corresponding to the [rules](https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_encoders.py):
      * BasicArabicEncoder
-     *  ArabicEncoderWithStartSymbol
+     * ArabicEncoderWithStartSymbol
 * text_cleaner:
      * basic_cleaners
      * valid_arabic_cleaners
