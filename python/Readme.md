@@ -109,7 +109,19 @@ python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file re
 The last model stored during traing is automatically chosen and the onnx model is saved into a hardcoded location:
 "../models-data/diacritization_model.onnx"
 
+#### Run
 ```bash
 python diacritization_model_to_onnx.py
 ```
 
+#### Important parameters
+They are hardcoded in the beginning of the script:
+* max_len: 
+	* match string length, initial model value is given in config.
+	* this param allow to tune the model speed and size! 
+	* the ruby ../lib/Readme.md points to ressources for preprocessing
+* batch_size: 
+	* the value is given by the original model and its training.
+	* this constrain how the onnx model can be put in production:
+		1. if > 1, single lines involve redundant computations
+		2. if > 1, files are processed bunch by bunches.

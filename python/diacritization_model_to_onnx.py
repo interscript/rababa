@@ -1,9 +1,33 @@
-
+import torch
 import pickle
+
 import numpy as np
 
-
 from diacritizer import CBHGDiacritizer
+
+
+"""
+    Key Params:
+        max_len: 
+            is the max length for the arabic strings to be diacritized
+        batch size: 
+            has to do with the model training and usage
+"""
+max_len = 300 # 600 for the original length
+batch_size = 32
+
+
+""" 
+    example and mock data:
+    we found that populating all the data, removing the zeros gives better results.
+"""
+src = torch.Tensor([[1 for i in range(max_len)]
+                    for i in range(batch_size)]).long()
+lengths = torch.Tensor([max_len for i in range(batch_size)]).long()
+# example data
+batch_data = pickle.load( open('../models-data/batch_data.pkl', 'rb') )
+
+#target = batch_data['target']
 
 
 """
@@ -17,19 +41,9 @@ dia = CBHGDiacritizer(config_str, model_kind_str, load_model)
 
 # set model to inference mode
 dia.model.to(dia.device)
-dia.model.eval()
-
-# test
-#tmp = dia.model(src=batch_data["src"],
-#                target=batch_data["target"],
-#                lengths=batch_data["lengths"])
-
-
-"""
-    Load sample data to "teach onnx what the computational flow is"
-"""
-
-batch_data = pickle.load( open('../data/batch_data.pkl', 'rb') )
+dia.model.eval();
+# run model
+torch_out = dia.model(src, lengths)
 
 
 """
@@ -43,11 +57,14 @@ import onnxruntime
 
 onnx_model_filename = '../models-data/diacritization_model.onnx'
 
-# input data for "teaching onnx about the nnets graph"
-src, lengths, target = (batch_data["src"], batch_data["lengths"], batch_data["target"])
 
 # export model
-torch.onnx.export(dia.model, (src, lengths, target), onnx_model_filename, verbose=False, opset_version=11, input_names=['src', 'lengths'])
+torch.onnx.export(dia.model, 
+                  (src, lengths), 
+                  onnx_model_filename, 
+                  verbose=False, 
+                  opset_version=11, 
+                  input_names=['src', 'lengths'])
 print('Model printed in rel. path:', onnx_model_filename)
 
 
@@ -77,14 +94,10 @@ ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.i
 # run onnx model
 ort_outs = ort_session.run(None, ort_inputs)
 
-# run torch model
-torch_out = dia.model(src, lengths)
-torch_out['diacritics'][0] # .shape
 
-# comparisons, we compare first 3 vectors for now
-np.testing.assert_allclose(torch_out['diacritics'][0].detach().numpy(), ort_outs[0][0], rtol=1e-05, atol=1e-05)
-np.testing.assert_allclose(torch_out['diacritics'][1].detach().numpy(), ort_outs[0][1], rtol=1e-05, atol=1e-05)
-np.testing.assert_allclose(torch_out['diacritics'][2].detach().numpy(), ort_outs[0][2], rtol=1e-05, atol=1e-05)
+for i in range(batch_size):
+    np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(), ort_outs[0][i], rtol=1e-03, atol=1e-03)
 
-print("Exported model has been tested with ONNXRuntime, and the result looks good!!!")
+
+print("\n!!!Exported model has been tested with ONNXRuntime, result looks good within given tolerance!!!")
 
