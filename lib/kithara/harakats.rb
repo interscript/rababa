@@ -92,18 +92,18 @@ module Harakats
     end
 
     def collapse_whitespace(text)
-        text = re.sub(_whitespace_re, " ", text)
+        """'a   a  a a'-> 'a a a a' """
+        text = text.x.gsub(/[[:space:]]+/, ' ')
     return text
     end
 
     def basic_cleaners(text)
-        text = collapse_whitespace(text)
-        return text.strip()
+        return collapse_whitespace(text).strip
     end
 
     def valid_arabic_cleaners(text)
-        text = filter(lambda char: char in Arabic_constant::VALID_ARABIC, text)
-        text = collapse_whitespace(''.join(list(text)))
+        text = text.chars.select {|c| Arabic_constant::VALID_ARABIC.include? c}
+        text = collapse_whitespace(text.join('')).strip
         return text.strip()
     end
 
