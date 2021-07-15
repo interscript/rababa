@@ -157,7 +157,7 @@ class ConfigManager:
         checkpoint (str): the path where models are saved
         """
         models = os.listdir(self.models_dir)
-        print(models)
+        # print(models)
         models = [model for model in models if model[-3:] == ".pt"]
         if len(models) == 0:
             return None
