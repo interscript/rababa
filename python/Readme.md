@@ -84,7 +84,7 @@ DER can be specified in the config file.
 ### Testing
 
 The testing is done in the same way as the training, 
-for instance with the cbhg model:
+for instance with the cbhg model on the data in /data/CA_MSA/test.csv:
 
 ```bash
 python test.py --model 'cbhg' --config config/cbhg.yml
