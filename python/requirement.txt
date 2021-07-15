@@ -8,3 +8,4 @@ diacritization-evaluation==0.5
 tqdm==4.56.0
 onnx==1.9.0
 onnxruntime==1.8.1
+pyyaml==5.4.1

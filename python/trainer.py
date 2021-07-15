@@ -136,7 +136,7 @@ class GeneralTrainer(Trainer):
                 targets = targets.view(-1)
                 loss = self.criterion(predictions, targets.to(self.device))
                 acc = categorical_accuracy(
-                    predictions, targets.to(self.device), self.pad_idx
+                    predictions, targets.to(self.device), self.pad_idx, self.device
                 )
                 epoch_loss += loss.item()
                 epoch_acc += acc.item()
