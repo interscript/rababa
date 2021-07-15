@@ -15,14 +15,14 @@ module Arabic_constant
     VALID_ARABIC = HARAQAT + ARAB_CHARS.chars()
 
     BASIC_HARAQAT = {
-        '\u064e'=> 'Fatha              ',
-        '\u064b'=> 'Fathatah           ',
-        '\u064f'=> 'Damma              ',
-        '\u064c'=> 'Dammatan           ',
-        '\u0650'=> 'Kasra              ',
-        '\u064d'=> 'Kasratan           ',
-        '\u0652'=> 'Sukun              ',
-        '\u0651'=> 'Shaddah            ',
+        '\u064e'=> 'Fatha              ', # َ
+        '\u064b'=> 'Fathatah           ', # ً
+        '\u064f'=> 'Damma              ', # ُ
+        '\u064c'=> 'Dammatan           ', # ٌ
+        '\u0650'=> 'Kasra              ', # ِ
+        '\u064d'=> 'Kasratan           ', # ٍ
+        '\u0652'=> 'Sukun              ', # ْ
+        '\u0651'=> 'Shaddah            ', # ّ
     }
 
     ALL_POSSIBLE_HARAQAT = {''=> 'No Diacritic       ',
