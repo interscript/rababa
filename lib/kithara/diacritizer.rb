@@ -1,7 +1,7 @@
 """
 this refers to:
   https://github.com/interscript/arabic-diacritization/blob/master/python/diacritizer.py
-as well as half of
+as well a drastic simplification of
  https://github.com/almodhfer/Arabic_Diacritization/blob/master/config_manager.py
 """
 
@@ -19,16 +19,16 @@ module Diacritizer
 
     class Diacritizer
 
-        # include config_manager
-        # include text_encoder
         def initialize(onnx_model_path, config_path)
 
             # load inference model from model_path
             @onnx_session = OnnxRuntime::InferenceSession.new(onnx_model_path)
+
             # load config
             @config = YAML.load_file(config_path)
             @max_length = @config['max_len']
             @batch_size = 32 # @config['batch_size']
+
             # instantiate encoder's class
             @encoder = get_text_encoder()
             @start_symbol_id = @encoder.start_symbol_id
@@ -41,12 +41,14 @@ module Diacritizer
 
         def diacritize_text(text)
             """Diacritize single arabic strings"""
+
             # remove diacritics
             text = Harakats::remove_diacritics(text)
             # map input to idces
             seq = @encoder.input_to_sequence(text)
             # correct expected lenght for vectors
             seq = seq+[0]*(@max_length-seq.length)
+
             # initialize onnx computation
             ort_inputs = {'src' => [seq]*@batch_size,
                           'lengths' => [seq.length]*@batch_size}
@@ -61,10 +63,12 @@ module Diacritizer
 
         def diacritize_file(path)
             """download data from relative path and diacritize line by line"""
+
             in_texts = []
             File.open(path).each do |line|
                 in_texts.push(line.chomp)
             end
+
             return in_texts.tqdm.map {|t| diacritize_text(t)}
         end
 

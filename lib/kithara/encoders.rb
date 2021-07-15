@@ -1,6 +1,6 @@
 """
 corresponds to:
-https://github.com/almodhfer/Arabic_Diacritization/blob/master/util/text_encoders.py
+https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_encoders.py
 """
 
 require_relative "constant_arabic"
@@ -22,7 +22,7 @@ module Encoders
             #    self.cleaner_fn = getattr(text_cleaners, cleaner_fn)
             #else:
             #    self.cleaner_fn = None
-            
+
             @pad = "P"
             @input_symbols = [@pad] + input_chars
             @target_symbols = [@pad] + target_charts
