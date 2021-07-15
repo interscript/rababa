@@ -1,5 +1,6 @@
 from config_manager import ConfigManager
 import os
+import torch
 from typing import Dict
 
 from torch import nn
@@ -26,7 +27,7 @@ class DiacritizationTester(GeneralTrainer):
         self.start_symbol_id = self.text_encoder.start_symbol_id
 
         self.model = self.config_manager.get_model()
-
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = self.model.to(self.device)
 
         self.load_model(model_path=self.config["test_model_path"], load_optimizer=False)
