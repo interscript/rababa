@@ -1,0 +1,15 @@
+session_name: base
+
+# text_encoder:
+#     BasicArabicEncoder, ArabicEncoderWithStartSymbol
+text_encoder: ArabicEncoderWithStartSymbol
+# text_cleaner:
+#     * basic_cleaners
+#     * valid_arabic_cleaners
+#       a white list that uses only Arabic letters,
+#       punctuations, and a space
+text_cleaner: valid_arabic_cleaners
+# max_len: sentences larger than this size will not be used
+max_len: 197 # 600
+# batch_size: was set to 1, meaning we process one text at a time
+# batch_size: 1 # 32

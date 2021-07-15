@@ -28,7 +28,7 @@ module Diacritizer
             # load config
             @config = YAML.load_file(config_path)
             @max_length = @config['max_len']
-            @batch_size = @config['batch_size']
+            @batch_size = 32 # @config['batch_size']
             # instantiate encoder's class
             @encoder = get_text_encoder()
             @start_symbol_id = @encoder.start_symbol_id
@@ -40,7 +40,7 @@ module Diacritizer
         end
 
         def diacritize_text(text)
-
+            """Diacritize single arabic strings"""
             # remove diacritics
             text = Harakats::remove_diacritics(text)
             # map input to idces
@@ -60,12 +60,11 @@ module Diacritizer
         end
 
         def diacritize_file(path)
-            """download data from relative path and diacritize it batch by batch"""
+            """download data from relative path and diacritize line by line"""
             in_texts = []
             File.open(path).each do |line|
                 in_texts.push(line.chomp)
             end
-
             return in_texts.tqdm.map {|t| diacritize_text(t)}
         end
 
@@ -78,7 +77,6 @@ module Diacritizer
 
             text, i = '', 0
             loop do
-
                 txt = vec_txt[i]
                 haraq = vec_haraqat[i]
                 i += 1
