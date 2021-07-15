@@ -24,12 +24,11 @@ pip install -r requirement.txt
 ### Datasets
 
 - We have chosen the Tashkeela corpus ~2800000 sentences:
-    * [huggingface](https://huggingface.co/datasets/tashkeela)
     * [sourceforge](https://sourceforge.net/projects/tashkeela-processed/)
+Other datasets are discussed in the reviewed literature or in the article referenced above. 
 ```bash
     mkdir data
     mkdir data/CA_MSA
-    unzip data.zip 
 ```
 for training, data need to be in format:
 ```bash
@@ -38,6 +37,7 @@ for training, data need to be in format:
 ```
 so for instance:
 ```bash
+unzip data.zip 
 for d in `ls tashkeela_val/*`; do; cat $d >> data/CA_MSA/eval.csv; done
 for d in `ls tashkeela_train/*`; do; cat $d >> data/CA_MSA/train.csv; done
 for d in `ls tashkeela_test/*`; do; cat $d >> data/CA_MSA/test.csv; done
@@ -46,10 +46,10 @@ for d in `ls tashkeela_test/*`; do; cat $d >> data/CA_MSA/test.csv; done
 
 ### Load Model
 
-Models are available under 
+Alternatively, trained CBHG models are available under 
 [releases](https://github.com/secryst/arabic-diacritization-deep-learning-models).
-Models are to be copied under:
- 2000000-snapshot.pt  -> log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt as specified in the link just above.
+Models are to be copied as specified in the link just above under:
+> log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt 
 
 
 ### Config Files
@@ -59,8 +59,8 @@ The configuration files are called explicitely in the below applications.
 
 ### Data Preprocessing
 
-The original work cited above allow for both raw and preprocessed. We go for the simplest version here:
-- The corpus must have test.csv, train.csv, and valid.csv. 
+The original work cited above allow for both raw and preprocessed. We go for the simplest raw version here:
+- As mentionned above, corpus must have test.csv, train.csv, and valid.csv. 
 - Specify that the data is not preprocessed in the config.
   In that case,  each batch will be processed and the text and diacritics 
   will be extracted from the original text.
