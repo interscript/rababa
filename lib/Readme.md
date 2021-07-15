@@ -15,7 +15,7 @@ Or files:
 * path to config file **Default:config/model.yml**: "-cCONFIG", "--config=CONFIG"
 
 ### Config
-##### Main players:
+#### Players:
 * max_len: 600
 	longer sentences will need to be preprocessed, which can be done for instance using [Hamza5](https://github.com/Hamza5) [code](https://github.com/Hamza5/Pipeline-diacritizer/blob/master/pipeline_diacritizer/pipeline_diacritizer.py).
 * text_encoder:
@@ -27,6 +27,7 @@ Or files:
 
 ### ONNX model
 ONNX model can be generated running the python [code](https://github.com/interscript/arabic-diacritization/blob/master/python/diacritization_model_to_onnx.py) in this library.
+It requires to go through some of the steps described in the link above.
 
 ### Gems
 
@@ -34,8 +35,3 @@ ONNX model can be generated running the python [code](https://github.com/intersc
 		 gem install optparse
 		 gem install yaml
 		 gem install tqdm
-
-
-require 'onnxruntime'
-require 'optparse'
-require 'yaml'
