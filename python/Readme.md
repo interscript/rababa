@@ -48,7 +48,9 @@ for d in `ls tashkeela_test/*`; do; cat $d >> data/CA_MSA/test.csv; done
 
 Models are available under 
 [releases](https://github.com/secryst/arabic-diacritization-deep-learning-models).
-Models are to be copied under /log_dir/ as specified in the link just above.
+Models are to be copied under:
+ 2000000-snapshot.pt  -> log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt as specified in the link just above.
+
 
 ### Config Files
 One can adjust the model configurations in the /config repository.
