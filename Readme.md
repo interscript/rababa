@@ -23,7 +23,6 @@ This repository contains:
 This very recent solution allows for efficient predictions on CPU's with a reasonable sized model.
 	* **Pytorch to ONNX** conversion of pytorch to ONNX format
 	* **Strings Pre-/Post-processing**, also from [almodhfer](https://github.com/almodhfer/Arabic_Diacritization)
-	* **Strings search** within a corpus for single words. Even though NNets capture some understanding of arabic lexicography, single words without contexts can be easily interpreted wrongly. 
 - [tests and benchmarking utilities](https://github.com/interscript/arabic-diacritization/tree/master/tests-benchmarks), allowing to compare with other implementations. 
 	* tests are are taken from [diacritization benchmarking](https://github.com/AliOsm/arabic-text-diacritization)
 	* we have added own, realistic datasets for the problem of diacritization
