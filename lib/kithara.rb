@@ -1,7 +1,7 @@
 """
-    run text of file diacritization:
-      ruby kithara.rb -t 'قطر' -m '../models-data/diacritization_model.onnx'
-      ruby kithara.rb -f example.csv -m '../models-data/diacritization_model.onnx'
+  run text of file diacritization:
+    ruby kithara.rb -t 'قطر' -m '../models-data/diacritization_model.onnx'
+    ruby kithara.rb -f example.csv -m '../models-data/diacritization_model.onnx'
 
 """
 

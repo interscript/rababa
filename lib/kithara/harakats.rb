@@ -93,8 +93,8 @@ module Harakats
 
     def collapse_whitespace(text)
         """'a   a  a a'-> 'a a a a' """
-        text = text.x.gsub(/[[:space:]]+/, ' ')
-    return text
+        text = text.gsub(/[[:space:]]+/, ' ')
+        return text
     end
 
     def basic_cleaners(text)

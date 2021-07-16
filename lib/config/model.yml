@@ -10,6 +10,6 @@ text_encoder: ArabicEncoderWithStartSymbol
 #       punctuations, and a space
 text_cleaner: valid_arabic_cleaners
 # max_len: sentences larger than this size will not be used
-max_len: 197 # 600
+max_len: 200 # 600
 # batch_size: was set to 1, meaning we process one text at a time
-# batch_size: 1 # 32
+batch_size: 32

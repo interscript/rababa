@@ -19,6 +19,8 @@ module Diacritizer
 
     class Diacritizer
 
+        #attr_accessor :preprocess_text
+
         def initialize(onnx_model_path, config_path)
 
             # load inference model from model_path
@@ -27,50 +29,86 @@ module Diacritizer
             # load config
             @config = YAML.load_file(config_path)
             @max_length = @config['max_len']
-            @batch_size = 32 # @config['batch_size']
+            @batch_size = @config['batch_size']
+            #@text_cleaner = @config['text_cleaner']
 
             # instantiate encoder's class
             @encoder = get_text_encoder()
             @start_symbol_id = @encoder.start_symbol_id
 
-            """ TODO:
-                * cleaner fct?
-            """
+        end
 
+        def preprocess_text(text)
+            """preprocess text into indices"""
+            #if text.length > @max_length
+            #    raise ValueError.new('text length larger than max_length')
+            #end
+            text = @encoder.clean(text)
+            text = Harakats::remove_diacritics(text)
+            seq = @encoder.input_to_sequence(text)
+            # correct expected length for vectors with 0's
+            return seq+[0]*(@max_length-seq.length)
         end
 
         def diacritize_text(text)
             """Diacritize single arabic strings"""
 
-            # remove diacritics
-            text = Harakats::remove_diacritics(text)
-            # map input to idces
-            seq = @encoder.input_to_sequence(text)
-            # correct expected lenght for vectors
-            seq = seq+[0]*(@max_length-seq.length)
+            seq = preprocess_text(text)
 
             # initialize onnx computation
+            # redondancy caused by batch processing of nnets
             ort_inputs = {'src' => [seq]*@batch_size,
                           'lengths' => [seq.length]*@batch_size}
-            # onnx predictions
-            predicts = @onnx_session.run(nil, ort_inputs)
-            # network outputs some likelihood for each haraqat:
-            preds = predicts[0][1].map.each{|r| r.each_with_index.max[1]}
 
-            # combine input sequence with predicted harakats
+            # onnx predictions
+            preds = predict_batch(ort_inputs)[0]
+
             return combine_text_and_haraqat(seq, preds)
         end
 
         def diacritize_file(path)
             """download data from relative path and diacritize line by line"""
 
-            in_texts = []
+            texts = []
             File.open(path).each do |line|
-                in_texts.push(line.chomp)
+                texts.push(line.chomp)
             end
 
-            return in_texts.tqdm.map {|t| diacritize_text(t)}
+            # process batches
+            out_texts = []
+            idx = 0
+            loop do
+                break if (idx+@batch_size > texts.length)
+
+                src = texts[idx..idx+@batch_size-1].map.each{|t| \
+                                                        preprocess_text(t)}
+                lengths = src.map.each{|seq| seq.length}
+                ort_inputs = {'src' => src,
+                              'lengths' => lengths}
+                preds = predict_batch(ort_inputs)
+
+                out_texts += (0..@batch_size-1).map.each{|i| \
+                                  combine_text_and_haraqat(src[i], preds[i])}
+                idx += @batch_size
+            end
+
+            # process rest of data
+            loop do
+                break if (idx >= texts.length)
+                out_texts += [diacritize_text(texts[idx])]
+                idx += 1
+            end
+
+            return out_texts
+
+        def predict_batch(batch_data)
+          # onnx predictions
+          predicts = @onnx_session.run(nil, batch_data)
+          predicts = predicts[0].map.each{|p| p.map.each{|r| r.each_with_index.max[1]}}
+          return predicts
         end
+
+
 
         def combine_text_and_haraqat(vec_txt, vec_haraqat)
 
@@ -90,7 +128,7 @@ module Diacritizer
                         @encoder.target_id_to_symbol[haraq]
             end
 
-            return text
+            return text.reverse
         end
 
         def get_text_encoder()
@@ -102,9 +140,9 @@ module Diacritizer
             end
 
             if @config['text_encoder'] == 'BasicArabicEncoder'
-                encoder = Encoders::BasicArabicEncoder.new()
+                encoder = Encoders::BasicArabicEncoder.new(@config['text_cleaner'])
             elsif @config['text_encoder'] == 'ArabicEncoderWithStartSymbol'
-                encoder = Encoders::ArabicEncoderWithStartSymbol.new()
+                encoder = Encoders::ArabicEncoderWithStartSymbol.new(@config['text_cleaner'])
             else
                 raise Exception.new(\
                     'the text encoder is not found: '+@config['text_encoder'].to_s)
