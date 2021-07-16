@@ -10,8 +10,8 @@ module Arabic_constant
     HARAQAT = ['ْ', 'ّ', 'ٌ', 'ٍ', 'ِ', 'ً', 'َ', 'ُ']
     UHARAQAT = ['\u0652', '\u0651', '\u064c', '\u064d', '\u0650', '\u064b', '\u064e', '\u064f']
     PUNCTUATIONS = ['.', '\u060c', ':', '\u061b', '-', '\u061f']
-    ARAB_CHARS = 'ىعظحرسيشضق ثلصطكآماإهزءأفؤغجئدةخوبذتن'
-    ARAB_CHARS_NO_SPACE = 'ىعظحرسيشضقثلصطكآماإهزءأفؤغجئدةخوبذتن'
+    ARAB_CHARS = '\u0649\u0639\u0638\u062D\u0631\u0633\u064A\u0634\u0636\u0642\20\u062B\u0644\u0635\u0637\u0643\u0622\u0645\u0627\u0625\u0647\u0632\u0621\u0623\u0641\u0624\u063A\u062C\u0626\u062F\u0629\u062E\u0648\u0628\u0630\u062A\u0646'
+    ARAB_CHARS_NO_SPACE = '\u0649\u0639\u0638\u062D\u0631\u0633\u064A\u0634\u0636\u0642\u062B\u0644\u0635\u0637\u0643\u0622\u0645\u0627\u0625\u0647\u0632\u0621\u0623\u0641\u0624\u063A\u062C\u0626\u062F\u0629\u062E\u0648\u0628\u0630\u062A\u0646'
     ARAB_CHARS_PUNCTUATIONS = ARAB_CHARS + PUNCTUATIONS.join('')
     VALID_ARABIC = HARAQAT + ARAB_CHARS.chars()
 
