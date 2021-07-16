@@ -16,8 +16,10 @@ Or files as data/examples.txt:
 
 ### Config
 #### Players:
-* max_len: 600
-	longer sentences will need to be preprocessed, which can be done for instance using [Hamza5](https://github.com/Hamza5) [code](https://github.com/Hamza5/Pipeline-diacritizer/blob/master/pipeline_diacritizer/pipeline_diacritizer.py).
+* max_len: 200 -- 600
+	* Parameter that has to match the onnx model built using the [code]{https://github.com/interscript/arabic-diacritization/blob/master/python/diacritization_model_to_onnx.py} and following the python/Readme.md.
+	* Longer sentences will need to be preprocessed, which can be done for instance using [Hamza5](https://github.com/Hamza5) [code](https://github.com/Hamza5/Pipeline-diacritizer/blob/master/pipeline_diacritizer/pipeline_diacritizer.py).
+	* the smaller the faster the nnets code.
 * text_encoder corresponding to the [rules](https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_encoders.py):
      * BasicArabicEncoder
      * ArabicEncoderWithStartSymbol

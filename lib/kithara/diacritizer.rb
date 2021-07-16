@@ -19,8 +19,6 @@ module Diacritizer
 
     class Diacritizer
 
-        #attr_accessor :preprocess_text
-
         def initialize(onnx_model_path, config_path)
 
             # load inference model from model_path
@@ -30,7 +28,6 @@ module Diacritizer
             @config = YAML.load_file(config_path)
             @max_length = @config['max_len']
             @batch_size = @config['batch_size']
-            #@text_cleaner = @config['text_cleaner']
 
             # instantiate encoder's class
             @encoder = get_text_encoder()
@@ -40,9 +37,10 @@ module Diacritizer
 
         def preprocess_text(text)
             """preprocess text into indices"""
-            #if text.length > @max_length
+            #if (text.length > @max_length)
             #    raise ValueError.new('text length larger than max_length')
             #end
+
             text = @encoder.clean(text)
             text = Harakats::remove_diacritics(text)
             seq = @encoder.input_to_sequence(text)
@@ -100,6 +98,7 @@ module Diacritizer
             end
 
             return out_texts
+        end
 
         def predict_batch(batch_data)
           # onnx predictions
@@ -107,8 +106,6 @@ module Diacritizer
           predicts = predicts[0].map.each{|p| p.map.each{|r| r.each_with_index.max[1]}}
           return predicts
         end
-
-
 
         def combine_text_and_haraqat(vec_txt, vec_haraqat)
 
@@ -122,7 +119,7 @@ module Diacritizer
                 txt = vec_txt[i]
                 haraq = vec_haraqat[i]
                 i += 1
-                break if (i == vec_txt.length) or \
+            break if (i == vec_txt.length) or \
                           (txt == @encoder.input_pad_id)
                 text += @encoder.input_id_to_symbol[txt] + \
                         @encoder.target_id_to_symbol[haraq]
