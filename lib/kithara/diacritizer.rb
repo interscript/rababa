@@ -107,7 +107,7 @@ module Diacritizer
           return predicts
         end
 
-        def combine_text_and_haraqat(vec_txt, vec_haraqat)
+        def combine_text_and_haraqat(vec_txt, vec_haraqat, encoding_mode='std')
 
             if vec_txt.length != vec_haraqat.length
                 raise Exception.new('haraqat.len != txt.len in \
@@ -121,11 +121,19 @@ module Diacritizer
                 i += 1
             break if (i == vec_txt.length) or \
                           (txt == @encoder.input_pad_id)
-                text += @encoder.input_id_to_symbol[txt] + \
-                        @encoder.target_id_to_symbol[haraq]
+
+                if encoding_mode == 'std'
+                    s = @encoder.input_id_to_symbol[txt].to_s + \
+                            @encoder.target_id_to_symbol[haraq].to_s
+
+                elsif encoding_mode == 'escaped unicode'
+                    s = @encoder.input_id_to_symbol[txt].to_s + \
+                            @utarget_symbol_to_id.utarget_id_to_symbol[haraq].to_s
+                end
+                text += s
             end
 
-            return text.reverse
+            return text #.reverse
         end
 
         def get_text_encoder()

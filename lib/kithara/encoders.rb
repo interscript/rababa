@@ -14,11 +14,12 @@ module Encoders
     class TextEncoder
 
         attr_accessor :start_symbol_id, :input_pad_id, \
-                      :input_id_to_symbol, :target_id_to_symbol
+                      :input_id_to_symbol, :target_id_to_symbol, \
+                      :utarget_id_to_symbol
 
         def initialize(input_chars, target_charts,
-                       cleaner, #: Optional[str] = None
-                       reverse_input) #: bool = false)
+                       cleaner,
+                       reverse_input)
 
             # cleaner fcts
             @cleaner = cleaner
@@ -37,6 +38,9 @@ module Encoders
                                                   {|s, i| [s, i] }.flatten]
             @target_id_to_symbol = Hash[*@target_symbols.map.with_index \
                                                   {|s, i| [i, s] }.flatten]
+            @utarget_id_to_symbol = Hash[ \
+                *Arabic_constant::UALL_POSSIBLE_HARAQAT.keys().map.with_index \
+                                                      {|s, i| [i, s] }.flatten]
 
             @reverse_input = reverse_input
             @input_pad_id = @input_symbol_to_id[@pad]

@@ -84,7 +84,7 @@ module Harakats
             #? text_list: all text that are not haraqat
             #? haraqat_list: all haraqat_list
         """
-        Arabic_constant::BASIC_HARAQAT.keys().each do |diacritic|
+        Arabic_constant::UBASIC_HARAQAT.keys().each do |diacritic|
             text.gsub(diacritic, "")
         end
 

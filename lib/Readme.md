@@ -8,6 +8,10 @@ Or files as data/examples.txt:
 
 	ruby kithara.rb -f 'data/example.txt' -m '../models-data/diacritization_model.onnx'
 
+### ONNX Models
+They can either be built in the /python repository or downloaded from the [releases](https://github.com/secryst/arabic-diacritization-deep-learning-models).
+
+
 ### Parameters
 * text to diacritize: "**-t**TEXT", "--text=TEXT",
 * path to file to diacritize: "**-f**FILE", "--text_filename=FILE",
