@@ -5,8 +5,6 @@ needing:
 https://github.com/almodhfer/diacritization_evaluation/blob/master/diacritization_evaluation/constants.py
 """
 
-#require_relative "arabic_constant"
-
 require_relative "constant_arabic"
 
 module Harakats

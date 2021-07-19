@@ -1,7 +1,13 @@
-# Literature and Codes 
-As in 06/2021... We review only the more advanced technologies. 
+# Literature and Codes
+
+Last updated: 2021-06.
+
+We review only the more advanced technologies.
+
 Older solutions used rules based approaches.
-Deep Learning was applied relatively to the problem of diacritization, gradually getting better results than rules based approaches.
+
+Deep Learning was applied relatively to the problem of diacritization, gradually
+getting better results than rules based approaches.
 
 **Mishkal, Arabic text vocalization software**
 Zerrouki, T.
@@ -65,7 +71,7 @@ Mokthar Ali Hasan Madhfar; Ali Mustafa Qamar
 **A Deep Belief Network Classification Approach for Automatic Diacritization of Arabic Text**
 Mohammad Aref Alshraideh, Mohammad Alshraideh and Omar Alkadi
 4.2021
-* keywords: DBN built with Boltzmann restricted machines (restricted RBM's) superior to LSTMs, unicode encoding, Borderline-SMOTE  
+* keywords: DBN built with Boltzmann restricted machines (restricted RBM's) superior to LSTMs, unicode encoding, Borderline-SMOTE
 * [paper](https://www.researchgate.net/publication/352226815_A_Deep_Belief_Network_Classification_Approach_for_Automatic_Diacritization_of_Arabic_Text)
 
 
@@ -77,4 +83,3 @@ Here we just mention some 2021-ish ideas mentioned in the recent papers above:
 * More Interpretable Attention Weights
 * Deep belief networks
 * More data and data processing
-

@@ -34,7 +34,7 @@ def parser
 
   end.parse!
   # required args
-  [:model_path].each {|arg| raise OptionParser::MissingArgument, arg if options[arg].nil?  }
+  [:model_path].each {|arg| raise OptionParser::MissingArgument, arg if options[arg].nil? }
   # p(options)
   options
 
