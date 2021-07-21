@@ -96,10 +96,12 @@ module Harakats
     end
 
     def basic_cleaners(text)
+        """strip + remove redundancy in whitespaces"""
         return collapse_whitespace(text).strip
     end
 
     def valid_arabic_cleaners(text)
+        """filter arabic only + basic cleaner"""
         text = text.chars.select {|c| Arabic_constant::VALID_ARABIC.include? c}
         text = collapse_whitespace(text.join('')).strip
         return text.strip()

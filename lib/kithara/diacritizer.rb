@@ -101,6 +101,7 @@ module Diacritizer
         end
 
         def predict_batch(batch_data)
+          """Call ONNX model with data transformed in batches"""
           # onnx predictions
           predicts = @onnx_session.run(nil, batch_data)
           predicts = predicts[0].map.each{|p| p.map.each{|r| r.each_with_index.max[1]}}
@@ -108,7 +109,7 @@ module Diacritizer
         end
 
         def combine_text_and_haraqat(vec_txt, vec_haraqat, encoding_mode='std')
-
+            """Combine: text + Haraqats --> diacritised arabic"""
             if vec_txt.length != vec_haraqat.length
                 raise Exception.new('haraqat.len != txt.len in \
                                      Harakats::combine_text_and_haraqat')

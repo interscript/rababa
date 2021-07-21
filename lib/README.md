@@ -58,8 +58,8 @@ It requires to go through some of the steps described in the link above.
      * BasicArabicEncoder
      * ArabicEncoderWithStartSymbol
 * text_cleaner corresponding to [logics](https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_cleaners.py):
-     * basic_cleaners: default
-     * valid_arabic_cleaners: the code would need to be massaged at the encoder's instantiation level to activate existing cleaner function.
+     * basic_cleaners: remove redundancy in whitespaces and strip string
+     * valid_arabic_cleaners: basic+filter of only arabic words
 
 ### Gems
 
