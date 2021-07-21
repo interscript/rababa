@@ -8,6 +8,14 @@ to speech or Romanization of Arabic texts or scripts.
 This repository contains everything to train a diacritization model in Python
 and run it in Python and Ruby.
 
+## Try out Kithara
+
+Kithara can be run both in python and ruby. Go the directory corresponding to the language you prefer to use.  Indications are in the README's, under the "Try out Kithara" section:
+* [Python](https://github.com/interscript/kithara/tree/master/python)
+* [Ruby](https://github.com/interscript/kithara/tree/master/lib)
+
+## Library
+
 This library was built for the
 [Interscript project](https://www.interscript.com)
 ([at GitHub](https://github.com/secryst/secryst)).
@@ -49,3 +57,14 @@ This repository contains:
 	* we have added own, realistic datasets for the problem of diacritization
 
 - **models-data** directory to store models and embeddings in various formats
+
+## About the Name
+A Kithara is an antic string instrument, emblematic of greece, anatolia and the middle east.
+As the music instrument produces lovely musics
+from few strings, our library
+The music instrument, g few strings are giving musical sounds, as our library is giving the arabic language its melody between consonants.
+
+## Under development
+We are working on the following improvements:
+* Preprocessing for breaking down large sentences
+* PoS tagging and search to improve the diacritization

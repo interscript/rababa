@@ -1,5 +1,16 @@
 # Diacritization Model
 
+## Try out Kithara
+* download the torch model under /Assets at [releases](https://github.com/secryst/kithara-models/releases)
+* Put the model under python/log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt
+* single sentences and text can now be diacritized as below:
+```bash
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'قطر'
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file relative_path_to_text_file
+```
+The maximal string length is set in configs at 600.
+Larger line will need to be breaken down, for instance using the library introduced in the Ruby Try out section: ../lib/README.md
+
 ## Core: Python Deep Learning models for recovering Arabic language diacritics
 
 We are referring here to the [code](https://github.com/almodhfer/Arabic_Diacritization) and
