@@ -59,7 +59,7 @@ This repository contains:
 - **models-data** directory to store models and embeddings in various formats
 
 ## About the Name
-A Rababa is an antic string instrument, emblematic of greece, anatolia and the middle east.
+A Rababa is an antic string instrument, emblematic of old arabia.
 As the music instrument produces lovely musics
 from few strings, our library
 The music instrument, g few strings are giving musical sounds, as our library is giving the arabic language its melody between consonants.
