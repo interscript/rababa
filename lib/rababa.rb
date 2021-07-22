@@ -1,7 +1,7 @@
 """
   run text of file diacritization:
-    ruby kithara.rb -t 'قطر' -m '../models-data/diacritization_model.onnx'
-    ruby kithara.rb -f example.csv -m '../models-data/diacritization_model.onnx'
+    ruby rababa.rb -t 'قطر' -m '../models-data/diacritization_model.onnx'
+    ruby rababa.rb -f example.csv -m '../models-data/diacritization_model.onnx'
 
 """
 
@@ -9,8 +9,8 @@ require 'onnxruntime'
 require 'optparse'
 require 'yaml'
 
-# load kithara library
-require_relative "kithara/diacritizer"
+# load rababa library
+require_relative "rababa/diacritizer"
 
 
 def parser

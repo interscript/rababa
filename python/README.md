@@ -1,7 +1,7 @@
 # Diacritization Model
 
-## Try out Kithara
-* download the torch model under /Assets at [releases](https://github.com/secryst/kithara-models/releases)
+## Try out Rababa
+* download the torch model under /Assets at [releases](https://github.com/secryst/rababa-models/releases)
 * Put the model under python/log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt
 * single sentences and text can now be diacritized as below:
 ```bash

@@ -1,4 +1,4 @@
-# قيثارة KITHARA an Arabic Diacritization Library
+# قيثارة RABABA an Arabic Diacritization Library
 
 Arabic diacritization is useful for several practical business cases like text
 to speech or Romanization of Arabic texts or scripts.
@@ -8,11 +8,11 @@ to speech or Romanization of Arabic texts or scripts.
 This repository contains everything to train a diacritization model in Python
 and run it in Python and Ruby.
 
-## Try out Kithara
+## Try out Rababa
 
-Kithara can be run both in python and ruby. Go the directory corresponding to the language you prefer to use.  Indications are in the README's, under the "Try out Kithara" section:
-* [Python](https://github.com/interscript/kithara/tree/master/python)
-* [Ruby](https://github.com/interscript/kithara/tree/master/lib)
+Rababa can be run both in python and ruby. Go the directory corresponding to the language you prefer to use.  Indications are in the README's, under the "Try out Rababa" section:
+* [Python](https://github.com/interscript/rababa/tree/master/python)
+* [Ruby](https://github.com/interscript/rababa/tree/master/lib)
 
 ## Library
 
@@ -59,7 +59,7 @@ This repository contains:
 - **models-data** directory to store models and embeddings in various formats
 
 ## About the Name
-A Kithara is an antic string instrument, emblematic of greece, anatolia and the middle east.
+A Rababa is an antic string instrument, emblematic of greece, anatolia and the middle east.
 As the music instrument produces lovely musics
 from few strings, our library
 The music instrument, g few strings are giving musical sounds, as our library is giving the arabic language its melody between consonants.

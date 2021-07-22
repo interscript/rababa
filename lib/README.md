@@ -1,6 +1,6 @@
-# Arabic Diacritization in Ruby with Kithara
+# Arabic Diacritization in Ruby with Rababa
 
-## Try out Kithara
+## Try out Rababa
 
 * Install the Gems listed below
 * Download a ruby model on [releases](https://github.com/secryst/arabic-diacritization-deep-learning-models)
@@ -9,16 +9,16 @@
 One can diacritize either single strings:
 
 ```sh
-$ ruby kithara.rb -t 'قطر' -m '../models-data/diacritization_model_max_len_200.onnx'
+$ ruby rababa.rb -t 'قطر' -m '../models-data/diacritization_model_max_len_200.onnx'
 ```
 
 Or files as data/examples.txt or your own arabic file (the max string length is specified in the model and has to match /config/models.yaml's max_len parameter):
 
 ```sh
-ruby kithara.rb -f 'data/example.txt' -m '../models-data/diacritization_model_max_len_200.onnx'
+ruby rababa.rb -f 'data/example.txt' -m '../models-data/diacritization_model_max_len_200.onnx'
 ```
 
-One would have to preprocess generic arabic texts for running Kithara in general. This can be done on sentences beginnings running for instance [Hamza5](https://github.com/Hamza5/Pipeline-diacritizer):
+One would have to preprocess generic arabic texts for running Rababa in general. This can be done on sentences beginnings running for instance [Hamza5](https://github.com/Hamza5/Pipeline-diacritizer):
 ```
 python __main__.py preprocess source destination
 ```
