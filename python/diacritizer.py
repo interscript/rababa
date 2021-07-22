@@ -1,5 +1,6 @@
 from typing import Dict
 import torch
+import tqdm
 from config_manager import ConfigManager
 from dataset import (DiacritizationDataset, 
                      collate_fn)
@@ -71,7 +72,7 @@ class Diacritizer:
         """download data from relative path and diacritize it batch by batch"""
         data_iterator = self.get_data_from_file(path)
         diacritized_data = []
-        for batch_inputs in data_iterator:
+        for batch_inputs in tqdm.tqdm(data_iterator):
             
             batch_inputs["src"] = batch_inputs["src"].to(self.device)
             batch_inputs["lengths"] = batch_inputs["lengths"].to('cpu')
