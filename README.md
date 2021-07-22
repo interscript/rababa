@@ -1,4 +1,4 @@
-# قيثارة RABABA an Arabic Diacritization Library
+# رُبابَة RABABA an Arabic Diacritization Library
 
 Arabic diacritization is useful for several practical business cases like text
 to speech or Romanization of Arabic texts or scripts.
