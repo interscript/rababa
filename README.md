@@ -59,9 +59,9 @@ This repository contains:
 - **models-data** directory to store models and embeddings in various formats
 
 ## About the Name
-A Rababa is an antic string instrument that emblematic of arabia.
+A Rababa is an antic string instrument.
 In a similar fashion that a Rababa produces melody from a simple strings and pieces of wood, 
-our library and diacritization gives a whole palette of colour and sense to arabic scripts.
+our library and diacritization gives a whole palette of colour and meanings to arabic scripts.
 
 ## Under development
 We are working on the following improvements:
