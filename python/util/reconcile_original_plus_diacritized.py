@@ -1,6 +1,22 @@
 from util.constants import HARAQAT
 
 
+"""
+##################
+# ALGORITHM IDEA #
+##################
+
+Given strings: s_original and s_diacritized 
+1. Build pivot map of matches, so for instance:
+    (24 abc, axbycz) -> [(3,0), (4,2), (5,4)]
+2. Build a string from "pivots":
+    a. first with the original string if needed
+    b. then with diacritized
+3. finalize by writing:
+    a. end of diacritics
+    b. end of original
+"""
+
 def build_pivot_map(d_original, d_diacritized):
     """build_pivot_map:
         This function takes 2 strings and finds the "pivot points", 
