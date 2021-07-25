@@ -61,7 +61,8 @@ module Diacritizer
             # onnx predictions
             preds = predict_batch(ort_inputs)[0]
 
-            return combine_text_and_haraqat(seq, preds)
+            return reconcile_strings(text,
+                                     combine_text_and_haraqat(seq, preds)
         end
 
         def diacritize_file(path)
@@ -78,15 +79,17 @@ module Diacritizer
             loop do
                 break if (idx+@batch_size > texts.length)
 
-                src = texts[idx..idx+@batch_size-1].map.each{|t| \
-                                                        preprocess_text(t)}
+                originals = texts[idx..idx+@batch_size-1]
+                src = originals.map.each{|t| preprocess_text(t)}
                 lengths = src.map.each{|seq| seq.length}
                 ort_inputs = {'src' => src,
                               'lengths' => lengths}
                 preds = predict_batch(ort_inputs)
 
                 out_texts += (0..@batch_size-1).map.each{|i| \
-                                  combine_text_and_haraqat(src[i], preds[i])}
+                  reconcile_strings(originals[i],
+                                    combine_text_and_haraqat(src[i], preds[i]))
+                }
                 idx += @batch_size
             end
 
@@ -104,7 +107,8 @@ module Diacritizer
           """Call ONNX model with data transformed in batches"""
           # onnx predictions
           predicts = @onnx_session.run(nil, batch_data)
-          predicts = predicts[0].map.each{|p| p.map.each{|r| r.each_with_index.max[1]}}
+          predicts = predicts[0].map.each{|p| \
+                                    p.map.each{|r| r.each_with_index.max[1]}}
           return predicts
         end
 
