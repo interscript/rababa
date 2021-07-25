@@ -92,7 +92,7 @@ def reconcile_strings(str_original, str_diacritized):
     for i in range(pt_ori,  len(d_original)):
         str__ += d_original[i]
 
-    return str__.split()
+    return str__.strip()
 
 
 """
