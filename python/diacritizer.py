@@ -103,7 +103,7 @@ class Diacritizer:
             # Diacritized strings, sentence have to be "reconciled"
             # with original strings, because the non arabic strings are removed
             # before being processed in nnet
-            sentence = reconcile.reconcile_strings(sentence, original)
+            sentence = reconcile.reconcile_strings(original, sentence)
             sentences.append(sentence)
 
         return sentences
