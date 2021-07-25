@@ -46,10 +46,13 @@ class TextEncoder:
         if self.reverse_input:
             text = "".join(list(reversed(text)))
 
-        sequence = [self.input_symbol_to_id[s] for s in text if s not in [self.pad]]
+        sequence = [self.input_symbol_to_id[s] for s in text
+                    if s not in [self.pad] and \
+                    self.input_symbol_to_id.get(s, False)]
         if len(sequence) == 0:
             # handle cases with zero length strings (no arabic symbols)
             sequence = [self.input_symbol_to_id[s] for s in ' ']
+
         return sequence
 
     def target_to_sequence(self, text: str) -> List[int]:
