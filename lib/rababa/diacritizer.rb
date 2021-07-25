@@ -9,11 +9,12 @@ require 'onnxruntime'
 require 'yaml'
 require 'tqdm'
 
-require_relative "encoders"
-require_relative "harakats"
+require_relative 'encoders'
+require_relative 'harakats'
+require_relative 'reconcile_original_diacritized'
 
 include Harakats
-
+include Reconcile
 
 module Diacritizer
 
@@ -62,7 +63,7 @@ module Diacritizer
             preds = predict_batch(ort_inputs)[0]
 
             return reconcile_strings(text,
-                                     combine_text_and_haraqat(seq, preds)
+                                     combine_text_and_haraqat(seq, preds))
         end
 
         def diacritize_file(path)
