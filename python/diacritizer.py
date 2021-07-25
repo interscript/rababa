@@ -37,7 +37,7 @@ class Diacritizer:
         # convert string into indices
         seq = self.text_encoder.input_to_sequence(text)
         # transform indices into "batch data"
-        batch_data = {'original': text,
+        batch_data = {'original': [text],
                       'src': torch.Tensor([seq]).long(),
                       'lengths': torch.Tensor([len(seq)]).long()}
 
