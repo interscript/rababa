@@ -2,10 +2,11 @@ from typing import Dict
 import torch
 import tqdm
 from config_manager import ConfigManager
-from dataset import (DiacritizationDataset, 
+from dataset import (DiacritizationDataset,
                      collate_fn)
-from torch.utils.data import (DataLoader, 
+from torch.utils.data import (DataLoader,
                               Dataset)
+import util.reconcile_original_plus_diacritized as reconcile
 
 
 
@@ -20,7 +21,7 @@ class Diacritizer:
         )
         self.config = self.config_manager.config
         self.text_encoder = self.config_manager.text_encoder
-        
+
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         if load_model:
@@ -36,12 +37,12 @@ class Diacritizer:
         # convert string into indices
         seq = self.text_encoder.input_to_sequence(text)
         # transform indices into "batch data"
-        batch_data = {'original': text, 
+        batch_data = {'original': text,
                       'src': torch.Tensor([seq]).long(),
                       'lengths': torch.Tensor([len(seq)]).long()}
-        
+
         return self.diacritize_batch(batch_data)[0]
-    
+
     def get_data_from_file(self, path):
         """get data from relative path"""
         loader_params = {"batch_size": self.config_manager.config["batch_size"],
@@ -66,68 +67,51 @@ class Diacritizer:
 
         data_iterator = DataLoader(dataset, collate_fn=collate_fn, **loader_params)
         # print(f"Length of data iterator = {len(valid_iterator)}")
-        return data_iterator 
-    
+        return data_iterator
+
     def diacritize_file(self, path: str):
         """download data from relative path and diacritize it batch by batch"""
         data_iterator = self.get_data_from_file(path)
         diacritized_data = []
         for batch_inputs in tqdm.tqdm(data_iterator):
-            
+
             batch_inputs["src"] = batch_inputs["src"].to(self.device)
             batch_inputs["lengths"] = batch_inputs["lengths"].to('cpu')
             batch_inputs["target"] = batch_inputs["target"].to(self.device)
-            
+
             for d in self.diacritize_batch(batch_inputs):
-                diacritized_data.append(d) 
+                diacritized_data.append(d)
 
         return diacritized_data
 
     def diacritize_batch(self, batch):
-        raise NotImplementedError()
+        #print('batch: ',batch)
+        self.model.eval()
+        originals = batch['original']
+        inputs = batch["src"]
+        lengths = batch["lengths"]
+        outputs = self.model(inputs.to(self.device), lengths.to("cpu"))
+        diacritics = outputs["diacritics"]
+        predictions = torch.max(diacritics, 2).indices
+        sentences = []
+
+        for src, prediction, original in zip(inputs, predictions, originals):
+            sentence = self.text_encoder.combine_text_and_haraqat(
+                list(src.detach().cpu().numpy()),
+                list(prediction.detach().cpu().numpy()),
+            )
+            # Diacritized strings, sentence have to be "reconciled"
+            # with original strings, because the non arabic strings are removed
+            # before being processed in nnet
+            sentence = reconcile.reconcile_strings(sentence, original)
+            sentences.append(sentence)
+
+        return sentences
 
     def diacritize_iterators(self, iterator):
         pass
 
-
+""" not needed
 class CBHGDiacritizer(Diacritizer):
-    
-    def diacritize_batch(self, batch):
-        #print('batch: ',batch)
-        self.model.eval()
-        inputs = batch["src"]
-        lengths = batch["lengths"]
-        outputs = self.model(inputs.to(self.device), lengths.to("cpu"))
-        diacritics = outputs["diacritics"]
-        predictions = torch.max(diacritics, 2).indices
-        sentences = []
-
-        for src, prediction in zip(inputs, predictions):
-            sentence = self.text_encoder.combine_text_and_haraqat(
-                list(src.detach().cpu().numpy()),
-                list(prediction.detach().cpu().numpy()),
-            )
-            sentences.append(sentence)
-
-        return sentences
-
-
 class Seq2SeqDiacritizer(Diacritizer):
-    
-    def diacritize_batch(self, batch):
-        self.model.eval()
-        inputs = batch["src"]
-        lengths = batch["lengths"]
-        outputs = self.model(inputs.to(self.device), lengths.to("cpu"))
-        diacritics = outputs["diacritics"]
-        predictions = torch.max(diacritics, 2).indices
-        sentences = []
-
-        for src, prediction in zip(inputs, predictions):
-            sentence = self.text_encoder.combine_text_and_haraqat(
-                list(src.detach().cpu().numpy()),
-                list(prediction.detach().cpu().numpy()),
-            )
-            sentences.append(sentence)
-
-        return sentences
+"""

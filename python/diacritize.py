@@ -1,6 +1,5 @@
 import argparse
-#from diacritizer import TransformerDiacritizer
-from diacritizer import (Diacritizer, CBHGDiacritizer)
+from diacritizer import Diacritizer
 from itertools import repeat
 import random
 
@@ -42,6 +41,6 @@ else:
 if args.text_file is None:
     txt = diacritizer.diacritize_text(args.text)
     print(txt)
-else: 
+else:
     for txt in diacritizer.diacritize_file(args.text_file):
         print(txt)
