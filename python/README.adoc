@@ -48,34 +48,33 @@ pip install -r requirement.txt
 Other datasets are discussed in the reviewed literature or in the article
 referenced above.
 
-[source,bash]
-----
-mkdir data
-mkdir data/CA_MSA
-----
-
-For training, data needs to be in format:
+For training, data needs to be stored in the `data/CA_MSA` directory in such a
+format:
 
 [source,bash]
 ----
 > ls data/CA_MSA/*
-  --> data/CA_MSA/eval.csv  data/CA_MSA/train.csv  data/CA_MSA/test.csv
+--> data/CA_MSA/eval.csv  data/CA_MSA/train.csv  data/CA_MSA/test.csv
 ----
 
 For instance:
 
 [source,bash]
 ----
-unzip data.zip
-for d in `ls tashkeela_val/*`; do; cat $d >> data/CA_MSA/eval.csv; done
-for d in `ls tashkeela_train/*`; do; cat $d >> data/CA_MSA/train.csv; done
-for d in `ls tashkeela_test/*`; do; cat $d >> data/CA_MSA/test.csv; done
+mkdir -p data/CA_MSA
+cd data
+curl -sSL https://github.com/interscript/rababa-tashkeela/archive/refs/tags/v1.0.zip -o tashkeela.zip
+unzip tashkeela.zip
+for d in `ls rababa-tashkeela-1.0/tashkeela_val/*`; do cat $d >> data/CA_MSA/eval.csv; done
+for d in `ls rababa-tashkeela-1.0/tashkeela_train/*`; do cat $d >> data/CA_MSA/train.csv; done
+for d in `ls rababa-tashkeela-1.0/tashkeela_test/*`; do cat $d >> data/CA_MSA/test.csv; done
 ----
 
 === Load Model
 
 Alternatively, trained CBHG models are available under
 https://github.com/secryst/rababa-models[releases].
+
 Models are to be copied as specified in the link just above under:
 
 [source,bash]
