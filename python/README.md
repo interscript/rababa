@@ -66,7 +66,7 @@ for d in `ls tashkeela_test/*`; do; cat $d >> data/CA_MSA/test.csv; done
 ### Load Model
 
 Alternatively, trained CBHG models are available under
-[releases](https://github.com/secryst/arabic-diacritization-deep-learning-models).
+[releases](https://github.com/secryst/rababa-models).
 Models are to be copied as specified in the link just above under:
 > log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt
 

@@ -3,7 +3,7 @@
 ## Try out Rababa
 
 * Install the Gems listed below
-* Download a ruby model on [releases](https://github.com/secryst/arabic-diacritization-deep-learning-models)
+* Download a ruby model on [releases](https://github.com/secryst/rababa-models)
 
 ### Run examples
 One can diacritize either single strings:
@@ -27,10 +27,10 @@ python __main__.py preprocess source destination
 ### ONNX Models
 
 They can either be built in the /python repository or downloaded from the
-[releases](https://github.com/secryst/arabic-diacritization-deep-learning-models).
+[releases](https://github.com/secryst/rababa-models).
 
 Or ONNX model can be generated running the python
-[code](https://github.com/interscript/arabic-diacritization/blob/master/python/diacritization_model_to_onnx.py)
+[code](https://github.com/interscript/rababa/blob/master/python/diacritization_model_to_onnx.py)
 in this library.
 
 It requires to go through some of the steps described in the link above.
@@ -48,16 +48,16 @@ It requires to go through some of the steps described in the link above.
 
 * max_len: 200 -- 600
 	* Parameter that has to match the ONNX model built using the
-	  [code]{https://github.com/interscript/arabic-diacritization/blob/master/python/diacritization_model_to_onnx.py}
+	  [code]{https://github.com/interscript/rababa/blob/master/python/diacritization_model_to_onnx.py}
 	  and following the python/Readme.md.
 	* Longer sentences will need to be preprocessed, which can be done for
 	  instance using [Hamza5](https://github.com/Hamza5)
 	  [code](https://github.com/Hamza5/Pipeline-diacritizer/blob/master/pipeline_diacritizer/pipeline_diacritizer.py).
 	* the smaller the faster the nnets code.
-* text_encoder corresponding to the [rules](https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_encoders.py):
+* text_encoder corresponding to the [rules](https://github.com/interscript/rababa/blob/master/python/util/text_encoders.py):
      * BasicArabicEncoder
      * ArabicEncoderWithStartSymbol
-* text_cleaner corresponding to [logics](https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_cleaners.py):
+* text_cleaner corresponding to [logics](https://github.com/interscript/rababa/blob/master/python/util/text_cleaners.py):
      * basic_cleaners: remove redundancy in whitespaces and strip string
      * valid_arabic_cleaners: basic+filter of only arabic words
 
