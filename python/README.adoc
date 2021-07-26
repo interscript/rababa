@@ -42,10 +42,11 @@ pip install -r requirement.txt
 
 === Datasets
 
-* We have chosen the Tashkeela corpus ~2800000 sentences:
-** https://sourceforge.net/projects/tashkeela-processed/[sourceforge]
+* We have chosen the "Tashkeela processed" corpus ~2,800,000 sentences:
+** https://github.com/interscript/rababa-tashkeela
 
-Other datasets are discussed in the reviewed literature or in the article referenced above.
+Other datasets are discussed in the reviewed literature or in the article
+referenced above.
 
 [source,bash]
 ----
@@ -53,7 +54,7 @@ mkdir data
 mkdir data/CA_MSA
 ----
 
-For training, data need to be in format:
+For training, data needs to be in format:
 
 [source,bash]
 ----
