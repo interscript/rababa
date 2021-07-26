@@ -1,0 +1,6 @@
+=== Model data dir
+
+Contains:
+
+* ONNX data
+* Pickle sample data

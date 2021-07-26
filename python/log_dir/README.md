@@ -1,1 +1,0 @@
-### Model storage directory for training and inference

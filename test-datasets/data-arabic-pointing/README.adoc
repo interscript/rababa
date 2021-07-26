@@ -1,2 +1,3 @@
-# Data arabic pointing:
+= Data arabic pointing
+
 https://github.com/secryst/data-arabic-pointing
