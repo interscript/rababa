@@ -99,35 +99,3 @@ module Rababa::Reconcile
   end
 
 end
-
-
-"""TESTS
-TODO: MOVE TO RSPEC
-d_tests = [{'original' => '# گيله پسمير الجديد 34',
-            'diacritized' => 'يَلِهُ سُمِيْرٌ الجَدِيدُ',
-            'reconciled' => '# گيَلِهُ پسُمِيْرٌ الجَدِيدُ 34' },
-
-           {'original' => 'abc',
-            'diacritized' => '',
-            'reconciled' => 'abc'},
-
-           {'original' => '‘Iz. Ibrāhīm as-Sa‘danī',
-            'diacritized' => '',
-            'reconciled' => '‘Iz. Ibrāhīm as-Sa‘danī'},
-
-           {'original' => '26 سبتمبر العقبة',
-            'diacritized' => 'سَبْتَمْبَرِ العَقَبَة',
-            'reconciled' => '26 سَبْتَمْبَرِ العَقَبَة'}]
-
-d_tests.each {|d| \
-    if not d['reconciled']==reconcile_strings(d['original'], d['diacritized'])
-        raise Exception.new('reconcile string not matched')
-    end
-}
-
-or:
-for s in '# گيله پسمير الجديد 34' 'abc'  '‘Iz. Ibrāhīm as-Sa‘danī' '26 سبتمبر العقبة'
-do;
-    ruby rababa.rb -t $s -m '../models-data/diacritization_model.onnx'
-done
-"""

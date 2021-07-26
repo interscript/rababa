@@ -13,7 +13,8 @@ and run it in Python and Ruby.
 Rababa can be run both in Python and Ruby. Go the directory corresponding to the
 language you prefer to use.
 
-Please see the following README's, under the "Try out Rababa" section:
+Please see the following README's, under the "`Try out Rababa`" section:
+
 * https://github.com/interscript/rababa/tree/master/python[Python]
 * https://github.com/interscript/rababa/tree/master/lib[Ruby]
 
@@ -55,8 +56,8 @@ CPU's with a reasonable sized model.
 * https://github.com/interscript/rababa/tree/master/tests-benchmarks[tests and benchmarking utilities],
   allowing to compare with other implementations.
 
-** tests are are taken from
-	  https://github.com/AliOsm/arabic-text-diacritization[diacritization benchmarking]
+** tests are taken from
+  https://github.com/AliOsm/arabic-text-diacritization[diacritization benchmarking]
 
 ** we have added own, realistic datasets for the problem of diacritization
 
