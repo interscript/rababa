@@ -1,31 +1,28 @@
-require_relative "constant_arabic"
+require_relative "arabic_constants"
 
-"""
 ##################
 # ALGORITHM IDEA #
 ##################
-Given strings: s_original and s_diacritized
-1. Build pivot map of matches, so for instance:
-    (24 abc, axbycz) -> [(3,0), (4,2), (5,4)]
-2. Build a string from ``pivots``:
-    a. first with the original string if needed
-    b. then with diacritized
-3. finalize by writing:
-    a. end of diacritics
-    b. end of original
-"""
+# Given strings: s_original and s_diacritized
+# 1. Build pivot map of matches, so for instance:
+#     (24 abc, axbycz) -> [(3,0), (4,2), (5,4)]
+# 2. Build a string from ``pivots``:
+#     a. first with the original string if needed
+#     b. then with diacritized
+# 3. finalize by writing:
+#     a. end of diacritics
+#     b. end of original
 
-module Reconcile
+module Rababa::Reconcile
 
-  def build_pivot_map(d_original, d_diacritized)
-      """build_pivot_map:
-          This function takes 2 strings and finds the pivot points,
-          i.e the points where both strings are identical.
-          args:
-              d_original: dictionary modelling the original string abc -> {0:a,1:b,2:c}
-              d_diacritized: dictionary modelling diacritized as above
-          return: list of ids tuple where strings match
-      """
+    # build_pivot_map:
+    # This function takes 2 strings and finds the pivot points,
+    # i.e the points where both strings are identical.
+    # args:
+    #     d_original: dictionary modelling the original string abc -> {0:a,1:b,2:c}
+    #     d_diacritized: dictionary modelling diacritized as above
+    # return: list of ids tuple where strings match
+    def build_pivot_map(d_original, d_diacritized)
       l_map = []
       idx_dia, idx_ori = 0, 0
 
@@ -41,29 +38,29 @@ module Reconcile
           idx_dia += 1
       end
 
-      return l_map
+      l_map
   end
 
-  def reconcile_strings(str_original, str_diacritized)
-      """reconcile_strings:
-          This function takes original and diacritized string and merge them into a sensible output.
-          For instance:
-              original string:
-                  # گيله پسمير الجديد 34
-              diacritised string (with non arabic removed by the nnets preprocessing):
-                  يَلِهُ سُمِيْرٌ الجَدِيدُ
-              reconcile_strings -->
-                  '# گيَلِهُ پسُمِيْرٌ الجَدِيدُ 34'
+    # reconcile_strings:
+    # This function takes original and diacritized string and merge them into a sensible output.
+    # For instance:
+    #     original string:
+    #         # گيله پسمير الجديد 34
+    #     diacritised string (with non arabic removed by the nnets preprocessing):
+    #         يَلِهُ سُمِيْرٌ الجَدِيدُ
+    #     reconcile_strings -->
+    #         '# گيَلِهُ پسُمِيْرٌ الجَدِيدُ 34'
+    #
+    # Other examples and tests can be found in the commented section below.
+    # args:
+    #     str_original: original string
+    #     str_diacritized: diacritized string
+    # return: reconciled string
+    def reconcile_strings(str_original, str_diacritized)
 
-          Other examples and tests can be found in the commented section below.
-          args:
-              str_original: original string
-              str_diacritized: diacritized string
-          return: reconciled string
-      """
       # we model the strings as dict
       d_original = Hash[*str_original.chars().select \
-                      {|n| not Arabic_constant::HARAQAT.include? n} \
+                      {|n| not Rababa::ArabicConstants::HARAQAT.include? n} \
                           .map.with_index \
                               {|c, i| [i, c] }.flatten]
 
@@ -98,13 +95,14 @@ module Reconcile
       # remaining chars for original string
       (pt_ori..d_original.length-1).each {|i| str__ += d_original[i]}
 
-      return str__
+      str__
   end
 
 end
 
 
 """TESTS
+TODO: MOVE TO RSPEC
 d_tests = [{'original' => '# گيله پسمير الجديد 34',
             'diacritized' => 'يَلِهُ سُمِيْرٌ الجَدِيدُ',
             'reconciled' => '# گيَلِهُ پسُمِيْرٌ الجَدِيدُ 34' },

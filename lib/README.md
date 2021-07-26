@@ -6,27 +6,41 @@
 * Download a ruby model on [releases](https://github.com/secryst/rababa-models)
 
 ### Run examples
+
+Prerequisite:
+
+* Please download the `diacritization_model_max_len_200.onnx` model file
+from https://github.com/secryst/rababa-models/releases/tag/0.1
+
 One can diacritize either single strings:
 
 ```sh
-$ ruby rababa.rb -t 'قطر' -m '../models-data/diacritization_model_max_len_200.onnx'
+rababa -t 'قطر' -m diacritization_model_max_len_200.onnx
+# or when inside the gem directory during development
+bundle exec exe/rababa -t 'قطر' -m diacritization_model_max_len_200.onnx
 ```
 
-Or files as data/examples.txt or your own arabic file (the max string length is specified in the model and has to match /config/models.yaml's max_len parameter):
+Or files as `data/examples.txt` or your own Arabic file (the max string length
+is specified in the model and has to match the `max_len` parameter in
+`config/models.yaml`):
 
 ```sh
-ruby rababa.rb -f 'data/example.txt' -m '../models-data/diacritization_model_max_len_200.onnx'
+rababa -f data/example.txt -m diacritization_model_max_len_200.onnx
+# or when inside the gem directory during development
+bundle exec exe/rababa -f data/example.txt -m diacritization_model_max_len_200.onnx
 ```
 
-One would have to preprocess generic arabic texts for running Rababa in general. This can be done on sentences beginnings running for instance [Hamza5](https://github.com/Hamza5/Pipeline-diacritizer):
+One would have to preprocess generic arabic texts for running Rababa in general.
+This can be done on sentences beginnings running for instance
+[Hamza5](https://github.com/Hamza5/Pipeline-diacritizer):
+
 ```
 python __main__.py preprocess source destination
 ```
 
-
 ### ONNX Models
 
-They can either be built in the /python repository or downloaded from the
+They can either be built in the `/python` repository or downloaded from the
 [releases](https://github.com/secryst/rababa-models).
 
 Or ONNX model can be generated running the python
@@ -64,8 +78,5 @@ It requires to go through some of the steps described in the link above.
 ### Gems
 
 ```sh
-gem install onnxruntime
-gem install optparse
-gem install yaml
-gem install tqdm
+gem install rababa
 ```

@@ -1,4 +1,4 @@
-# رُبابَة RABABA an Arabic Diacritization Library
+# رُبابَة RABABA the Arabic Diacritization Library
 
 Arabic diacritization is useful for several practical business cases like text
 to speech or Romanization of Arabic texts or scripts.
@@ -17,7 +17,7 @@ Rababa can be run both in python and ruby. Go the directory corresponding to the
 ## Library
 
 This library was built for the
-[Interscript project](https://www.interscript.com)
+[Interscript project](https://www.interscript.org)
 ([at GitHub](https://github.com/interscript/)).
 
 Diacritization strategy is following several steps with at heart a deep learning
@@ -59,11 +59,15 @@ This repository contains:
 - **models-data** directory to store models and embeddings in various formats
 
 ## About the Name
-A Rababa is an antic string instrument.
-In a similar fashion that a Rababa produces melody from a simple strings and pieces of wood,
-our library and diacritization gives a whole palette of colour and meanings to arabic scripts.
+
+A https://en.wikipedia.org/wiki/Rebab[Rababa] is an antique string instrument.
+
+In a similar fashion that a Rababa produces melody from a simple strings and
+pieces of wood, our library and diacritization gives a whole palette of colour
+and meanings to arabic scripts.
 
 ## Under development
+
 We are working on the following improvements:
 * Preprocessing for breaking down large sentences
 * PoS tagging and search to improve the diacritization
