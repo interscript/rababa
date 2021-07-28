@@ -9,7 +9,6 @@ from torch.utils.data import (DataLoader,
 import util.reconcile_original_plus_diacritized as reconcile
 
 
-
 class Diacritizer:
     def __init__(
         self, config_path: str, model_kind: str, load_model: bool = False
@@ -48,25 +47,21 @@ class Diacritizer:
         loader_params = {"batch_size": self.config_manager.config["batch_size"],
                          "shuffle": False,
                          "num_workers": 2}
-        # data processed or not, specs in config file
-        if self.config_manager.config["is_data_preprocessed"]:
-            data = pd.read_csv(path,
-                               encoding="utf-8",
-                               sep=self.config_manager.config["data_separator"],
-                               nrows=self.config_manager.config["n_validation_examples"],
-                               header=None)
 
-            # data = data[data[0] <= config_manager.config["max_len"]]
-            dataset = DiacritizationDataset(self.config_manager, data.index, data)
-        else:
-            with open(path, encoding="utf8") as file:
-                data = file.readlines()
-            data = [text for text in data if len(text) <= self.config_manager.config["max_len"]]
-            dataset = DiacritizationDataset(
-                self.config_manager, [idx for idx in range(len(data))], data)
+        with open(path, encoding="utf8") as file:
+            data = file.readlines()
+        data = [text for text in data
+                if len(text) <= self.config_manager.config["max_len"]]
 
-        data_iterator = DataLoader(dataset, collate_fn=collate_fn, **loader_params)
-        # print(f"Length of data iterator = {len(valid_iterator)}")
+        dataset = DiacritizationDataset(self.config_manager,
+                                        [idx for idx in range(len(data))],
+                                        data)
+
+        data_iterator = DataLoader(dataset,
+                                   collate_fn=collate_fn,
+                                   **loader_params)
+
+        # print(f"Length of data iterator = {len(data_iterator)}")
         return data_iterator
 
     def diacritize_file(self, path: str):
@@ -75,6 +70,7 @@ class Diacritizer:
         diacritized_data = []
         for batch_inputs in tqdm.tqdm(data_iterator):
 
+            #batch_inputs["original"] = batch_inputs["original"].to(self.device)
             batch_inputs["src"] = batch_inputs["src"].to(self.device)
             batch_inputs["lengths"] = batch_inputs["lengths"].to('cpu')
             batch_inputs["target"] = batch_inputs["target"].to(self.device)
@@ -103,7 +99,8 @@ class Diacritizer:
             # Diacritized strings, sentence have to be "reconciled"
             # with original strings, because the non arabic strings are removed
             # before being processed in nnet
-            sentence = reconcile.reconcile_strings(original, sentence)
+            if self.config['reconcile']:
+                sentence = reconcile.reconcile_strings(original, sentence)
             sentences.append(sentence)
 
         return sentences

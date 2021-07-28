@@ -4,7 +4,8 @@ Loading the diacritization dataset
 
 import os
 
-from diacritization_evaluation import util
+#from diacritization_evaluation import util
+import util.text_cleaners as cleaners
 import pandas as pd
 import torch
 import random
@@ -15,15 +16,17 @@ from config_manager import ConfigManager
 
 class DiacritizationDataset(Dataset):
     """
-    The diacritization dataset
+    The datasets for preprocessing for diacritization
     """
 
     def __init__(self, config_manager: ConfigManager, list_ids, data):
+        #         reconcile=False):
         "Initialization"
         self.list_ids = list_ids
         self.data = data
         self.text_encoder = config_manager.text_encoder
         self.config = config_manager.config
+        # print('config:: ', self.config)
 
     def __len__(self):
         "Denotes the total number of samples"
@@ -33,34 +36,15 @@ class DiacritizationDataset(Dataset):
         "Generates one sample of data"
         # Select sample
         id = self.list_ids[index]
-        if self.config["is_data_preprocessed"]:
-            data = self.data.iloc[id]
-            inputs = torch.Tensor(self.text_encoder.input_to_sequence(data[1]))
-            targets = torch.Tensor(
-                self.text_encoder.target_to_sequence(
-                    data[2].split(self.config["diacritics_separator"])
-                )
-            )
-            return inputs, targets, data[0]
-        
-        encoding_failed = True
-        while encoding_failed:
-            try:
-                data = self.data[id]
-                data = self.text_encoder.clean(data)
-                text, inputs, diacritics = util.extract_haraqat(data)
-                encoding_failed = False
-            except:
-                print('dataset.py :: error with that data')
-                print('id: ', id)
-                print('data: ', data)
-                # text, inputs, diacritics = util.extract_haraqat(data[0])
-                id = random.randint(0, len(data)) 
+        data_orig = self.data[id]
+        text, inputs, diacritics = cleaners.extract_haraqat(
+                                        self.text_encoder.clean(data_orig))
 
-        inputs = torch.Tensor(self.text_encoder.input_to_sequence("".join(inputs)))
-        diacritics = torch.Tensor(self.text_encoder.target_to_sequence(diacritics))
-
-        return inputs, diacritics, text
+        inputs = torch.Tensor(
+                    self.text_encoder.input_to_sequence("".join(inputs)))
+        diacritics = torch.Tensor(
+                    self.text_encoder.target_to_sequence(diacritics))
+        return inputs, diacritics, data_orig
 
 
 def collate_fn(data):

@@ -16,7 +16,7 @@ diacritics_separator: '*'  # Required if the data already processed
 text_encoder: ArabicEncoderWithStartSymbol
 text_cleaner: valid_arabic_cleaners # a white list that uses only Arabic letters, punctuations, and a space
 max_len: 600 # sentences larger than this size will not be used
-
+reconcile: true
 
 max_steps: 2_000_000
 learning_rate: 0.001
