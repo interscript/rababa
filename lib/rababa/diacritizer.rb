@@ -38,10 +38,15 @@ module Diacritizer
 
         def preprocess_text(text)
             """preprocess text into indices"""
-            #if (text.length > @max_length)
-            #    raise ValueError.new('text length larger than max_length')
-            #end
-
+            # if (text.length > @max_length)
+            #     raise ValueError.new('text length larger than max_length')
+            # end
+            # hack in absence of preprocessing!
+            if text.length > @max_length
+                text = text[0..@max_length]
+                warn('WARNING:: string cut length > #{@max_length},\n')
+                warn('text:: '+text)
+            end
             text = @encoder.clean(text)
             text = Harakats::remove_diacritics(text)
             seq = @encoder.input_to_sequence(text)
@@ -52,6 +57,7 @@ module Diacritizer
         def diacritize_text(text)
             """Diacritize single arabic strings"""
 
+            text = text.strip()
             seq = preprocess_text(text)
 
             # initialize onnx computation
@@ -71,7 +77,7 @@ module Diacritizer
 
             texts = []
             File.open(path).each do |line|
-                texts.push(line.chomp)
+                texts.push(line.chomp.strip())
             end
 
             # process batches
