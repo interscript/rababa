@@ -14,7 +14,7 @@ module Rababa::Harakats
         char_haraqat = []
 
         while stack.length != 0
-            char_haraqat.append(stack.pop)
+            char_haraqat << stack.pop
         end
 
         full_haraqah = char_haraqat.join("")

@@ -31,7 +31,7 @@ module Rababa::Reconcile
           (idx_ori..d_original.length).each {|i|
               if (c_dia == d_original[i])
                   idx_ori = i
-                  l_map.append([idx_dia, idx_ori])
+                  l_map << [idx_dia, idx_ori]
                   break
               end
           }
