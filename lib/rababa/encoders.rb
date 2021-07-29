@@ -1,17 +1,17 @@
 """
 corresponds to:
-https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_encoders.py
+https://github.com/interscript/rababa/blob/master/python/util/text_encoders.py
 and
-https://github.com/interscript/arabic-diacritization/blob/master/python/util/text_cleaners.py
+https://github.com/interscript/rababa/blob/master/python/util/text_cleaners.py
 """
 
-require_relative "constant_arabic"
-require_relative "encoders"
+require_relative "arabic_constants"
+require_relative "harakats"
 
-
-module Encoders
+module Rababa::Encoders
 
     class TextEncoder
+        include Rababa::Harakats
 
         attr_accessor :start_symbol_id, :input_pad_id, \
                       :input_id_to_symbol, :target_id_to_symbol, \
@@ -39,34 +39,32 @@ module Encoders
             @target_id_to_symbol = Hash[*@target_symbols.map.with_index \
                                                   {|s, i| [i, s] }.flatten]
             @utarget_id_to_symbol = Hash[ \
-                *Arabic_constant::UALL_POSSIBLE_HARAQAT.keys().map.with_index \
+                *Rababa::ArabicConstants::UALL_POSSIBLE_HARAQAT.keys.map.with_index \
                                                       {|s, i| [i, s] }.flatten]
 
             @reverse_input = reverse_input
             @input_pad_id = @input_symbol_to_id[@pad]
             @start_symbol_id = nil
-
         end
 
+        # cleaner, should be a method instantiated at init.
         def clean(text)
-            """cleaner, should be a method instantiated at init."""
             if @cleaner == "basic_cleaners"
-                text = Harakats::basic_cleaners(text)
+                basic_cleaners(text)
             elsif @cleaner == "valid_arabic_cleaners"
-                text = Harakats::valid_arabic_cleaners(text)
+                valid_arabic_cleaners(text)
             end
-            return text
         end
 
+        # String -> Seq of chars -> List of indices
         def input_to_sequence(text)
-            """String -> Seq of chars -> List of indices """
             if @reverse_input
-                text = text.chars().reverse.join("")
+                text = text.chars.reverse.join("")
             end
-            sequence = text.chars(). \
-                            map{|s| @input_symbol_to_id[s]}. \
-                                map.reject{|i| i.nil?}
-            return sequence
+
+            text.chars.map do |s|
+                @input_symbol_to_id[s]
+            end.map.reject{|i| i.nil?}
         end
 
     end
@@ -77,8 +75,8 @@ module Encoders
                        reverse_input: bool = false,
                        reverse_target: bool = false)
 
-            input_chars = "بض.غىهظخة؟:طس،؛فندؤلوئآك-يذاصشحزءمأجإ ترقعث".chars()
-            target_charts = Arabic_constant::ALL_POSSIBLE_HARAQAT.keys()
+            input_chars = "بض.غىهظخة؟:طس،؛فندؤلوئآك-يذاصشحزءمأجإ ترقعث".chars
+            target_charts = Rababa::ArabicConstants::ALL_POSSIBLE_HARAQAT.keys
 
             super(input_chars, target_charts,
                   cleaner=cleaner,
@@ -92,15 +90,14 @@ module Encoders
                        reverse_input: bool = false,
                        reverse_target: bool = false)
 
-            input_chars = "بض.غىهظخة؟:طس،؛فندؤلوئآك-يذاصشحزءمأجإ ترقعث".chars()
-            target_charts = Arabic_constant::ALL_POSSIBLE_HARAQAT.keys()
+            input_chars = "بض.غىهظخة؟:طس،؛فندؤلوئآك-يذاصشحزءمأجإ ترقعث".chars
+            target_charts = Rababa::ArabicConstants::ALL_POSSIBLE_HARAQAT.keys
 
             super(input_chars, target_charts,
                   cleaner=cleaner,
                   reverse_input=reverse_input)
 
             @start_symbol_id = @target_symbol_to_id["s"]
-
         end
     end
 end

@@ -1,24 +1,20 @@
-"""
-this refers to:
-  https://github.com/interscript/arabic-diacritization/blob/master/python/diacritizer.py
-as well a drastic simplification of
- https://github.com/almodhfer/Arabic_Diacritization/blob/master/config_manager.py
-"""
 
-require 'onnxruntime'
-require 'yaml'
-require 'tqdm'
+# this refers to:
+#   https://github.com/interscript/rababa/blob/master/python/diacritizer.py
+# as well a drastic simplification of
+#   https://github.com/almodhfer/Arabic_Diacritization/blob/master/config_manager.py
+
 
 require_relative 'encoders'
 require_relative 'harakats'
-require_relative 'reconcile_original_diacritized'
+require_relative 'reconcile'
 
-include Harakats
-include Reconcile
 
-module Diacritizer
+module Rababa
 
     class Diacritizer
+        include Rababa::Harakats
+        include Rababa::Reconcile
 
         def initialize(onnx_model_path, config_path)
 
@@ -36,7 +32,9 @@ module Diacritizer
 
         end
 
+        # preprocess text into indices
         def preprocess_text(text)
+<<<<<<< HEAD
             """preprocess text into indices"""
             # if (text.length > @max_length)
             #     raise ValueError.new('text length larger than max_length')
@@ -47,34 +45,44 @@ module Diacritizer
                 warn('WARNING:: string cut length > #{@max_length},\n')
                 warn('text:: '+text)
             end
+=======
+            #if (text.length > @max_length)
+            #    raise ValueError.new('text length larger than max_length')
+            #end
+
+>>>>>>> 666a60a1bc422777ebe032e3d670ac3390dd776d
             text = @encoder.clean(text)
-            text = Harakats::remove_diacritics(text)
+            text = remove_diacritics(text)
             seq = @encoder.input_to_sequence(text)
             # correct expected length for vectors with 0's
             return seq+[0]*(@max_length-seq.length)
         end
 
+        # Diacritize single arabic strings
         def diacritize_text(text)
+<<<<<<< HEAD
             """Diacritize single arabic strings"""
 
             text = text.strip()
+=======
+>>>>>>> 666a60a1bc422777ebe032e3d670ac3390dd776d
             seq = preprocess_text(text)
 
             # initialize onnx computation
             # redondancy caused by batch processing of nnets
-            ort_inputs = {'src' => [seq]*@batch_size,
-                          'lengths' => [seq.length]*@batch_size}
+            ort_inputs = {
+                'src' => [seq]*@batch_size,
+                'lengths' => [seq.length]*@batch_size
+            }
 
             # onnx predictions
             preds = predict_batch(ort_inputs)[0]
 
-            return reconcile_strings(text,
-                                     combine_text_and_haraqat(seq, preds))
+            reconcile_strings(text, combine_text_and_haraqat(seq, preds))
         end
 
+        # download data from relative path and diacritize line by line
         def diacritize_file(path)
-            """download data from relative path and diacritize line by line"""
-
             texts = []
             File.open(path).each do |line|
                 texts.push(line.chomp.strip())
@@ -107,11 +115,11 @@ module Diacritizer
                 idx += 1
             end
 
-            return out_texts
+            out_texts
         end
 
+        # Call ONNX model with data transformed in batches
         def predict_batch(batch_data)
-          """Call ONNX model with data transformed in batches"""
           # onnx predictions
           predicts = @onnx_session.run(nil, batch_data)
           predicts = predicts[0].map.each{|p| \
@@ -119,8 +127,8 @@ module Diacritizer
           return predicts
         end
 
+        # Combine: text + Haraqats --> diacritised arabic
         def combine_text_and_haraqat(vec_txt, vec_haraqat, encoding_mode='std')
-            """Combine: text + Haraqats --> diacritised arabic"""
             if vec_txt.length != vec_haraqat.length
                 raise Exception.new('haraqat.len != txt.len in \
                                      Harakats::combine_text_and_haraqat')
@@ -145,11 +153,11 @@ module Diacritizer
                 text += s
             end
 
-            return text #.reverse
+            text #.reverse
         end
 
+        # Initialise text encoder from config params
         def get_text_encoder()
-            """Initialise text encoder from config params"""
             if not ['basic_cleaners', 'valid_arabic_cleaners', nil].include? \
                                                 @config['text_cleaner']
                 raise Exception.new( \
@@ -165,7 +173,7 @@ module Diacritizer
                     'the text encoder is not found: '+@config['text_encoder'].to_s)
             end
 
-            return encoder
+            encoder
         end
 
     end

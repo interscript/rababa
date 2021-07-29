@@ -5,7 +5,8 @@ reference:
 https://github.com/almodhfer/diacritization_evaluation/blob/master/diacritization_evaluation/constants.py
 """
 
-module Arabic_constant
+module Rababa
+  module ArabicConstants
 
     HARAQAT = ['ْ', 'ّ', 'ٌ', 'ٍ', 'ِ', 'ً', 'َ', 'ُ']
     UHARAQAT = ['\u0652', '\u0651', '\u064c', '\u064d', '\u0650', '\u064b', '\u064e', '\u064f']
@@ -75,4 +76,5 @@ module Arabic_constant
         '\u0651\u064d'=> 'Shaddah + Kasratan '
     }
 
+  end
 end

@@ -34,6 +34,7 @@ class Diacritizer:
 
     def diacritize_text(self, text: str):
         # convert string into indices
+        text = text.strip()
         seq = self.text_encoder.input_to_sequence(text)
         # transform indices into "batch data"
         batch_data = {'original': [text],

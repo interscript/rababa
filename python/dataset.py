@@ -36,7 +36,7 @@ class DiacritizationDataset(Dataset):
         "Generates one sample of data"
         # Select sample
         id = self.list_ids[index]
-        data_orig = self.data[id]
+        data_orig = self.data[id].strip()
         text, inputs, diacritics = cleaners.extract_haraqat(
                                         self.text_encoder.clean(data_orig))
 

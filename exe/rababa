@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+# run text of file diacritization:
+#  rababa -t 'قطر' -m '../models-data/diacritization_model.onnx'
+#  rababa -f example.csv -m '../models-data/diacritization_model.onnx'
+
+require_relative "../lib/rababa"
+
+parser = Rababa.parser
+
+config_path = parser.has_key?(:config) ? parser[:config] : "config/model.yml"
+
+diacritizer = Rababa::Diacritizer.new(parser[:model_path], config_path)
+
+if parser.has_key?(:text)
+  # run diacritization text if has :text
+  txt = diacritizer.diacritize_text(parser[:text])
+  puts txt
+elsif parser.has_key?(:text_filename)
+  # run diacritization file
+  txts = diacritizer.diacritize_file(parser[:text_filename])
+  txts.each {|t| puts t }
+else
+  raise ValueError.new('text or text_filename required')
+end
