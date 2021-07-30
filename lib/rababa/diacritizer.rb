@@ -45,12 +45,7 @@ module Rababa
                 warn('WARNING:: string cut length > #{@max_length},\n')
                 warn('text:: '+text)
             end
-=======
-            #if (text.length > @max_length)
-            #    raise ValueError.new('text length larger than max_length')
-            #end
 
->>>>>>> 666a60a1bc422777ebe032e3d670ac3390dd776d
             text = @encoder.clean(text)
             text = remove_diacritics(text)
             seq = @encoder.input_to_sequence(text)
@@ -60,12 +55,8 @@ module Rababa
 
         # Diacritize single arabic strings
         def diacritize_text(text)
-<<<<<<< HEAD
             """Diacritize single arabic strings"""
-
             text = text.strip()
-=======
->>>>>>> 666a60a1bc422777ebe032e3d670ac3390dd776d
             seq = preprocess_text(text)
 
             # initialize onnx computation

@@ -1,6 +1,8 @@
 from typing import Dict
 import torch
 import tqdm
+import pandas as pd
+import numpy as np
 from config_manager import ConfigManager
 from dataset import (DiacritizationDataset,
                      collate_fn)
@@ -49,18 +51,28 @@ class Diacritizer:
                          "shuffle": False,
                          "num_workers": 2}
 
-        with open(path, encoding="utf8") as file:
-            data = file.readlines()
-        data = [text for text in data
-                if len(text) <= self.config_manager.config["max_len"]]
+        data_tmp = pd.read_csv(path,
+                           encoding="utf-8",
+                           sep=self.config_manager.config["data_separator"],
+                           header=None)
 
+        data = []
+        max_len = self.config_manager.config["max_len"]
+        for txt in [d[0] for d in data_tmp.values.tolist()]:
+            if len(txt) > max_len:
+                txt = txt[:max_len]
+                warnings.warn('Warning: text length cut for sentence: \n'+text)
+            data.append(txt)
+
+        list_ids = [idx for idx in range(len(data))]
         dataset = DiacritizationDataset(self.config_manager,
-                                        [idx for idx in range(len(data))],
+                                        list_ids,
                                         data)
 
         data_iterator = DataLoader(dataset,
                                    collate_fn=collate_fn,
-                                   **loader_params)
+                                   # **loader_params,
+                                   shuffle=False)
 
         # print(f"Length of data iterator = {len(data_iterator)}")
         return data_iterator
@@ -82,7 +94,7 @@ class Diacritizer:
         return diacritized_data
 
     def diacritize_batch(self, batch):
-        #print('batch: ',batch)
+        # print('batch: ',batch)
         self.model.eval()
         originals = batch['original']
         inputs = batch["src"]
@@ -90,13 +102,12 @@ class Diacritizer:
         outputs = self.model(inputs.to(self.device), lengths.to("cpu"))
         diacritics = outputs["diacritics"]
         predictions = torch.max(diacritics, 2).indices
-        sentences = []
 
+        sentences = []
         for src, prediction, original in zip(inputs, predictions, originals):
             sentence = self.text_encoder.combine_text_and_haraqat(
-                list(src.detach().cpu().numpy()),
-                list(prediction.detach().cpu().numpy()),
-            )
+                    list(src.detach().cpu().numpy()),
+                    list(prediction.detach().cpu().numpy()))
             # Diacritized strings, sentence have to be "reconciled"
             # with original strings, because the non arabic strings are removed
             # before being processed in nnet
