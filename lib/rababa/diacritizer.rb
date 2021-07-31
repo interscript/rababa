@@ -34,7 +34,6 @@ module Rababa
 
         # preprocess text into indices
         def preprocess_text(text)
-<<<<<<< HEAD
             """preprocess text into indices"""
             # if (text.length > @max_length)
             #     raise ValueError.new('text length larger than max_length')
