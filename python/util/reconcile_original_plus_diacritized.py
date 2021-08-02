@@ -26,6 +26,7 @@ def build_pivot_map(d_original, d_diacritized):
             d_diacritized: dictionary modelling diacritized as above
         return: list of ids tuple where strings match
     """
+
     l_map = []
     idx_dia, idx_ori = 0, 0
     while idx_dia < len(d_diacritized):
@@ -59,6 +60,7 @@ def reconcile_strings(str_original, str_diacritized):
             str_diacritized: diacritized string
         return: reconciled string
     """
+    
     # we model the strings as dict
     d_original = dict((i,c) for i,c in
                       enumerate(list([c for c in str_original if not c in HARAQAT])))

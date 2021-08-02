@@ -196,6 +196,7 @@ class GeneralTrainer(Trainer):
         return results, summary_texts
 
     def run(self):
+
         scaler = torch.cuda.amp.GradScaler()
         train_iterator, _, validation_iterator = load_iterators(self.config_manager)
         print("data loaded")
