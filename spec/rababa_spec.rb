@@ -21,7 +21,7 @@ RSpec.describe Rababa do
       'batch_size' => 32
     }
 
-    open(ONNX_FILE) do |remote|
+    URI.open(ONNX_FILE) do |remote|
       File.open(ONNX_PATH, "wb") do |file|
         file.write(remote.read)
       end
