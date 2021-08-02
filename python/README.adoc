@@ -144,7 +144,7 @@ All models config are placed in the config directory.
 
 [source,bash]
 ----
-python train.py --model model_name --config config/config_name.yml
+python train.py --model "cbhg" --config config/cbhg.yml
 ----
 
 The model will report the WER and DER while training using the
