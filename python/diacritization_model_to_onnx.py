@@ -3,7 +3,7 @@ import pickle
 
 import numpy as np
 
-from diacritizer import CBHGDiacritizer
+from diacritizer import Diacritizer
 
 
 """
@@ -37,7 +37,7 @@ model_kind_str = 'cbhg'
 config_str = 'config/cbhg.yml'
 load_model = True
 
-dia = CBHGDiacritizer(config_str, model_kind_str, load_model)
+dia = Diacritizer(config_str, model_kind_str, load_model)
 
 # set model to inference mode
 dia.model.to(dia.device)

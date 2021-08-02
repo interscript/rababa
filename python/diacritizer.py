@@ -119,8 +119,3 @@ class Diacritizer:
 
     def diacritize_iterators(self, iterator):
         pass
-
-""" not needed
-class CBHGDiacritizer(Diacritizer):
-class Seq2SeqDiacritizer(Diacritizer):
-"""
