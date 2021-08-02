@@ -21,8 +21,10 @@ RSpec.describe Rababa do
       'batch_size' => 32
     }
 
-    File.open(ONNX_PATH, "wb") do |file|
-      file.write open(ONNX_FILE).read
+    open(ONNX_FILE) do |remote|
+      File.open(ONNX_PATH, "wb") do |file|
+        file.write(remote.read)
+      end
     end
 
     diacritizer = Rababa::Diacritizer.new(ONNX_PATH, DEFAULT_CONFIG)
