@@ -12,7 +12,7 @@ from tqdm import trange
 
 from config_manager import ConfigManager
 from dataset import load_iterators
-from diacritizer import CBHGDiacritizer
+from diacritizer import Diacritizer
 from util.learning_rates import LearningRateDecay
 from options import OptimizerType
 from util.utils import (
@@ -78,7 +78,7 @@ class GeneralTrainer(Trainer):
 
     def load_diacritizer(self):
         if self.model_kind in ["cbhg", "baseline"]:
-            self.diacritizer = CBHGDiacritizer(self.config_path, self.model_kind)
+            self.diacritizer = Diacritizer(self.config_path, self.model_kind)
         else:
             print('model not found')
             exit()
