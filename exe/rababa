@@ -10,7 +10,7 @@ parser = Rababa.parser
 
 config_path = parser.has_key?(:config) ? parser[:config] : "config/model.yml"
 
-diacritizer = Rababa::Diacritizer.new(parser[:model_path], config_path)
+diacritizer = Rababa::Diacritizer.new(parser[:model_path], YAML.load_file(config_path))
 
 if parser.has_key?(:text)
   # run diacritization text if has :text

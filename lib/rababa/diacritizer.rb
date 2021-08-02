@@ -16,25 +16,24 @@ module Rababa
         include Rababa::Harakats
         include Rababa::Reconcile
 
-        def initialize(onnx_model_path, config_path)
+        def initialize(onnx_model_path, config)
 
             # load inference model from model_path
             @onnx_session = OnnxRuntime::InferenceSession.new(onnx_model_path)
 
             # load config
-            @config = YAML.load_file(config_path)
+            @config = config
             @max_length = @config['max_len']
             @batch_size = @config['batch_size']
 
             # instantiate encoder's class
-            @encoder = get_text_encoder()
+            @encoder = get_text_encoder
             @start_symbol_id = @encoder.start_symbol_id
 
         end
 
         # preprocess text into indices
         def preprocess_text(text)
-            """preprocess text into indices"""
             # if (text.length > @max_length)
             #     raise ValueError.new('text length larger than max_length')
             # end
