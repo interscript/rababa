@@ -1,8 +1,8 @@
 """
 corresponds to:
-https://github.com/interscript/rababa/blob/master/python/util/text_encoders.py
+https://github.com/interscript/rababa/blob/main/python/util/text_encoders.py
 and
-https://github.com/interscript/rababa/blob/master/python/util/text_cleaners.py
+https://github.com/interscript/rababa/blob/main/python/util/text_cleaners.py
 """
 
 require_relative "arabic_constants"

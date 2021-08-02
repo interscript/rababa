@@ -50,13 +50,15 @@ https://github.com/Hamza5/Pipeline-diacritizer[Hamza5]:
 python __main__.py preprocess source destination
 ----
 
+== Training
+
 === ONNX Models
 
 They can either be built in the `/python` repository or downloaded from the
 https://github.com/secryst/rababa-models[releases].
 
 Or ONNX model can be generated running the Python
-https://github.com/interscript/rababa/blob/master/python/diacritization_model_to_onnx.py[code]
+https://github.com/interscript/rababa/blob/main/python/diacritization_model_to_onnx.py[code]
 in this library.
 
 It requires to go through some of the steps described in the link above.
@@ -75,7 +77,7 @@ It requires to go through some of the steps described in the link above.
 * `max_len`: `200` -- `600`
 
 ** Parameter that has to match the ONNX model built using the
-  https://github.com/interscript/rababa/blob/master/python/diacritization_model_to_onnx.py[code]
+  https://github.com/interscript/rababa/blob/main/python/diacritization_model_to_onnx.py[code]
   and following the python/README.adoc.
 
 ** Longer sentences will need to be preprocessed, which can be done for
@@ -84,10 +86,10 @@ It requires to go through some of the steps described in the link above.
 
 ** the smaller the faster the NNets code.
 
-* text_encoder corresponding to the https://github.com/interscript/rababa/blob/master/python/util/text_encoders.py[rules]:
+* text_encoder corresponding to the https://github.com/interscript/rababa/blob/main/python/util/text_encoders.py[rules]:
 ** `BasicArabicEncoder`
 ** `ArabicEncoderWithStartSymbol`
 
-* text_cleaner corresponding to https://github.com/interscript/rababa/blob/master/python/util/text_cleaners.py[logics]:
+* text_cleaner corresponding to https://github.com/interscript/rababa/blob/main/python/util/text_cleaners.py[logics]:
 ** `basic_cleaners`: remove redundancy in whitespaces and strip string
 ** `valid_arabic_cleaners`: basic+filter of only Arabic words

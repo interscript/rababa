@@ -1,6 +1,6 @@
 
 # this refers to:
-#   https://github.com/interscript/rababa/blob/master/python/diacritizer.py
+#   https://github.com/interscript/rababa/blob/main/python/diacritizer.py
 # as well a drastic simplification of
 #   https://github.com/almodhfer/Arabic_Diacritization/blob/master/config_manager.py
 
