@@ -338,9 +338,12 @@ class GeneralTrainer(Trainer):
 
         predictions = outputs["diacritics"].contiguous()
         targets = batch_inputs["target"].contiguous()
+
         predictions = predictions.view(-1, predictions.shape[-1])
         targets = targets.view(-1)
-        loss = self.criterion(predictions.to(self.device), targets.to(self.device))
+
+        loss = self.criterion(predictions.to(self.device),
+                              targets.to(self.device))
         outputs.update({"loss": loss})
         return outputs
 

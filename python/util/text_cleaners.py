@@ -63,8 +63,8 @@ def extract_haraqat(text: str, correct_reversed: bool = True):
         if char not in BASIC_HARAQAT.keys():
             stack_content = extract_stack(stack,
                                           correct_reversed=correct_reversed)
-            if stack_content != '':
-                haraqat_list.append(stack_content)
+            #if stack_content != '':
+            haraqat_list.append(stack_content)
             txt_list.append(char)
             stack = []
         else:

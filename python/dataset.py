@@ -4,12 +4,13 @@ Loading the diacritization dataset
 
 import os
 
-#from diacritization_evaluation import util
 import util.text_cleaners as cleaners
 import pandas as pd
 import torch
 import random
 import warnings
+from diacritization_evaluation import util
+
 from torch.utils.data import DataLoader, Dataset
 
 from config_manager import ConfigManager
@@ -28,7 +29,6 @@ class DiacritizationDataset(Dataset):
         self.config = config_manager.config
         # print('config:: ', self.config)
 
-
     def __len__(self):
         "Denotes the total number of samples"
         return len(self.list_ids)
@@ -45,8 +45,14 @@ class DiacritizationDataset(Dataset):
                     self.text_encoder.input_to_sequence("".join(inputs)))
         diacritics = torch.Tensor(
                     self.text_encoder.target_to_sequence(diacritics))
+
         return inputs, diacritics, data_orig
 
+#data = self.data[id]
+#data = self.text_encoder.clean(data)
+#text, inputs, diacritics = util.extract_haraqat(data)
+#inputs = torch.Tensor(self.text_encoder.input_to_sequence("".join(inputs)))
+#diacritics = torch.Tensor(self.text_encoder.target_to_sequence(diacritics))
 
 def collate_fn(data):
     """
