@@ -51,6 +51,7 @@ class GeneralTrainer(Trainer):
         self.model = self.config_manager.get_model()
 
         self.optimizer = self.get_optimizer()
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = self.model.to(self.device)
 
         self.load_model(model_path=self.config.get("train_resume_model_path"))
@@ -361,7 +362,8 @@ class GeneralTrainer(Trainer):
             last_model_path = model_path
 
         print(f"loading from {last_model_path}")
-        saved_model = torch.load(last_model_path)
+        saved_model = torch.load(last_model_path) if torch.cuda.is_available() \
+            else torch.load(last_model_path, map_location=torch.device('cpu'))
         self.model.load_state_dict(saved_model["model_state_dict"])
         if load_optimizer:
             self.optimizer.load_state_dict(saved_model["optimizer_state_dict"])
