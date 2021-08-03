@@ -38,7 +38,7 @@ jobs:
     - name: Run diacriticization
       working-directory: ./python
       run: |
-        python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'قطر'
+        python diacritize.py --model_kind "cbhg" --config config/test_cbhg.yml --text 'قطر'
 
   train:
     runs-on: ubuntu-latest
