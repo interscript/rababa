@@ -40,19 +40,19 @@ jobs:
       run: |
         python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'قطر'
 
-    # - name: Prepare dataset
-    #   working-directory: ./python
-    #   run: |
-    #     mkdir -p data/CA_MSA
-    #     touch data/CA_MSA/{eval,train,test}.csv
-    #     cd data
-    #     curl -sSL https://github.com/interscript/rababa-tashkeela/archive/refs/tags/v1.0.zip -o tashkeela.zip
-    #     unzip tashkeela.zip
-    #     for d in `ls rababa-tashkeela-1.0/tashkeela_val/*`; do cat $d >> CA_MSA/eval.csv; done
-    #     for d in `ls rababa-tashkeela-1.0/tashkeela_train/*`; do cat $d >> CA_MSA/train.csv; done
-    #     for d in `ls rababa-tashkeela-1.0/tashkeela_test/*`; do cat $d >> CA_MSA/test.csv; done
+    - name: Prepare dataset
+      working-directory: ./python
+      run: |
+        mkdir -p data/CA_MSA
+        touch data/CA_MSA/{eval,train,test}.csv
+        cd data
+        curl -sSL https://github.com/interscript/rababa-tashkeela/archive/refs/tags/v1.0.zip -o tashkeela.zip
+        unzip tashkeela.zip
+        for d in `ls rababa-tashkeela-1.0/tashkeela_val/*`; do cat $d >> CA_MSA/eval.csv; done
+        for d in `ls rababa-tashkeela-1.0/tashkeela_train/*`; do cat $d >> CA_MSA/train.csv; done
+        for d in `ls rababa-tashkeela-1.0/tashkeela_test/*`; do cat $d >> CA_MSA/test.csv; done
 
-    # - name: Try training (WIP)
-    #   working-directory: ./python
-    #   run: |
-    #     python train.py --model models/cbhg.py --config config/cbhg.yml
+    - name: Try training (WIP)
+      working-directory: ./python
+      run: |
+        python train.py --model models/cbhg.py --config config/cbhg.yml
