@@ -55,4 +55,5 @@ jobs:
     - name: Try training (WIP)
       working-directory: ./python
       run: |
+        rm -f log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt
         python train.py --model "cbhg" --config config/cbhg.yml
