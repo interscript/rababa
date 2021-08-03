@@ -55,4 +55,4 @@ jobs:
     - name: Try training (WIP)
       working-directory: ./python
       run: |
-        python train.py --model models/cbhg.py --config config/cbhg.yml
+        python train.py --model "cbhg" --config config/cbhg.yml
