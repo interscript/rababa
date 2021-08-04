@@ -8,16 +8,16 @@ from diacritizer import Diacritizer
 
 """
     Key Params:
-        max_len: 
+        max_len:
             is the max length for the arabic strings to be diacritized
-        batch size: 
+        batch size:
             has to do with the model training and usage
 """
-max_len = 300 # 600 for the original length
+max_len = 200 # 600 for the original length
 batch_size = 32
 
 
-""" 
+"""
     example and mock data:
     we found that populating all the data, removing the zeros gives better results.
 """
@@ -57,13 +57,12 @@ import onnxruntime
 
 onnx_model_filename = '../models-data/diacritization_model.onnx'
 
-
 # export model
-torch.onnx.export(dia.model, 
-                  (src, lengths), 
-                  onnx_model_filename, 
-                  verbose=False, 
-                  opset_version=11, 
+torch.onnx.export(dia.model,
+                  (src, lengths),
+                  onnx_model_filename,
+                  verbose=False,
+                  opset_version=11,
                   input_names=['src', 'lengths'])
 print('Model printed in rel. path:', onnx_model_filename)
 
@@ -98,6 +97,56 @@ ort_outs = ort_session.run(None, ort_inputs)
 for i in range(batch_size):
     np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(), ort_outs[0][i], rtol=1e-03, atol=1e-03)
 
-
 print("\n!!!Exported model has been tested with ONNXRuntime, result looks good within given tolerance!!!")
 
+
+"""
+    Test ONNX model on randomized data
+"""
+
+import random
+
+print('***** Test Random Boolean vectors: *****')
+
+for test_run in range(3):
+    vec = [[random.randint(0,1) for i in range(max_len)]
+            for i in range(batch_size)]
+    src = torch.Tensor(vec).long()
+    torch_out = dia.model(src, lengths)
+
+    # prepare onnx input
+    ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.int64),
+                  ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64)}
+
+    # run onnx model
+    ort_outs = ort_session.run(None, ort_inputs)
+
+    for i in range(batch_size):
+        np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(), \
+                                   ort_outs[0][i], rtol=1e-03, atol=1e-03)
+
+    print('test :: ', test_run)
+    print("Result looks good within given tolerance!!!")
+
+
+print('***** Test Random float vectors within (-0.5, 0.5): *****')
+
+for test_run in range(3):
+    vec = [[random.random()-0.5 for i in range(max_len)]
+            for i in range(batch_size)]
+    src = torch.Tensor(vec).long()
+    torch_out = dia.model(src, lengths)
+
+    # prepare onnx input
+    ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.int64),
+                  ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64)}
+
+    # run onnx model
+    ort_outs = ort_session.run(None, ort_inputs)
+
+    for i in range(batch_size):
+        np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(), \
+                                   ort_outs[0][i], rtol=1e-03, atol=1e-03)
+
+    print('test :: ', test_run)
+    print("Result looks good within given tolerance!!!")
