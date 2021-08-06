@@ -48,7 +48,7 @@ module Rababa
             text = remove_diacritics(text)
             seq = @encoder.input_to_sequence(text)
             # correct expected length for vectors with 0's
-            return seq+[0]*(@max_length-seq.length)
+            return seq
         end
 
         # Diacritize single arabic strings
