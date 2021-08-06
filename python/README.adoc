@@ -200,12 +200,12 @@ python diacritization_model_to_onnx.py
 They are hardcoded in the beginning of the script:
 
 * `max_len`:
-** match string length, initial model value is given in config.
+** matches max string length, initial model value is given in config.
 ** this param allows tuning the model speed and size!
 ** the Ruby ../lib/README.md points to resources for preprocessing
 
 * batch_size:
 ** the value is given by the original model and its training.
 ** this constrain how the ONNX model can be put in production:
-... if > 1, single lines involve redundant computations
+... if > 1, processing single lines involve redundant computations.
 ... if > 1, files are processed in batches.
