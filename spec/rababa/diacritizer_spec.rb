@@ -5,7 +5,7 @@ require 'tmpdir'
 
 RSpec.describe Rababa::Diacritizer do
 
-  ONNX_FILE = 'https://github.com/secryst/rababa-models/releases/download/0.1/diacritization_model_max_len_200.onnx'
+  ONNX_FILE = 'https://github.com/secryst/rababa-models/releases/download/0.1/diacritization_model.onnx'
   ONNX_PATH = File.join(Dir.mktmpdir, "model.onnx")
   DEFAULT_CONFIG = {
     'session_name' => 'base',
