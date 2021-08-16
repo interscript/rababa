@@ -13,7 +13,7 @@ require_relative "arabic_constants"
 #     a. end of diacritics
 #     b. end of original
 
-module Rababa::Reconcile
+module Rababa::Reconciler
 
     # build_pivot_map:
     # This function takes 2 strings and finds the pivot points,
@@ -59,12 +59,12 @@ module Rababa::Reconcile
     def reconcile_strings(str_original, str_diacritized)
 
       # we model the strings as dict
-      d_original = Hash[*str_original.chars().select \
+      d_original = Hash[*str_original.chars.select \
                       {|n| not Rababa::ArabicConstants::HARAQAT.include? n} \
                           .map.with_index \
                               {|c, i| [i, c] }.flatten]
 
-      d_diacritized = Hash[*str_diacritized.chars().map.with_index \
+      d_diacritized = Hash[*str_diacritized.chars.map.with_index \
                             {|c, i| [i, c] }.flatten]
 
       # matching positions
@@ -78,6 +78,7 @@ module Rababa::Reconcile
           if (pt_ori < x_ori)
               (pt_ori..x_ori-1).each {|i| str__ += d_original[i]}
           end
+
           # We then add chars from diacritized strings
           if (pt_dia < x_dia)
               (pt_dia..x_dia-1).each {|i| str__ += d_diacritized[i]}
@@ -86,7 +87,6 @@ module Rababa::Reconcile
           # append matches
           str__ += d_original[x_ori]
           pt_dia, pt_ori = x_dia + 1, x_ori + 1
-
       end
 
       # Finalize by adding first last diacritized chars and then
