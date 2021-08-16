@@ -7,14 +7,14 @@
 
 require_relative 'encoders'
 require_relative 'harakats'
-require_relative 'reconcile'
+require_relative 'reconciler'
 
 
 module Rababa
 
     class Diacritizer
         include Rababa::Harakats
-        include Rababa::Reconcile
+        include Rababa::Reconciler
 
         def initialize(onnx_model_path, config)
 
@@ -53,8 +53,7 @@ module Rababa
 
         # Diacritize single arabic strings
         def diacritize_text(text)
-            """Diacritize single arabic strings"""
-            text = text.strip()
+            text = text.strip
             seq = preprocess_text(text)
 
             # initialize onnx computation
@@ -74,7 +73,7 @@ module Rababa
         def diacritize_file(path)
             texts = []
             File.open(path).each do |line|
-                texts.push(line.chomp.strip())
+                texts.push(line.chomp.strip)
             end
 
             # process batches
@@ -113,7 +112,7 @@ module Rababa
           predicts = @onnx_session.run(nil, batch_data)
           predicts = predicts[0].map.each{|p| \
                                     p.map.each{|r| r.each_with_index.max[1]}}
-          return predicts
+          predicts
         end
 
         # Combine: text + Haraqats --> diacritised arabic
@@ -146,7 +145,7 @@ module Rababa
         end
 
         # Initialise text encoder from config params
-        def get_text_encoder()
+        def get_text_encoder
             if not ['basic_cleaners', 'valid_arabic_cleaners', nil].include? \
                                                 @config['text_cleaner']
                 raise Exception.new( \

@@ -18,7 +18,7 @@ module Rababa::Harakats
         end
 
         full_haraqah = char_haraqat.join("")
-        reversed_full_haraqah = char_haraqat.reverse().join("")
+        reversed_full_haraqah = char_haraqat.reverse.join("")
 
         if ArabicConstants::ALL_POSSIBLE_HARAQAT.include? full_haraqah
             out = full_haraqah
