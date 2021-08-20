@@ -1,4 +1,4 @@
-from util.constants import HARAQAT
+from util.constants import HARAQAT, ARAB_CHARS
 
 
 """
@@ -36,6 +36,9 @@ def build_pivot_map(d_original, d_diacritized):
             if c_dia == d_original[i]:
                 idx_ori = i
                 l_map.append((idx_dia, idx_ori))
+                # making sure double arabic letters dont get replicated:
+                if c_dia in ARAB_CHARS:
+                    idx_ori += 1
                 break
 
         idx_dia += 1
@@ -60,7 +63,6 @@ def reconcile_strings(str_original, str_diacritized):
             str_diacritized: diacritized string
         return: reconciled string
     """
-    
     # we model the strings as dict
     d_original = dict((i,c) for i,c in
                       enumerate(list([c for c in str_original if not c in HARAQAT])))
@@ -68,7 +70,6 @@ def reconcile_strings(str_original, str_diacritized):
 
     # matching positions
     l_pivot_map = build_pivot_map(d_original, d_diacritized)
-
     str__ = '' # "accumulated" chars
     pt_dia, pt_ori = 0, 0 # pointers for resp diacr and orig. strings
     for x_dia, x_ori in l_pivot_map:

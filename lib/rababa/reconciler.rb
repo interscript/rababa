@@ -32,6 +32,10 @@ module Rababa::Reconciler
               if (c_dia == d_original[i])
                   idx_ori = i
                   l_map << [idx_dia, idx_ori]
+                  # making sure that double arabic letters don't get replicated
+                  if Rababa::ArabicConstants::ARAB_CHARS.include? c_dia
+                      idx_ori += 1
+                  end
                   break
               end
           }
