@@ -12,3 +12,6 @@
 
 *.onnx
 Gemfile.lock
+
+.eggs
+__pycache__

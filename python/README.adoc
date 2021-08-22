@@ -13,7 +13,8 @@ Rababa Python is used for both:
 Rababa uses deep Learning models for recovering Arabic language diacritics.
 
 Rababa implements the models described in the paper
-https://ieeexplore.ieee.org/document/9274427[Effective Deep Learning Models for Automatic Diacritization of Arabic Text] and refers to the implementation models from
+https://ieeexplore.ieee.org/document/9274427[Effective Deep Learning Models for Automatic Diacritization of Arabic Text]
+and refers to the implementation models from
 https://github.com/almodhfer/Arabic_Diacritization[almodhfer],
 which we have selected for this project from a list of alternatives listed in
 the README.
@@ -34,11 +35,23 @@ implemented, we selected the simplest and most performant ones:
 
 Python version: 3.6+.
 
+Best if you use pyenv:
+
+[source,bash]
+----
+brew install pyenv
+pyenv install 3.7.11
+pyenv local 3.7.11
+# Verify your python version
+python --version
+----
+
 Setup dependencies with:
 
 [source,bash]
 ----
-pip install -r requirement.txt
+pip install --upgrade pip
+pip install .
 ----
 
 
@@ -68,7 +81,7 @@ introduced in the link:../lib/README.adoc[Ruby quickstart] section.
 
 === Datasets
 
-* We have chosen the "Tashkeela processed" corpus ~2,800,000 sentences:
+* We have chosen the "`Tashkeela processed`" corpus ~2,800,000 sentences:
 ** https://github.com/interscript/rababa-tashkeela
 
 Other datasets are discussed in the reviewed literature or in the article
