@@ -70,35 +70,4 @@ module Rababa::Harakats
         [text, vec_txt, vec_haraqat]
     end
 
-    # Args:
-    #     text (str): text to be diacritized
-    # Returns:
-    #     text: the text as came
-    #     #? text_list: all text that are not haraqat
-    #     #? haraqat_list: all haraqat_list
-    def remove_diacritics(text)
-        Rababa::ArabicConstants::UBASIC_HARAQAT.keys.each do |diacritic|
-            text.gsub(diacritic, "")
-        end
-
-        text
-    end
-
-    # 'a   a  a a'-> 'a a a a'
-    def collapse_whitespace(text)
-        text.gsub(/[[:space:]]+/, ' ')
-    end
-
-    # strip + remove redundancy in whitespaces
-    def basic_cleaners(text)
-        collapse_whitespace(text).strip
-    end
-
-    # filter arabic only + basic cleaner
-    def valid_arabic_cleaners(text)
-        text = text.chars.select {|c| Rababa::ArabicConstants::VALID_ARABIC.include? c}
-        text = collapse_whitespace(text.join('')).strip
-        text.strip
-    end
-
 end

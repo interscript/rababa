@@ -78,13 +78,13 @@ It requires to go through some of the steps described in the link above.
 
 ** Parameter that has to match the ONNX model built using the
   https://github.com/interscript/rababa/blob/main/python/diacritization_model_to_onnx.py[code]
-  and following the python/README.adoc.
+  and following the `python/README.adoc`.
 
 ** Longer sentences will need to be preprocessed, which can be done for
   instance using https://github.com/Hamza5[Hamza5]
   https://github.com/Hamza5/Pipeline-diacritizer/blob/master/pipeline_diacritizer/pipeline_diacritizer.py[code].
 
-** the smaller the faster, the slimer the NNets code.
+** the smaller the faster, the slimmer the NNets code.
 
 * text_encoder corresponding to the https://github.com/interscript/rababa/blob/main/python/util/text_encoders.py[rules]:
 ** `BasicArabicEncoder`

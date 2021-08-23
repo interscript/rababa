@@ -3,7 +3,7 @@
 RSpec.describe Rababa::Reconciler do
   subject(:instance) { Class.new.extend(described_class) }
 
-  PASSING_TESTS = [
+  [
     {
       original: '# گيله پسمير الجديد 34',
       diacritized: 'يَلِهُ سُمِيْرٌ الجَدِيدُ',
@@ -27,9 +27,7 @@ RSpec.describe Rababa::Reconciler do
       diacritized: 'سَبْتَمْبَرِ العَقَبَة',
       reconciled: '26 سَبْتَمْبَرِ العَقَبَة'
     }
-  ]
-
-  PASSING_TESTS.each do |data|
+  ].each do |data|
 
     it "reconciles #{data[:original]}" do
       original = data[:original]

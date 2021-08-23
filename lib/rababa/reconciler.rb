@@ -43,7 +43,7 @@ module Rababa::Reconciler
       end
 
       l_map
-  end
+    end
 
     # reconcile_strings:
     # This function takes original and diacritized string and merge them into a sensible output.

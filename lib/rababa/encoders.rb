@@ -1,32 +1,28 @@
-"""
-corresponds to:
-https://github.com/interscript/rababa/blob/main/python/util/text_encoders.py
-and
-https://github.com/interscript/rababa/blob/main/python/util/text_cleaners.py
-"""
+# corresponds to:
+# https://github.com/interscript/rababa/blob/main/python/util/text_encoders.py
+# and
+# https://github.com/interscript/rababa/blob/main/python/util/text_cleaners.py
 
 require_relative "arabic_constants"
-require_relative "harakats"
+require_relative "cleaner"
 
 module Rababa::Encoders
 
     class TextEncoder
-        include Rababa::Harakats
-
-        attr_accessor :start_symbol_id, :input_pad_id, \
-                      :input_id_to_symbol, :target_id_to_symbol, \
+        attr_accessor :start_symbol_id, :input_pad_id,
+                      :input_id_to_symbol, :target_id_to_symbol,
                       :utarget_id_to_symbol
 
-        def initialize(input_chars, target_charts,
-                       cleaner,
+        def initialize(input_chars, target_chars,
+                       cleaner_type,
                        reverse_input)
 
             # cleaner fcts
-            @cleaner = cleaner
+            @cleaner = get_text_cleaner(cleaner_type)
 
             @pad = "P"
             @input_symbols = [@pad] + input_chars
-            @target_symbols = [@pad] + target_charts
+            @target_symbols = [@pad] + target_chars
 
             # encoding of arabic without diacritics
             @input_symbol_to_id = Hash[*@input_symbols.map.with_index \
@@ -47,13 +43,22 @@ module Rababa::Encoders
             @start_symbol_id = nil
         end
 
-        # cleaner, should be a method instantiated at init.
+        def get_text_cleaner(type)
+          case type.to_s
+          when 'basic_cleaners', nil
+            Rababa::Cleaner::BasicCleaner.new
+          when 'valid_arabic_cleaners'
+            Rababa::Cleaner::ValidArabicCleaner.new
+          else
+            raise Exception.new(
+              'text_cleaner not known: ' + type.to_s
+            )
+          end
+        end
+
+        # cleaner, instantiated at initialization
         def clean(text)
-            if @cleaner == "basic_cleaners"
-                basic_cleaners(text)
-            elsif @cleaner == "valid_arabic_cleaners"
-                valid_arabic_cleaners(text)
-            end
+          @cleaner.clean(text)
         end
 
         # String -> Seq of chars -> List of indices
@@ -71,32 +76,29 @@ module Rababa::Encoders
 
     class BasicArabicEncoder < TextEncoder
 
-        def initialize(cleaner="basic_cleaners",
+        def initialize(cleaner_type='basic_cleaners',
                        reverse_input: bool = false,
                        reverse_target: bool = false)
 
             input_chars = "بض.غىهظخة؟:طس،؛فندؤلوئآك-يذاصشحزءمأجإ ترقعث".chars
-            target_charts = Rababa::ArabicConstants::ALL_POSSIBLE_HARAQAT.keys
+            target_chars = Rababa::ArabicConstants::ALL_POSSIBLE_HARAQAT.keys
 
-            super(input_chars, target_charts,
-                  cleaner=cleaner,
-                  reverse_input=reverse_input)
+            super(
+              input_chars,
+              target_chars,
+              cleaner_type=cleaner_type,
+              reverse_input=reverse_input
+            )
         end
     end
 
-    class ArabicEncoderWithStartSymbol < TextEncoder
+    class ArabicEncoderWithStartSymbol < BasicArabicEncoder
 
-        def initialize(cleaner="basic_cleaners",
+        def initialize(cleaner_type='basic_cleaners',
                        reverse_input: bool = false,
                        reverse_target: bool = false)
 
-            input_chars = "بض.غىهظخة؟:طس،؛فندؤلوئآك-يذاصشحزءمأجإ ترقعث".chars
-            target_charts = Rababa::ArabicConstants::ALL_POSSIBLE_HARAQAT.keys
-
-            super(input_chars, target_charts,
-                  cleaner=cleaner,
-                  reverse_input=reverse_input)
-
+            super
             @start_symbol_id = @target_symbol_to_id["s"]
         end
     end

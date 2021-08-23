@@ -1,9 +1,8 @@
-
-"""
-Constants that are useful for processing arabic diacritics.
-reference:
-https://github.com/almodhfer/diacritization_evaluation/blob/master/diacritization_evaluation/constants.py
-"""
+#
+# Constants that are useful for processing arabic diacritics.
+# reference:
+# https://github.com/almodhfer/diacritization_evaluation/blob/master/diacritization_evaluation/constants.py
+#
 
 module Rababa
   module ArabicConstants
