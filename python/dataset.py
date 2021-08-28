@@ -48,11 +48,6 @@ class DiacritizationDataset(Dataset):
 
         return inputs, diacritics, data_orig
 
-#data = self.data[id]
-#data = self.text_encoder.clean(data)
-#text, inputs, diacritics = util.extract_haraqat(data)
-#inputs = torch.Tensor(self.text_encoder.input_to_sequence("".join(inputs)))
-#diacritics = torch.Tensor(self.text_encoder.target_to_sequence(diacritics))
 
 def collate_fn(data):
     """
