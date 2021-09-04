@@ -1,5 +1,6 @@
 from typing import Dict
 import torch
+import warnings
 import tqdm
 import pandas as pd
 import numpy as np
@@ -61,7 +62,7 @@ class Diacritizer:
         for txt in [d[0] for d in data_tmp.values.tolist()]:
             if len(txt) > max_len:
                 txt = txt[:max_len]
-                warnings.warn('Warning: text length cut for sentence: \n'+text)
+                warnings.warn('Warning: text length cut for sentence: \n'+txt)
             data.append(txt)
 
         list_ids = [idx for idx in range(len(data))]
