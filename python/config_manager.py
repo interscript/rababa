@@ -217,7 +217,9 @@ class ConfigManager:
         model = CBHGModel(
             embedding_dim=self.config["embedding_dim"],
             inp_vocab_size=self.config["len_input_symbols"],
-            targ_vocab_size=self.config["len_target_symbols"],
+            targ_niqqud_size=self.config["len_niqqud_symbols"],
+            targ_dagesh_size=self.config["len_dagesh_symbols"],
+            targ_sin_size=self.config["len_sin_symbols"],
             use_prenet=self.config["use_prenet"],
             prenet_sizes=self.config["prenet_sizes"],
             cbhg_gru_units=self.config["cbhg_gru_units"],

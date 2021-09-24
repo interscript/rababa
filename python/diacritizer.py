@@ -30,20 +30,13 @@ class Diacritizer:
             self.model, self.global_step = self.config_manager.load_model()
             self.model = self.model.to(self.device)
 
-        self.start_symbol_id = self.text_encoder.start_symbol_id
-
     def set_model(self, model: torch.nn.Module):
         self.model = model
 
     def diacritize_text(self, text: str):
         # convert string into indices
         text = text.strip()
-        seq = self.text_encoder.input_to_sequence(text)
-        # transform indices into "batch data"
-        batch_data = {'original': [text],
-                      'src': torch.Tensor([seq]).long(),
-                      'lengths': torch.Tensor([len(seq)]).long()}
-
+        batch_data = self.text_encoder.str_to_data(text)
         return self.diacritize_batch(batch_data)[0]
 
     def get_data_from_file(self, path):
@@ -96,27 +89,32 @@ class Diacritizer:
 
     def diacritize_batch(self, batch):
         # print('batch: ',batch)
-        self.model.eval()
-        originals = batch['original']
-        inputs = batch["src"]
-        lengths = batch["lengths"]
-        outputs = self.model(inputs.to(self.device), lengths.to("cpu"))
-        diacritics = outputs["diacritics"]
-        predictions = torch.max(diacritics, 2).indices
+        # self.model.eval()
 
-        sentences = []
-        for src, prediction, original in zip(inputs, predictions, originals):
-            sentence = self.text_encoder.combine_text_and_haraqat(
-                    list(src.detach().cpu().numpy()),
-                    list(prediction.detach().cpu().numpy()))
-            # Diacritized strings, sentence have to be "reconciled"
-            # with original strings, because the non arabic strings are removed
-            # before being processed in nnet
-            if self.config['reconcile']:
-                sentence = reconcile.reconcile_strings(original, sentence)
-            sentences.append(sentence)
+        batch_size = config['batch_size']
+        normalized = torch.tensor(data.normalized).to('cuda').long()
+        n_data = normalized.shape[0]
 
-        return sentences
+        # niqqud, sin, dagesh = predict_batch(model, hebrew_idces)
+        niqqud_sin_dagesh = [predict_batch(model, normalized[i:i+batch_size])
+                             for i in range(0, n_data, batch_size)]
+
+        if n_data % batch_size != 0:
+            idx = int(n_data/batch_size) * batch_size
+            niqqud_sin_dagesh += [predict_batch(model, normalized[idx:])]
+
+        niqqud = np.concatenate([x[0] for x in niqqud_sin_dagesh])
+        dagesh = np.concatenate([x[1] for x in niqqud_sin_dagesh])
+        sin = np.concatenate([x[2] for x in niqqud_sin_dagesh])
+
+
+        return normalized, niqqud, dagesh, sin
+
+    def predict_batch(self, model, hebrew_normalized_idces):
+        niqqud, dagesh, sin = model(hebrew_normalized_idces)
+        return torch.max(niqqud.permute(0, 2, 1), 1).indices.detach().cpu().numpy(),
+                         torch.max(dagesh.permute(0, 2, 1), 1).indices.detach().cpu().numpy(),
+                                torch.max(sin.permute(0, 2, 1), 1).indices.detach().cpu().numpy()
 
     def diacritize_iterators(self, iterator):
         pass
