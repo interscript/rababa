@@ -231,12 +231,14 @@ class ConfigManager:
 
     def get_text_encoder(self):
         """Getting the class of TextEncoder from config"""
+        """
         if self.config["text_cleaner"] not in [
             "basic_cleaners",
             "valid_hebraic_cleaners",
             None,
         ]:
             raise Exception(f"cleaner is not known {self.config['text_cleaner']}")
+        """
         return TextEncoder(self.config)
 
     def get_loss_type(self):
