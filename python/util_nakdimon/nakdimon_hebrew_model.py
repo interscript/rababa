@@ -169,3 +169,18 @@ def iterate_dotted_text(text: str) -> Iterator[HebrewChar]:
                 niqqud = DAGESH_LETTER
 
         yield HebrewChar(letter, normalized, dagesh, sin, niqqud)
+
+
+def split_by_length(characters: Iterable, maxlen: int):
+    assert maxlen > 1
+    out = []
+    space = maxlen
+    for c in characters:
+        if is_space(c):
+            space = len(out)
+        out.append(c)
+        if len(out) == maxlen - 1:
+            yield out[:space+1]
+            out = out[space+1:]
+    if out:
+        yield out

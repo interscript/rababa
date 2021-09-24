@@ -14,9 +14,8 @@ from models.cbhg import CBHGModel
 
 from options import AttentionType, LossType, OptimizerType
 from util.text_encoders import (
-    ArabicEncoderWithStartSymbol,
-    BasicArabicEncoder,
     TextEncoder,
+    # HebraicEncoder
 )
 
 
@@ -52,10 +51,7 @@ class ConfigManager:
         self.plot_dir = Path(os.path.join(self.base_dir, "plots"))
         self.models_dir = Path(os.path.join(self.base_dir, "models"))
 
-        #self.text_encoder: TextEncoder = self.get_text_encoder()
-
-        #self.config["len_input_symbols"] = len(self.text_encoder.input_symbols)
-        #self.config["len_target_symbols"] = len(self.text_encoder.target_symbols)
+        self.text_encoder: TextEncoder = self.get_text_encoder()
 
         if self.model_kind in ["seq2seq", "tacotron_based"]:
             self.config["attention_type"] = AttentionType[self.config["attention_type"]]
@@ -237,23 +233,11 @@ class ConfigManager:
         """Getting the class of TextEncoder from config"""
         if self.config["text_cleaner"] not in [
             "basic_cleaners",
-            "valid_arabic_cleaners",
+            "valid_hebraic_cleaners",
             None,
         ]:
             raise Exception(f"cleaner is not known {self.config['text_cleaner']}")
-
-        if self.config["text_encoder"] == "BasicArabicEncoder":
-            text_encoder = BasicArabicEncoder(cleaner_fn=self.config["text_cleaner"])
-        elif self.config["text_encoder"] == "ArabicEncoderWithStartSymbol":
-            text_encoder = ArabicEncoderWithStartSymbol(
-                cleaner_fn=self.config["text_cleaner"]
-            )
-        else:
-            raise Exception(
-                f"the text encoder is not found {self.config['text_encoder']}"
-            )
-
-        return text_encoder
+        return TextEncoder(self.config)
 
     def get_loss_type(self):
         try:

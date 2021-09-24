@@ -1,5 +1,5 @@
 
-#from util import text_cleaners
+from util import text_cleaners
 from typing import Dict, List, Optional
 
 from util_nakdimon import nakdimon_dataset as dataset
@@ -7,20 +7,20 @@ from util_nakdimon import nakdimon_hebrew_model as hebrew
 
 
 class TextEncoder:
-    pad = "P"
 
     def __init__(
         self,
-        cleaner_fn: Optional[str] = None,
-        config = None, #: Dict[str] = None,
+        config = None, # Dict[str, Any] = None,
     ):
-        if cleaner_fn:
-            self.cleaner_fn = getattr(text_cleaners, cleaner_fn)
+        self.config = config
+        if self.config.get('text_cleaner', False):
+            self.cleaner_fn = getattr(text_cleaners,
+                                      self.config['text_cleaner'])
         else:
             self.cleaner_fn = None
 
-    def str_to_data(self, text: str, heb_items=[]) -> dataset.Data:
-        return dataset.from_text(text, self.config['max_len'])
+    def str_to_data(self, text: str) -> dataset.Data: #, heb_items=[]) -> dataset.Data:
+        return dataset.Data.from_text([text], self.config['max_len'])
 
     def data_to_str(self, data: dataset.Data, diacritics=None):
         if diacritics is None:
@@ -37,4 +37,5 @@ class TextEncoder:
         return type(self).__name__
 
 
-# class HebrewEncoder(TextEncoder):
+class HebraicEncoder(TextEncoder):
+    pass

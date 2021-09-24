@@ -45,7 +45,6 @@ class GeneralTrainer(Trainer):
 
         self.config_manager.create_remove_dirs()
         self.text_encoder = self.config_manager.text_encoder
-        self.start_symbol_id = self.text_encoder.start_symbol_id
         self.summary_manager = SummaryWriter(log_dir=self.config_manager.log_dir)
 
         self.model = self.config_manager.get_model()
