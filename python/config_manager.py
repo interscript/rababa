@@ -34,14 +34,11 @@ class ConfigManager:
         self.model_kind = model_kind
         self.yaml = ruamel.yaml.YAML()
         self.config: Dict[str, Any] = self._load_config()
-        # self.git_hash = self._get_git_hash()
+
         self.session_name = ".".join(
-            [
-                self.config["data_type"],
-                self.config["session_name"],
-                f"{model_kind}",
-            ]
-        )
+            [self.config["data_type"],
+             self.config["session_name"],
+             f"{model_kind}"])
 
         self.data_dir = Path(
             os.path.join(self.config["data_directory"], self.config["data_type"])
@@ -49,13 +46,17 @@ class ConfigManager:
         self.base_dir = Path(
             os.path.join(self.config["log_directory"], self.session_name)
         )
+
         self.log_dir = Path(os.path.join(self.base_dir, "logs"))
         self.prediction_dir = Path(os.path.join(self.base_dir, "predictions"))
         self.plot_dir = Path(os.path.join(self.base_dir, "plots"))
         self.models_dir = Path(os.path.join(self.base_dir, "models"))
-        self.text_encoder: TextEncoder = self.get_text_encoder()
-        self.config["len_input_symbols"] = len(self.text_encoder.input_symbols)
-        self.config["len_target_symbols"] = len(self.text_encoder.target_symbols)
+
+        #self.text_encoder: TextEncoder = self.get_text_encoder()
+
+        #self.config["len_input_symbols"] = len(self.text_encoder.input_symbols)
+        #self.config["len_target_symbols"] = len(self.text_encoder.target_symbols)
+
         if self.model_kind in ["seq2seq", "tacotron_based"]:
             self.config["attention_type"] = AttentionType[self.config["attention_type"]]
         self.config["optimizer"] = OptimizerType[self.config["optimizer_type"]]
@@ -188,9 +189,9 @@ class ConfigManager:
                 return model, 1
         else:
             last_model_path = model_path
-        
+
         saved_model = torch.load(last_model_path) if torch.cuda.is_available() else torch.load(last_model_path, map_location=torch.device('cpu'))
-            
+
         out = model.load_state_dict(saved_model["model_state_dict"])
         # print(out) check...
         global_step = saved_model["global_step"] + 1
