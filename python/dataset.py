@@ -46,7 +46,8 @@ def collate_fn(data):
     """
     Padding the input and output sequences
     """
-    return data
+    return np.array([d[0] for d in data]), np.array([d[1] for d in data]), \
+        np.array([d[2] for d in data]), np.array([d[3] for d in data])
 
 
 def load_training_data(config_manager: ConfigManager, loader_parameters):
@@ -62,7 +63,7 @@ def load_training_data(config_manager: ConfigManager, loader_parameters):
     training_set = DiacritizationDataset(config_manager, path)
 
     train_iterator = DataLoader(
-        training_set, collate_fn=collate_fn, **loader_parameters
+        training_set.data, collate_fn=collate_fn, **loader_parameters
     )
 
     print(f"Length of training iterator = {len(train_iterator)}")
@@ -80,7 +81,7 @@ def load_test_data(config_manager: ConfigManager, loader_parameters):
 
     test_dataset = DiacritizationDataset(config_manager, path)
 
-    test_iterator = DataLoader(test_dataset, collate_fn=collate_fn,
+    test_iterator = DataLoader(test_dataset.data, collate_fn=collate_fn,
                                **loader_parameters)
 
     print(f"Length of test iterator = {len(test_iterator)}")
@@ -99,7 +100,7 @@ def load_validation_data(config_manager: ConfigManager, loader_parameters):
     valid_dataset = DiacritizationDataset(config_manager, path)
 
     valid_iterator = DataLoader(
-        valid_dataset, collate_fn=collate_fn, **loader_parameters
+        valid_dataset.data, collate_fn=collate_fn, **loader_parameters
     )
 
     print(f"Length of valid iterator = {len(valid_iterator)}")
@@ -120,4 +121,5 @@ def load_iterators(config_manager: ConfigManager):
     train_iterator = load_training_data(config_manager, loader_parameters=params)
     valid_iterator = load_validation_data(config_manager, loader_parameters=params)
     test_iterator = load_test_data(config_manager, loader_parameters=params)
+
     return train_iterator, test_iterator, valid_iterator

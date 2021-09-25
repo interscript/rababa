@@ -119,9 +119,14 @@ class Data:
         self.dagesh = torch.tensor(self.dagesh).to('cuda')
         self.sin = torch.tensor(self.sin).to('cuda')
 
-    def get_id(self, idx):
-        return self.normalized[idx], self.niqqud[idx], \
-            self.dagesh[idx], self.sin[idx]
+    def get_idces(self, idces):
+        return self.normalized[idces], \
+               self.niqqud[idces], \
+               self.dagesh[idces], \
+               self.sin[idces]
+
+    def __getitem__(self, item):
+        return self.get_idces(item)
 
     @staticmethod
     def from_text(heb_items, maxlen: int) -> 'Data':

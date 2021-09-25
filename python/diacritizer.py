@@ -46,12 +46,12 @@ class Diacritizer:
 
         dataset = DiacritizationDataset(path)
 
-        data_iterator = DataLoader(dataset,
+        data_iterator = DataLoader(dataset.data,
                                    collate_fn=collate_fn,
                                    # **loader_params,
                                    shuffle=False)
 
-        # print(f"Length of data iterator = {len(data_iterator)}")
+        print(f"Length of data iterator = {len(data_iterator)}")
         return data_iterator
 
     def diacritize_file(self, path: str):

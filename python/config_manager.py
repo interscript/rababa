@@ -40,7 +40,7 @@ class ConfigManager:
              f"{model_kind}"])
 
         self.data_dir = Path(
-            os.path.join(self.config["data_directory"], self.config["data_type"])
+            os.path.join(self.config["data_directory"]) #, self.config["data_type"])
         )
         self.base_dir = Path(
             os.path.join(self.config["log_directory"], self.session_name)
