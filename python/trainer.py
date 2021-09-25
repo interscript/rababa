@@ -41,7 +41,7 @@ class GeneralTrainer(Trainer):
         self.lr = 0
         self.pad_idx = 0
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.pad_idx)
-        self.set_device()
+        self.device = self.config_manager.device
 
         self.config_manager.create_remove_dirs()
         self.text_encoder = self.config_manager.text_encoder
@@ -59,12 +59,6 @@ class GeneralTrainer(Trainer):
         self.initialize_model()
 
         self.print_config()
-
-    def set_device(self):
-        if self.config.get("device"):
-            self.device = self.config["device"]
-        else:
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def print_config(self):
         self.config_manager.dump_config()

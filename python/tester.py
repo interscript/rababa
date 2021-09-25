@@ -21,7 +21,7 @@ class DiacritizationTester(GeneralTrainer):
         self.config = self.config_manager.config
         self.pad_idx = 0
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.pad_idx)
-        self.set_device()
+        self.device = self.config_manager.device
 
         self.text_encoder = self.config_manager.text_encoder
         self.start_symbol_id = self.text_encoder.start_symbol_id

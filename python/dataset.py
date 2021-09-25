@@ -23,15 +23,15 @@ class DiacritizationDataset(Dataset):
     The datasets to preprocess for diacritization
     """
 
-    def __init__(self, config_manager: ConfigManager, list_ids, data_file_path):
+    def __init__(self, config_manager: ConfigManager, data_file_path):
         "Initialization"
 
         self.config = config_manager.config
+        self.device = config_manager.device
 
         self.data_file_path = data_file_path
         self.data, _ = dataset.get_data([self.data_file_path],
                                         self.config['max_len'])
-        self.data.to_device(self.config['device'])
 
     def __len__(self):
         "Denotes the total number of samples"
@@ -116,6 +116,7 @@ def load_iterators(config_manager: ConfigManager):
         "shuffle": True,
         "num_workers": 2,
     }
+
     train_iterator = load_training_data(config_manager, loader_parameters=params)
     valid_iterator = load_validation_data(config_manager, loader_parameters=params)
     test_iterator = load_test_data(config_manager, loader_parameters=params)

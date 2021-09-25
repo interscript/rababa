@@ -33,7 +33,7 @@ class ConfigManager:
         self.model_kind = model_kind
         self.yaml = ruamel.yaml.YAML()
         self.config: Dict[str, Any] = self._load_config()
-
+        self.set_device()
         self.session_name = ".".join(
             [self.config["data_type"],
              self.config["session_name"],
@@ -61,6 +61,12 @@ class ConfigManager:
         with open(self.config_path, "rb") as model_yaml:
             _config = self.yaml.load(model_yaml)
         return _config
+
+    def set_device(self):
+        if self.config.get("device"):
+            self.device = self.config["device"]
+        else:
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     @staticmethod
     def _get_git_hash():
@@ -131,6 +137,7 @@ class ConfigManager:
         self.base_dir.mkdir(exist_ok=True, parents=True)
         self.plot_dir.mkdir(exist_ok=True)
         self.prediction_dir.mkdir(exist_ok=True)
+
         if clear_dir:
             delete = input(f"Delete {self.log_dir} AND {self.models_dir}? (y/[n])")
             if delete == "y":
@@ -186,7 +193,9 @@ class ConfigManager:
         else:
             last_model_path = model_path
 
-        saved_model = torch.load(last_model_path) if torch.cuda.is_available() else torch.load(last_model_path, map_location=torch.device('cpu'))
+        saved_model = torch.load(last_model_path) \
+            if torch.cuda.is_available() else \
+                torch.load(last_model_path, map_location=torch.device('cpu'))
 
         out = model.load_state_dict(saved_model["model_state_dict"])
         # print(out) check...

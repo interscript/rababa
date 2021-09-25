@@ -36,7 +36,7 @@ post_cbhg_use_batch_norm: true
 
 use_mixed_precision: false
 optimizer_type: Adam
-device: cuda
+device: cpu
 
 # LOGGING
 evaluate_frequency: 5000

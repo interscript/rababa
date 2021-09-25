@@ -103,7 +103,7 @@ class Data:
                 self.sin.shape, self.niqqud.shape #, self.kind.shape
 
     def size(self):
-        self.shapes[0][0]
+        self.shapes()[0][0]
 
     def shuffle(self):
         utils.shuffle_in_unison(

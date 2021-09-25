@@ -23,8 +23,7 @@ class Diacritizer:
         )
         self.config = self.config_manager.config
         self.text_encoder = self.config_manager.text_encoder
-
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = self.config_manager.device
 
         if load_model:
             self.model, self.global_step = self.config_manager.load_model()
@@ -45,23 +44,7 @@ class Diacritizer:
                          "shuffle": False,
                          "num_workers": 2}
 
-        data_tmp = pd.read_csv(path,
-                           encoding="utf-8",
-                           sep=self.config_manager.config["data_separator"],
-                           header=None)
-
-        data = []
-        max_len = self.config_manager.config["max_len"]
-        for txt in [d[0] for d in data_tmp.values.tolist()]:
-            if len(txt) > max_len:
-                txt = txt[:max_len]
-                warnings.warn('Warning: text length cut for sentence: \n'+txt)
-            data.append(txt)
-
-        list_ids = [idx for idx in range(len(data))]
-        dataset = DiacritizationDataset(self.config_manager,
-                                        list_ids,
-                                        data)
+        dataset = DiacritizationDataset(path)
 
         data_iterator = DataLoader(dataset,
                                    collate_fn=collate_fn,
