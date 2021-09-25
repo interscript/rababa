@@ -9,7 +9,7 @@ from dataset import (DiacritizationDataset,
                      collate_fn)
 from torch.utils.data import (DataLoader,
                               Dataset)
-import util.reconcile_original_plus_diacritized as reconcile
+# import util.reconcile_original_plus_diacritized as reconcile
 
 
 class Diacritizer:
@@ -112,9 +112,9 @@ class Diacritizer:
 
     def predict_batch(self, model, hebrew_normalized_idces):
         niqqud, dagesh, sin = model(hebrew_normalized_idces)
-        return torch.max(niqqud.permute(0, 2, 1), 1).indices.detach().cpu().numpy(),
-                         torch.max(dagesh.permute(0, 2, 1), 1).indices.detach().cpu().numpy(),
-                                torch.max(sin.permute(0, 2, 1), 1).indices.detach().cpu().numpy()
+        return torch.max(niqqud.permute(0, 2, 1), 1).indices.detach().cpu().numpy(), \
+                torch.max(dagesh.permute(0, 2, 1), 1).indices.detach().cpu().numpy(), \
+                 torch.max(sin.permute(0, 2, 1), 1).indices.detach().cpu().numpy()
 
     def diacritize_iterators(self, iterator):
         pass

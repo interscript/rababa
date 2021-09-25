@@ -184,3 +184,14 @@ def split_by_length(characters: Iterable, maxlen: int):
             out = out[space+1:]
     if out:
         yield out
+
+
+
+def iterate_file(path):
+    with open(path, encoding='utf-8') as f:
+        text = ''.join(s + ' ' for s in f.read().split())
+        try:
+            yield from iterate_dotted_text(text)
+        except AssertionError as ex:
+            ex.args += (path,)
+            raise

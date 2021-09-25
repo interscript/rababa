@@ -1,7 +1,6 @@
 import os
 from typing import Dict
 
-from diacritization_evaluation import der, wer
 import torch
 from torch import nn
 from torch import optim
@@ -15,12 +14,13 @@ from dataset import load_iterators
 from diacritizer import Diacritizer
 from util.learning_rates import LearningRateDecay
 from options import OptimizerType
+
 from util.utils import (
-    categorical_accuracy,
+    # categorical_accuracy,
     count_parameters,
-    initialize_weights,
-    plot_alignment,
-    repeater,
+    # initialize_weights,
+    # plot_alignment,
+    # repeater,
 )
 
 
@@ -74,7 +74,7 @@ class GeneralTrainer(Trainer):
             print(f"loaded form {self.global_step}")
 
         parameters_count = count_parameters(self.model)
-        print(f"The model has {parameters_count} trainable parameters parameters")
+        print(f"Model has {parameters_count} trainable parameters parameters")
 
     def load_diacritizer(self):
         if self.model_kind in ["cbhg", "baseline"]:
