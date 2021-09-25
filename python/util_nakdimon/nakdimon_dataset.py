@@ -2,6 +2,7 @@
 from typing import Tuple, List
 import random
 import numpy as np
+import torch
 
 #from cachier import cachier
 
@@ -101,6 +102,9 @@ class Data:
         return self.text.shape, self.normalized.shape, self.dagesh.shape, \
                 self.sin.shape, self.niqqud.shape #, self.kind.shape
 
+    def size(self):
+        self.shapes[0][0]
+
     def shuffle(self):
         utils.shuffle_in_unison(
             self.text,
@@ -108,6 +112,16 @@ class Data:
             self.dagesh,
             self.niqqud,
             self.sin)
+
+    def to_device(self, device):
+        self.normalized = torch.tensor(self.normalized).to('cuda')
+        self.niqqud = torch.tensor(self.niqqud).to('cuda')
+        self.dagesh = torch.tensor(self.dagesh).to('cuda')
+        self.sin = torch.tensor(self.sin).to('cuda')
+
+    def get_id(self, idx):
+        return self.normalized[idx], self.niqqud[idx], \
+            self.dagesh[idx], self.sin[idx]
 
     @staticmethod
     def from_text(heb_items, maxlen: int) -> 'Data':
@@ -170,3 +184,12 @@ def load_data(corpora, validation_rate: float, maxlen: int,
     if shuffle:
         train.shuffle()
     return train, validation_data
+
+
+def get_data(l_filenames, max_len, validation_rate=0.):
+
+    train, test = load_data(tuple(read_corpora(tuple(l_filenames))),
+                            validation_rate=validation_rate,
+                            maxlen=max_len)
+
+    return train, test

@@ -13,69 +13,40 @@ from torch.utils.data import DataLoader, Dataset
 
 from config_manager import ConfigManager
 
+from util_nakdimon import nakdimon_dataset as dataset
+from util_nakdimon import nakdimon_utils as utils
+from util_nakdimon import nakdimon_hebrew_model as hebrew
+
 
 class DiacritizationDataset(Dataset):
     """
-    The datasets for preprocessing for diacritization
+    The datasets to preprocess for diacritization
     """
 
-    def __init__(self, config_manager: ConfigManager, list_ids, data):
+    def __init__(self, config_manager: ConfigManager, list_ids, data_file_path):
         "Initialization"
-        self.list_ids = list_ids
-        self.data = data
-        self.text_encoder = config_manager.text_encoder
+
         self.config = config_manager.config
-        # print('config:: ', self.config)
+
+        self.data_file_path = data_file_path
+        self.data, _ = dataset.get_data([self.data_file_path],
+                                        self.config['max_len'])
+        self.data.to_device(self.config['device'])
 
     def __len__(self):
         "Denotes the total number of samples"
-        return len(self.list_ids)
+        return self.data.size()
 
     def __getitem__(self, index):
         "Generates one sample of data"
-        # Select sample
-        id = self.list_ids[index]
-        data_orig = self.data[id].strip()
-        text, inputs, diacritics = cleaners.extract_haraqat(
-                                        self.text_encoder.clean(data_orig))
-
-        inputs = torch.Tensor(
-                    self.text_encoder.input_to_sequence("".join(inputs)))
-        diacritics = torch.Tensor(
-                    self.text_encoder.target_to_sequence(diacritics))
-
-        return inputs, diacritics, data_orig
+        return self.data.get_id(index)
 
 
 def collate_fn(data):
     """
     Padding the input and output sequences
     """
-
-    def merge(sequences):
-        lengths = [len(seq) for seq in sequences]
-        padded_seqs = torch.zeros(len(sequences), max(lengths)).long()
-        for i, seq in enumerate(sequences):
-            end = lengths[i]
-            padded_seqs[i, :end] = seq[:end]
-        return padded_seqs, lengths
-
-    data.sort(key=lambda x: len(x[0]), reverse=True)
-
-    # separate source and target sequences
-    src_seqs, trg_seqs, original = zip(*data)
-
-    # merge sequences (from tuple of 1D tensor to 2D tensor)
-    src_seqs, src_lengths = merge(src_seqs)
-    trg_seqs, trg_lengths = merge(trg_seqs)
-
-    batch = {
-        "original": original,
-        "src": src_seqs,
-        "target": trg_seqs,
-        "lengths": torch.LongTensor(src_lengths),  # src_lengths = trg_lengths
-    }
-    return batch
+    return data
 
 
 def load_training_data(config_manager: ConfigManager, loader_parameters):
@@ -87,30 +58,8 @@ def load_training_data(config_manager: ConfigManager, loader_parameters):
         return []
 
     path = os.path.join(config_manager.data_dir, "train.csv")
-    if config_manager.config["is_data_preprocessed"]:
-        train_data = pd.read_csv(
-            path,
-            encoding="utf-8",
-            sep=config_manager.config["data_separator"],
-            nrows=config_manager.config["n_training_examples"],
-            header=None,
-        )
 
-        # train_data = train_data[train_data[0] <= config_manager.config["max_len"]]
-        training_set = DiacritizationDataset(
-            config_manager, train_data.index, train_data
-        )
-    else:
-        with open(path, encoding="utf8") as file:
-            train_data = file.readlines()
-            train_data = [
-                text
-                for text in train_data
-                if len(text) <= config_manager.config["max_len"]
-            ]
-        training_set = DiacritizationDataset(
-            config_manager, [idx for idx in range(len(train_data))], train_data
-        )
+    training_set = DiacritizationDataset(config_manager, path)
 
     train_iterator = DataLoader(
         training_set, collate_fn=collate_fn, **loader_parameters
@@ -128,25 +77,8 @@ def load_test_data(config_manager: ConfigManager, loader_parameters):
         return []
     test_file_name = config_manager.config.get("test_file_name", "test.csv")
     path = os.path.join(config_manager.data_dir, test_file_name)
-    if config_manager.config["is_data_preprocessed"]:
-        test_data = pd.read_csv(
-            path,
-            encoding="utf-8",
-            sep=config_manager.config["data_separator"],
-            nrows=config_manager.config["n_test_examples"],
-            header=None,
-        )
-        # test_data = test_data[test_data[0] <= config_manager.config["max_len"]]
-        test_dataset = DiacritizationDataset(config_manager, test_data.index, test_data)
-    else:
-        with open(path, encoding="utf8") as file:
-            test_data = file.readlines()
-        test_data = [
-            text for text in test_data if len(text) <= config_manager.config["max_len"]
-        ]
-        test_dataset = DiacritizationDataset(
-            config_manager, [idx for idx in range(len(test_data))], test_data
-        )
+
+    test_dataset = DiacritizationDataset(config_manager, path)
 
     test_iterator = DataLoader(test_dataset, collate_fn=collate_fn,
                                **loader_parameters)
@@ -163,29 +95,8 @@ def load_validation_data(config_manager: ConfigManager, loader_parameters):
     if not config_manager.config["load_validation_data"]:
         return []
     path = os.path.join(config_manager.data_dir, "eval.csv")
-    if config_manager.config["is_data_preprocessed"]:
-        valid_data = pd.read_csv(
-            path,
-            encoding="utf-8",
-            sep=config_manager.config["data_separator"],
-            nrows=config_manager.config["n_validation_examples"],
-            header=None,
-        )
 
-        # valid_data = valid_data[valid_data[0] <= config_manager.config["max_len"]]
-        valid_dataset = DiacritizationDataset(
-            config_manager, valid_data.index, valid_data
-        )
-    else:
-        with open(path, encoding="utf8") as file:
-            valid_data = file.readlines()
-
-        valid_data = [
-            text for text in valid_data if len(text) <= config_manager.config["max_len"]
-        ]
-        valid_dataset = DiacritizationDataset(
-            config_manager, [idx for idx in range(len(valid_data))], valid_data
-        )
+    valid_dataset = DiacritizationDataset(config_manager, path)
 
     valid_iterator = DataLoader(
         valid_dataset, collate_fn=collate_fn, **loader_parameters

@@ -186,7 +186,6 @@ def split_by_length(characters: Iterable, maxlen: int):
         yield out
 
 
-
 def iterate_file(path):
     with open(path, encoding='utf-8') as f:
         text = ''.join(s + ' ' for s in f.read().split())
@@ -195,3 +194,11 @@ def iterate_file(path):
         except AssertionError as ex:
             ex.args += (path,)
             raise
+
+
+def is_space(c):
+    if isinstance(c, HebrewChar):
+        return c.letter == ' '
+    elif isinstance(c, str):
+        return c == ' '
+    assert False
