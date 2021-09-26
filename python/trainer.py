@@ -22,7 +22,10 @@ from util.utils import (
     # plot_alignment,
     # repeater,
 )
-from util_nakdimon import nakdimon_dataset as dataset
+
+from util_nakdimon import nakdimon_dataset
+from util_nakdimon import nakdimon_utils as utils
+from util_nakdimon import nakdimon_hebrew_model as hebrew
 
 
 class Trainer:
@@ -31,6 +34,7 @@ class Trainer:
 
 
 class GeneralTrainer(Trainer):
+
     def __init__(self, config_path: str, model_kind: str) -> None:
         self.config_path = config_path
         self.model_kind = model_kind
@@ -41,7 +45,6 @@ class GeneralTrainer(Trainer):
         self.losses = []
         self.lr = 0
         self.pad_idx = 0
-        self.criterion = nn.CrossEntropyLoss(ignore_index=self.pad_idx)
         self.device = self.config_manager.device
 
         self.config_manager.create_remove_dirs()
@@ -51,6 +54,8 @@ class GeneralTrainer(Trainer):
         self.model = self.config_manager.get_model()
 
         self.optimizer = self.get_optimizer()
+        self.criterion = nn.CrossEntropyLoss(ignore_index=self.pad_idx)
+
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = self.model.to(self.device)
 
@@ -104,38 +109,77 @@ class GeneralTrainer(Trainer):
                     pos=pos + 4,
                 )
 
+    def get_loss(self, losses):
+        n_losses = len(losses)
+        d_loss = {}
+        for k in ['N','D','S']:
+            loss = sum([l[k] for l in losses])/n_losses
+            d_loss[k+'_loss'] = loss
+        return d_loss
+
+    def get_bmarks(self, test_data: nakdimon_dataset.Data):
+
+        test_data.shuffle()
+        normalized = test_data.normalized #).to('cuda').long()
+        n_data = normalized.shape[0]
+        n_ref, d_ref, s_ref = test_data.niqqud, test_data.dagesh, test_data.sin
+
+        batch_size = config['batch_size']
+        d_scores = {'N': 0, 'D': 0, 'S': 0}
+
+        # Run the model on some test examples
+        with torch.no_grad():
+            total = 0
+            for i in range(0, n_data, batch_size): # n_data
+
+                total += batch_size * config['max_len']
+
+                hebrew_idces = normalized[i:i+batch_size]
+
+                dots_idces = [niqqud[i:i+batch_size],
+                              dagesh[i:i+batch_size],
+                              sin[i:i+batch_size]]
+
+                outputs = model(hebrew_idces)
+
+                for i,k in enumerate(['N', 'D', 'S']):
+
+                    labels = dots_idces[i]
+                    predicted = torch.max(outputs[i].permute(0, 2, 1), 1).indices
+                    scores[k] += (predicted == labels).sum().item()
+
+            for k in ['N', 'D', 'S']:
+                print(f"pointing: {k}, score: {scores[k]/total}%")
+                # wandb.log({k+'_accu': scores[k]/total})
+
+            return dict([(k+'_accu', scores[k]/total) for k in ['N', 'D', 'S']])
+
+
     def evaluate(self, iterator, tqdm, use_target=True):
         epoch_loss = 0
         epoch_acc = 0
         self.model.eval()
         tqdm.set_description(f"Eval: {self.global_step}")
         with torch.no_grad():
-            for batch_inputs in iterator:
-                batch_inputs["src"] = batch_inputs["src"].to(self.device)
-                batch_inputs["lengths"] = batch_inputs["lengths"].to("cpu")
-                if use_target:
-                    batch_inputs["target"] = batch_inputs["target"].to(self.device)
-                else:
-                    batch_inputs["target"] = None
 
-                outputs = self.model(
-                    src=batch_inputs["src"],
-                    target=batch_inputs["target"],
-                    lengths=batch_inputs["lengths"],
-                )
+            raw_data, pred_data = self.diacritizer. \
+                                    diacritize_data_iterator(iterator)
 
-                predictions = outputs["diacritics"]
+            targets = raw_data.dagesh.view(-1) + \
+                        raw_data.sin.view(-1) + \
+                            raw_data.niqqud.view(-1)
+            predictions = pred_data.dagesh.view(-1) + \
+                            pred_data.sin.view(-1) + \
+                                pred_data.niqqud.view(-1)
 
-                predictions = predictions.view(-1, predictions.shape[-1])
-                targets = batch_inputs["target"]
-                targets = targets.view(-1)
-                loss = self.criterion(predictions, targets.to(self.device))
-                acc = categorical_accuracy(
-                    predictions, targets.to(self.device), self.pad_idx, self.device
-                )
-                epoch_loss += loss.item()
-                epoch_acc += acc.item()
-                tqdm.update()
+
+            loss = self.criterion(predictions, targets.to(self.device))
+            acc = categorical_accuracy(
+                predictions, targets.to(self.device), self.pad_idx, self.device
+            )
+            epoch_loss += loss.item()
+            epoch_acc += acc.item()
+            tqdm.update()
 
         tqdm.reset()
         return epoch_loss / len(iterator), epoch_acc / len(iterator)

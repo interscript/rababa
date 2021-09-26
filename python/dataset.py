@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader, Dataset
 
 from config_manager import ConfigManager
 
-from util_nakdimon import nakdimon_dataset as dataset
+from util_nakdimon import nakdimon_dataset
 from util_nakdimon import nakdimon_utils as utils
 from util_nakdimon import nakdimon_hebrew_model as hebrew
 
@@ -30,8 +30,8 @@ class DiacritizationDataset(Dataset):
         self.device = config_manager.device
 
         self.data_file_path = data_file_path
-        self.data, _ = dataset.get_data([self.data_file_path],
-                                        self.config['max_len'])
+        self.data, _ = nakdimon_dataset.get_data([self.data_file_path],
+                                                 self.config['max_len'])
 
     def __len__(self):
         "Denotes the total number of samples"
@@ -46,7 +46,7 @@ def collate_fn(data):
     """
     Padding the input and output sequences
     """
-    return dataset.Data.concatenate(data)
+    return nakdimon_dataset.Data.concatenate(data)
 
 
 def load_training_data(config_manager: ConfigManager, loader_parameters):

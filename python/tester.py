@@ -10,6 +10,10 @@ from tqdm import trange
 from dataset import load_iterators
 from trainer import GeneralTrainer
 
+from util_nakdimon import nakdimon_dataset
+from util_nakdimon import nakdimon_utils as utils
+from util_nakdimon import nakdimon_hebrew_model as hebrew
+
 
 class DiacritizationTester(GeneralTrainer):
     def __init__(self, config_path: str, model_kind: str) -> None:

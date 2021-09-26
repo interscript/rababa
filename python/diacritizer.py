@@ -1,16 +1,18 @@
+
 from typing import Dict
 import torch
 import warnings
 import tqdm
 import pandas as pd
 import numpy as np
+
 from config_manager import ConfigManager
 from dataset import (DiacritizationDataset,
                      collate_fn)
 from torch.utils.data import (DataLoader,
                               Dataset)
-from util_nakdimon import nakdimon_dataset as dataset
 
+from util_nakdimon import nakdimon_dataset as dataset
 # import util.reconcile_original_plus_diacritized as reconcile
 
 
@@ -70,13 +72,7 @@ class Diacritizer:
         """
         data_iterator = self.get_data_from_file(path)
 
-        raw_data, diacritized_data = [], []
-        for data_batch in tqdm.tqdm(data_iterator):
-            raw_data.append(data_batch)
-            dia_data.append(self.predict_batch(data_batch))
-
-        raw_data = Data.concatenate(raw_data)
-        dia_data = Data.concatenate(dia_data)
+        raw_data, dia_data = diacritize_data_iterator(self, data_iterator)
 
         dia_total = dataset.merge_unconditional( \
                                 raw_data.text, raw_data.normalized, \
@@ -85,6 +81,17 @@ class Diacritizer:
         text = ' '.join(dia_total).replace('\ufeff', ''). \
                         replace('  ', ' ').replace(hebrew.RAFE, '')
         return text
+
+    def diacritize_data_iterator(self, data_iterator): #model):
+        aw_data, diacritized_data = [], []
+        for data_batch in tqdm.tqdm(data_iterator):
+            raw_data.append(data_batch)
+            dia_data.append(self.predict_batch(data_batch))
+
+        raw_data = Data.concatenate(raw_data)
+        dia_data = Data.concatenate(dia_data)
+        return raw_data, dia_data
+
 
     def predict_batch(self, data_batch: dataset.Data):
         # Forward pass
