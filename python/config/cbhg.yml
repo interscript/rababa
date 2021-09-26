@@ -1,7 +1,7 @@
 session_name: base
 
 data_directory: "data"
-data_type: "CA_MSA"
+#data_type: "CA_MSA"
 log_directory: "log_dir"
 load_training_data: true
 load_test_data: false
@@ -38,6 +38,12 @@ post_cbhg_use_batch_norm: true
 use_mixed_precision: false
 optimizer_type: Adam
 device: cpu
+
+# GEOMETRY
+len_input_symbols: 90
+len_niqqud_symbols: 16
+len_dagesh_symbols: 3
+len_sin_symbols: 4
 
 # LOGGING
 evaluate_frequency: 5000

@@ -3,7 +3,7 @@ Loading the diacritization dataset
 """
 
 import os
-
+import numpy as np
 import pandas as pd
 import torch
 import random
@@ -46,8 +46,7 @@ def collate_fn(data):
     """
     Padding the input and output sequences
     """
-    return np.array([d[0] for d in data]), np.array([d[1] for d in data]), \
-        np.array([d[2] for d in data]), np.array([d[3] for d in data])
+    return dataset.Data.concatenate(data)
 
 
 def load_training_data(config_manager: ConfigManager, loader_parameters):

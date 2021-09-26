@@ -58,6 +58,7 @@ def from_categorical(t):
     return np.argmax(t, axis=-1)
 
 
+"""
 def merge(texts, tnss, nss, dss, sss):
     res = []
     for ts, tns, ns, ds, ss in zip(texts, tnss, nss, dss, sss):
@@ -77,16 +78,37 @@ def merge(texts, tnss, nss, dss, sss):
                                     replace(hebrew.RAFE, ''))
         res.append(''.join(sentence))
     return res
+"""
+
+
+def merge_unconditional(texts, tnss, nss, dss, sss):
+    res = []
+    for ts, tns, ns, ds, ss in zip(texts, tnss, nss, dss, sss):
+        sentence = []
+        for t, tn, n, d, s in zip(ts, tns, ns, ds, ss):
+            if tn == 0:
+                break
+            sentence.append(t)
+            sentence.append(dagesh_table.indices_char[d] \
+                            if hebrew.can_dagesh(t) else '\uFEFF')
+            sentence.append(sin_table.indices_char[s] \
+                            if hebrew.can_sin(t) else '\uFEFF')
+            sentence.append(niqqud_table.indices_char[n] \
+                            if hebrew.can_niqqud(t) else '\uFEFF')
+        res.append(''.join(sentence))
+    return res
 
 
 class Data:
-    text: np.ndarray = None
-    normalized: np.ndarray = None
-    dagesh: np.ndarray = None
-    sin: np.ndarray = None
-    niqqud: np.ndarray = None
 
-    filenames: Tuple[str, ...] = ()
+    def __init__(self,
+                 text=None,normalized=None,dagesh=None,sin=None,niqqud=None):
+        self.text = text
+        self.normalized = normalized
+        self.dagesh = dagesh
+        self.sin = sin
+        self.niqqud = niqqud
+        self.filenames = None
 
     @staticmethod
     def concatenate(others):
@@ -114,16 +136,19 @@ class Data:
             self.sin)
 
     def to_device(self, device):
-        self.normalized = torch.tensor(self.normalized).to('cuda')
-        self.niqqud = torch.tensor(self.niqqud).to('cuda')
-        self.dagesh = torch.tensor(self.dagesh).to('cuda')
-        self.sin = torch.tensor(self.sin).to('cuda')
+        self.normalized = torch.tensor(self.normalized).to(device)
+        self.niqqud = torch.tensor(self.niqqud).to(device)
+        self.dagesh = torch.tensor(self.dagesh).to(device)
+        self.sin = torch.tensor(self.sin).to(device)
 
     def get_idces(self, idces):
-        return self.normalized[idces], \
-               self.niqqud[idces], \
-               self.dagesh[idces], \
-               self.sin[idces]
+        if type(idces) == int:
+            idces = [idces]
+        return Data(self.text[idces], \
+                    self.normalized[idces], \
+                    self.niqqud[idces], \
+                    self.dagesh[idces], \
+                    self.sin[idces])
 
     def __getitem__(self, item):
         return self.get_idces(item)

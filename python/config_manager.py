@@ -35,7 +35,7 @@ class ConfigManager:
         self.config: Dict[str, Any] = self._load_config()
         self.set_device()
         self.session_name = ".".join(
-            [self.config["data_type"],
+            [# self.config["data_type"],
              self.config["session_name"],
              f"{model_kind}"])
 
