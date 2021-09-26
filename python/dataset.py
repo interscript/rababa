@@ -58,7 +58,8 @@ def load_training_data(config_manager: ConfigManager, loader_parameters):
     if not config_manager.config["load_training_data"]:
         return []
 
-    path = os.path.join(config_manager.data_dir, "train.csv")
+    train_file_name = config_manager.config.get("train_file_name", "train.txt")
+    path = os.path.join(config_manager.data_dir, 'train', train_file_name)
 
     training_set = DiacritizationDataset(config_manager, path)
 
@@ -77,7 +78,7 @@ def load_test_data(config_manager: ConfigManager, loader_parameters):
     if not config_manager.config["load_test_data"]:
         return []
     test_file_name = config_manager.config.get("test_file_name", "test.csv")
-    path = os.path.join(config_manager.data_dir, test_file_name)
+    path = os.path.join(config_manager.data_dir, 'test', test_file_name)
 
     test_dataset = DiacritizationDataset(config_manager, path)
 
@@ -95,7 +96,8 @@ def load_validation_data(config_manager: ConfigManager, loader_parameters):
 
     if not config_manager.config["load_validation_data"]:
         return []
-    path = os.path.join(config_manager.data_dir, "eval.csv")
+    valid_file_name = config_manager.config.get("valid_file_name", "eval.txt")
+    path = os.path.join(config_manager.data_dir, 'eval', test_file_name)
 
     valid_dataset = DiacritizationDataset(config_manager, path)
 

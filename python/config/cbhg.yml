@@ -9,12 +9,13 @@ load_validation_data: true
 n_training_examples: null # null load all training examples, good for fast loading
 n_test_examples: null  # null load all test examples
 n_validation_examples: null # null load all validation examples
-test_file_name: "test.csv"
+train_file_name: "clean_data_modern.txt"
+test_file_name: "test.txt"
 is_data_preprocessed: false # The data file is organized as (original text | text | diacritics)
 data_separator: '|' # Required if the data already processed
 diacritics_separator: '*'  # Required if the data already processed
-text_encoder: ArabicEncoderWithStartSymbol
-text_cleaner: valid_arabic_cleaners # a white list that uses only Arabic letters, punctuations, and a space
+#text_encoder: ArabicEncoderWithStartSymbol
+#text_cleaner: valid_arabic_cleaners # a white list that uses only Arabic letters, punctuations, and a space
 max_len: 600 # sentences larger than this size will not be used
 reconcile: true
 
