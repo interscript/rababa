@@ -61,9 +61,7 @@ class GeneralTrainer(Trainer):
 
         self.load_model(model_path=self.config.get("train_resume_model_path"))
         self.load_diacritizer()
-
         self.initialize_model()
-
         self.print_config()
 
     def print_config(self):
@@ -119,17 +117,10 @@ class GeneralTrainer(Trainer):
 
     def get_benchmarks(self, test_data_iterator): # nakdimon_dataset.Data):
 
-        test_data.shuffle()
-        normalized = test_data.normalized #).to('cuda').long()
-        n_data = normalized.shape[0]
-        n_ref, d_ref, s_ref = test_data.niqqud, test_data.dagesh, test_data.sin
-
-        batch_size = config['batch_size']
         d_scores = {'N': 0, 'D': 0, 'S': 0}
-
         # Run the model on some test examples
         with torch.no_grad():
-            total = 0
+
             raw_data, dia_data = \
                 self.diacritizer.diacritize_data_iterator(test_data_iterator)
 
@@ -139,15 +130,14 @@ class GeneralTrainer(Trainer):
                 {'N': dia_data.niqqud, 'D': dia_data.dagesh, 'S': dia_data.sin}
 
             for i,k in enumerate(d_scores.keys()):
-
                 labels = d_raw_data[k]
                 predicted = torch.max(d_dia_data[k].permute(0, 2, 1), 1).indices
-                scores[k] += (predicted == labels).sum().item()
+                d_scores[k] = (predicted == labels).sum().item() / predicted.shape[0]
 
-            return dict([(k+'_accu', scores[k]/total) for k in d_scores.keys()])
-
+            return dict([(k+'_accu', scores[k]) for k in d_scores.keys()])
 
     def evaluate(self, iterator, tqdm, use_target=True):
+
         epoch_loss = 0
         epoch_acc = 0
         self.model.eval()
@@ -182,7 +172,7 @@ class GeneralTrainer(Trainer):
         results = {}
         self.diacritizer.set_model(self.model)
         evaluated_batches = 0
-        tqdm.set_description(f"Calculating DER/WER {self.global_step}: ")
+        tqdm.set_description(f"Calculating DEC/CHA/WOR/VOC {self.global_step}: ")
         for batch in iterator:
             if evaluated_batches > int(self.config["error_rates_n_batches"]):
                 break
@@ -193,19 +183,24 @@ class GeneralTrainer(Trainer):
             tqdm.update()
 
         summary_texts = []
-        orig_path = os.path.join(self.config_manager.prediction_dir, f"original.txt")
-        predicted_path = os.path.join(
-            self.config_manager.prediction_dir, f"predicted.txt"
-        )
+        orig_path = os.path.join(self.config_manager.prediction_dir,
+                                 f"original.txt")
+        predicted_path = os.path.join(self.config_manager.prediction_dir,
+                                      f"predicted.txt")
 
         with open(orig_path, "w", encoding="utf8") as file:
             for sentence in all_orig:
                 file.write(f"{sentence}\n")
 
+        self.diacritizer.diacritize_file(predicted_path)
         with open(predicted_path, "w", encoding="utf8") as file:
             for sentence in all_predicted:
                 file.write(f"{sentence}\n")
 
+        results = nakdimon_metrics. \
+                    all_metrics_for_files(test_file_path, tmp_path)
+
+        """
         for i in range(int(self.config["n_predicted_text_tensorboard"])):
             if i > len(all_predicted):
                 break
@@ -213,15 +208,8 @@ class GeneralTrainer(Trainer):
             summary_texts.append(
                 (f"eval-text/{i}", f"{ all_orig[i]} |->  {all_predicted[i]}")
             )
+        """
 
-        results["DER"] = der.calculate_der_from_path(orig_path, predicted_path)
-        results["DER*"] = der.calculate_der_from_path(
-            orig_path, predicted_path, case_ending=False
-        )
-        results["WER"] = wer.calculate_wer_from_path(orig_path, predicted_path)
-        results["WER*"] = wer.calculate_wer_from_path(
-            orig_path, predicted_path, case_ending=False
-        )
         tqdm.reset()
         return results, summary_texts
 
@@ -235,7 +223,7 @@ class GeneralTrainer(Trainer):
         tqdm_eval = trange(0, len(validation_iterator), leave=True)
         tqdm_error_rates = trange(0, len(validation_iterator), leave=True)
         tqdm_eval.set_description("Eval")
-        tqdm_error_rates.set_description("WER/DER : ")
+        tqdm_error_rates.set_description("DEC/CHA/WOR/VOC : ")
         tqdm = trange(self.global_step, self.config["max_steps"] + 1, leave=True)
 
         for batch_inputs in repeater(train_iterator):
@@ -249,7 +237,7 @@ class GeneralTrainer(Trainer):
                 with autocast():
                     step_results = self.train_batch(batch_inputs)
                     for k in step_results.keys():
-                        scaler.scale(step_results[k]).backward()
+                        scaler.scale(step_results[k]).backward(retain_graph=True)
                     scaler.unscale_(self.optimizer)
                     if self.config.get("CLIP"):
                         torch.nn.utils.clip_grad_norm_(
@@ -262,7 +250,7 @@ class GeneralTrainer(Trainer):
                 step_results = self.train_batch(batch_inputs)
 
                 for k in step_results.keys():
-                    step_results[k].backward()
+                    step_results[k].backward(retain_graph=True)
 
                 if self.config.get("CLIP"):
                     torch.nn.utils.clip_grad_norm_(
@@ -308,38 +296,37 @@ class GeneralTrainer(Trainer):
                 self.global_step % self.config["evaluate_with_error_rates_frequency"]
                 == 0
             ):
-                error_rates, summery_texts = self.evaluate_with_error_rates(
+                scores, summery_texts = self.evaluate_with_error_rates(
                     validation_iterator, tqdm_error_rates
                 )
                 if error_rates:
-                    WER = error_rates["WER"]
-                    DER = error_rates["DER"]
-                    DER1 = error_rates["DER*"]
-                    WER1 = error_rates["WER*"]
+
+                    DEC, CHA, WOR, VOC = \
+                     scores["DEC"], scores["CHA"], scores["WOR"], scores["VOC"]
 
                     self.summary_manager.add_scalar(
-                        "error_rates/WER",
-                        WER / 100,
+                        "error_rates/DEC",
+                        DEC,
                         global_step=self.global_step,
                     )
                     self.summary_manager.add_scalar(
-                        "error_rates/DER",
-                        DER / 100,
+                        "error_rates/CHA",
+                        CHA,
                         global_step=self.global_step,
                     )
                     self.summary_manager.add_scalar(
-                        "error_rates/DER*",
-                        DER1 / 100,
+                        "error_rates/WOR",
+                        WOR,
                         global_step=self.global_step,
                     )
                     self.summary_manager.add_scalar(
-                        "error_rates/WER*",
-                        WER1 / 100,
+                        "error_rates/VOC",
+                        VOC,
                         global_step=self.global_step,
                     )
 
-                    error_rates = f"DER: {DER}, WER: {WER}, DER*: {DER1}, WER*: {WER1}"
-                    tqdm.display(f"WER/DER {self.global_step}: {error_rates}", pos=9)
+                    error_rates = f"DEC: {DEC]}, CHA: {CHA}, WOR: {WOR}, VOC: {VOC}"
+                    tqdm.display(f"metrics {self.global_step}: {error_rates}", pos=9)
 
                     for tag, text in summery_texts:
                         self.summary_manager.add_text(tag, text)
@@ -364,17 +351,16 @@ class GeneralTrainer(Trainer):
         # Forward pass
         outputs = self.model(raw_data.normalized)
         losses = []
-        self.optimizer.zero_grad()
+        #self.optimizer.zero_grad()
         for i,k in enumerate(labels):
             # Evaluate loss
             loss = self.criterion(outputs[i].permute(0, 2, 1), \
                                   dots_idces[i].long())
             # Backward pass
-            loss.backward(retain_graph=True)
+            #loss.backward(retain_graph=True)
             # Step with optimizer
             losses.append((labels[i], float(loss)))
-        self.optimizer.step()
-
+        #self.optimizer.step()
         return dict(losses)
 
     """

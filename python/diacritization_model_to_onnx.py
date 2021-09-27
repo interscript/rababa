@@ -21,9 +21,9 @@ batch_size = 32
     example and mock data:
     we found that populating all the data, removing the zeros gives better results.
 """
-src = torch.Tensor([[1 for i in range(max_len)]
+normalized = torch.Tensor([[1 for i in range(max_len)]
                     for i in range(batch_size)]).long()
-lengths = torch.Tensor([max_len for i in range(batch_size)]).long()
+
 # example data
 batch_data = pickle.load( open('../models-data/batch_example_data.pkl', 'rb') )
 
@@ -43,7 +43,7 @@ dia = Diacritizer(config_str, model_kind_str, load_model)
 dia.model.to(dia.device)
 dia.model.eval();
 # run model
-torch_out = dia.model(src, lengths)
+niqqud, dagesh, sin = dia.model(normalized)
 
 
 """
@@ -58,21 +58,19 @@ import onnxruntime
 onnx_model_filename = '../models-data/diacritization_model.onnx'
 
 
-print(src.shape)
+print(normalized.shape)
 
 #exit()
 # export model
 torch.onnx.export(dia.model,
-                  (src, lengths),
+                  normalized,
                   onnx_model_filename,
                   verbose=False,
                   opset_version=11,
-                  input_names=['src', 'lengths'],
-                  output_names=['output'],
-                  dynamic_axes = {'src': [1], #[0,1,2], #[0,1,2],
-                  #'input_2':{0:'batch'},
-                  'output': [1]
-                  })
+                  input_names=['normalized'],
+                  output_names=['niqqud', 'dagesh', 'sin'],
+                  dynamic_axes = {'normalized': [1],
+                                  'output': [1], 'dagesh': [1], 'sin': [1]})
 
 print('Model printed in rel. path:', onnx_model_filename)
 
@@ -97,19 +95,15 @@ ort_session = onnxruntime.InferenceSession(onnx_model_filename)
 """
 
 # prepare onnx input
-ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.int64),
-              ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64)}
+ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
 # run onnx model
 ort_outs = ort_session.run(None, ort_inputs)
 
 print('outs:: ', ort_outs)
 
+print('normalized:: ', normalized.detach().numpy().astype(np.int64))
 
-print('src:: ', src.detach().numpy().astype(np.int64))
-print('lengths: ',lengths.detach().numpy().astype(np.int64))
-
-#exit()
 
 for i in range(batch_size):
     np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(),
@@ -120,17 +114,10 @@ print("\n!!!Exported model has been tested with ONNXRuntime, result looks good w
 
 
 vec = [[41, 12, 40] for i in range(batch_size)]
-src = torch.Tensor(vec).long()
+normalized = torch.Tensor(vec).long()
 
-lengths = torch.Tensor([3 for i in range(batch_size)]).long()
+ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
-ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.int64),
-              ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64)}
-
-
-#print('12345678910')
-#print(ort_session.get_inputs()[0].name)
-#print(ort_session.get_inputs()[1].name)
 
 print('run 3')
 ort_outs = ort_session.run(None, ort_inputs)
@@ -139,16 +126,13 @@ print('outs:: ', ort_outs[0][0][0])
 print('outs:: ', ort_outs[0][0][1])
 print('outs:: ', ort_outs[0][0][2])
 
-torch_out = dia.model(src, lengths)
+torch_out = dia.model(normalized)
 
-#print(torch_out['diacritics'][0])
 for i in range(batch_size):
     np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(), \
                                ort_outs[0][i], rtol=1e-03, atol=1e-03)
 
-print('12345678910')
 print(ort_session.get_inputs()[0].name)
-print(ort_session.get_inputs()[1].name)
 
 #exit()
 
@@ -168,39 +152,22 @@ for test_run in range(3):
 
     vec = [[random.randint(0,1) for i in range(max_len)]
             for i in range(batch_size)]
-    src = torch.Tensor(vec).long()
-    lengths = torch.Tensor([max_len for i in range(batch_size)]).long()
+    normalized = torch.Tensor(vec).long()
 
-    """
-    with open('test_data/test'+str(test_id)+'.txt', 'w') as f:
-        for ll in src.detach().tolist():
-            for item in ll:
-                f.write("%s " % item)
-            f.write("\n")
-    f.close()
-    """
-    torch_out = dia.model(src, lengths)
-    """
-    my_list = torch_out['diacritics'].detach().numpy().tolist()
-    with open('test_data/test'+str(test_id)+'_torch.txt', 'w') as f:
-        for ll in my_list:
-            for item in ll:
-                for l in item:
-                    f.write("%s " % l)
-                f.write("\n")
-    f.close()
-    test_id+=1
-    """
+    torch_out = dia.model(normalized)
     # prepare onnx input
-    ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.int64),
-                  ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64)}
+    ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
     # run onnx model
     ort_outs = ort_session.run(None, ort_inputs)
 
     for i in range(batch_size):
-        np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(), \
+        np.testing.assert_allclose(torch_out['niqqud'][i].detach().numpy(), \
                                    ort_outs[0][i], rtol=1e-03, atol=1e-03)
+        np.testing.assert_allclose(torch_out['dagesh'][i].detach().numpy(), \
+                                   ort_outs[1][i], rtol=1e-03, atol=1e-03)
+        np.testing.assert_allclose(torch_out['sin'][i].detach().numpy(), \
+                                   ort_outs[2][i], rtol=1e-03, atol=1e-03)
 
     print('test :: ', test_run)
     print("Result looks good within given tolerance!!!")
@@ -213,38 +180,22 @@ for test_run in range(3):
 
     vec = [[random.randint(0, 17) for i in range(max_len)]
             for i in range(batch_size)]
-    src = torch.Tensor(vec).long()
-    """
-    with open('test_data/test'+str(test_id)+'.txt', 'w') as f:
-        for ll in src.detach().tolist():
-            for item in ll:
-                f.write("%s " % item)
-            f.write("\n")
-    f.close()
-    """
-    torch_out = dia.model(src, lengths)
+    normalized = torch.Tensor(vec).long()
+    torch_out = dia.model(normalized)
 
-    #my_list = torch_out['diacritics'].detach().numpy().tolist()
-    """
-    with open('test_data/test'+str(test_id)+'_torch.txt', 'w') as f:
-        for ll in my_list:
-            for item in ll:
-                for l in item:
-                    f.write("%s " % l)
-                f.write("\n")
-    f.close()
-    test_id+=1
-    """
     # prepare onnx input
-    ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.int64),
-                  ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64)}
+    ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
     # run onnx model
     ort_outs = ort_session.run(None, ort_inputs)
 
     for i in range(batch_size):
-        np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(), \
+        np.testing.assert_allclose(torch_out['niqqud'][i].detach().numpy(), \
                                    ort_outs[0][i], rtol=1, atol=1)
+        np.testing.assert_allclose(torch_out['dagesh'][i].detach().numpy(), \
+                                   ort_outs[1][i], rtol=1, atol=1)
+        np.testing.assert_allclose(torch_out['sin'][i].detach().numpy(), \
+                                   ort_outs[2][i], rtol=1, atol=1)
 
     print('test :: ', test_run)
     print("Result looks good within given tolerance!!!")
@@ -258,21 +209,23 @@ for l in [2, 10, 40, 100, 150]:
 
     vec = [[1 for i in range(l)] # random.randint(0,1)
             for i in range(batch_size)]
-    src = torch.Tensor(vec).long()
-    lengths = torch.Tensor([l for i in range(batch_size)]).long()
+    normalized = torch.Tensor(vec).long()
 
-    torch_out = dia.model(src, lengths)
+    torch_out = dia.model(normalized)
 
     # prepare onnx input
-    ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.int64),
-                  ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64)}
+    ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
     # run onnx model
     ort_outs = ort_session.run(None, ort_inputs)
 
     for i in range(batch_size):
-        np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(), \
+        np.testing.assert_allclose(torch_out['niqqud'][i].detach().numpy(), \
                                    ort_outs[0][i], rtol=1e-03, atol=1e-03)
+        np.testing.assert_allclose(torch_out['dagesh'][i].detach().numpy(), \
+                                   ort_outs[1][i], rtol=1e-03, atol=1e-03)
+        np.testing.assert_allclose(torch_out['sin'][i].detach().numpy(), \
+                                   ort_outs[2][i], rtol=1e-03, atol=1e-03)
 
     print('test :: ', l)
     print("Result looks good within given tolerance!!!")
@@ -284,21 +237,23 @@ for l in [2, 10, 40, 100, 150]:
 
     vec = [[random.randint(0, 17) for i in range(l)]
             for i in range(batch_size)]
-    src = torch.Tensor(vec).long()
-    lengths = torch.Tensor([l for i in range(batch_size)]).long()
+    normalized = torch.Tensor(vec).long()
 
-    torch_out = dia.model(src, lengths)
+    torch_out = dia.model(normalized)
 
     # prepare onnx input
-    ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.int64),
-                  ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64)}
+    ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
     # run onnx model
     ort_outs = ort_session.run(None, ort_inputs)
 
     for i in range(batch_size):
-        np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(), \
+        np.testing.assert_allclose(torch_out['niqqud'][i].detach().numpy(), \
                                    ort_outs[0][i], rtol=1, atol=1)
+        np.testing.assert_allclose(torch_out['dagesh'][i].detach().numpy(), \
+                                   ort_outs[1][i], rtol=1, atol=1)
+        np.testing.assert_allclose(torch_out['sin'][i].detach().numpy(), \
+                                   ort_outs[2][i], rtol=1, atol=1)
 
     print('test :: ', l)
     print("Result looks good within given tolerance!!!")

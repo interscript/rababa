@@ -128,9 +128,4 @@ class CBHGModel(nn.Module):
         predictions_sin = self.projections_sin(outputs)
 
         # predictions = [batch_size, src len, targ_vocab_size]
-
-        output = {'niqqud': predictions_niqqud,
-                  'dagesh': predictions_dagesh,
-                  'sin': predictions_sin}
-
-        return output
+        return predictions_niqqud, predictions_dagesh, predictions_sin
