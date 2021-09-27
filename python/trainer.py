@@ -117,7 +117,7 @@ class GeneralTrainer(Trainer):
             d_loss[k+'_loss'] = loss
         return d_loss
 
-    def get_bmarks(self, test_data: nakdimon_dataset.Data):
+    def get_benchmarks(self, test_data_iterator): # nakdimon_dataset.Data):
 
         test_data.shuffle()
         normalized = test_data.normalized #).to('cuda').long()
@@ -130,29 +130,21 @@ class GeneralTrainer(Trainer):
         # Run the model on some test examples
         with torch.no_grad():
             total = 0
-            for i in range(0, n_data, batch_size): # n_data
+            raw_data, dia_data = \
+                self.diacritizer.diacritize_data_iterator(test_data_iterator)
 
-                total += batch_size * config['max_len']
+            d_raw_data = \
+                {'N': raw_data.niqqud, 'D': raw_data.dagesh, 'S': raw_data.sin}
+            d_dia_data = \
+                {'N': dia_data.niqqud, 'D': dia_data.dagesh, 'S': dia_data.sin}
 
-                hebrew_idces = normalized[i:i+batch_size]
+            for i,k in enumerate(d_scores.keys()):
 
-                dots_idces = [niqqud[i:i+batch_size],
-                              dagesh[i:i+batch_size],
-                              sin[i:i+batch_size]]
+                labels = d_raw_data[k]
+                predicted = torch.max(d_dia_data[k].permute(0, 2, 1), 1).indices
+                scores[k] += (predicted == labels).sum().item()
 
-                outputs = model(hebrew_idces)
-
-                for i,k in enumerate(['N', 'D', 'S']):
-
-                    labels = dots_idces[i]
-                    predicted = torch.max(outputs[i].permute(0, 2, 1), 1).indices
-                    scores[k] += (predicted == labels).sum().item()
-
-            for k in ['N', 'D', 'S']:
-                print(f"pointing: {k}, score: {scores[k]/total}%")
-                # wandb.log({k+'_accu': scores[k]/total})
-
-            return dict([(k+'_accu', scores[k]/total) for k in ['N', 'D', 'S']])
+            return dict([(k+'_accu', scores[k]/total) for k in d_scores.keys()])
 
 
     def evaluate(self, iterator, tqdm, use_target=True):
@@ -236,7 +228,8 @@ class GeneralTrainer(Trainer):
     def run(self):
 
         scaler = torch.cuda.amp.GradScaler()
-        train_iterator, _, validation_iterator = load_iterators(self.config_manager)
+        train_iterator, _, validation_iterator = \
+                        load_iterators(self.config_manager)
         print("data loaded")
         print("----------------------------------------------------------")
         tqdm_eval = trange(0, len(validation_iterator), leave=True)
@@ -254,8 +247,9 @@ class GeneralTrainer(Trainer):
             self.optimizer.zero_grad()
             if self.device == "cuda" and self.config["use_mixed_precision"]:
                 with autocast():
-                    step_results = self.run_one_step(batch_inputs)
-                    scaler.scale(step_results["loss"]).backward()
+                    step_results = self.train_batch(batch_inputs)
+                    for k in step_results.keys():
+                        scaler.scale(step_results[k]).backward()
                     scaler.unscale_(self.optimizer)
                     if self.config.get("CLIP"):
                         torch.nn.utils.clip_grad_norm_(
@@ -263,20 +257,20 @@ class GeneralTrainer(Trainer):
                         )
 
                     scaler.step(self.optimizer)
-
                     scaler.update()
             else:
-                step_results = self.run_one_step(batch_inputs)
+                step_results = self.train_batch(batch_inputs)
 
-                loss = step_results["loss"]
-                loss.backward()
+                for k in step_results.keys():
+                    step_results[k].backward()
+
                 if self.config.get("CLIP"):
                     torch.nn.utils.clip_grad_norm_(
                         self.model.parameters(), self.config["CLIP"]
                     )
                 self.optimizer.step()
 
-            self.losses.append(step_results["loss"].item())
+            self.losses.append(step_results)
 
             self.print_losses(step_results, tqdm)
 
@@ -364,7 +358,28 @@ class GeneralTrainer(Trainer):
 
             tqdm.update()
 
+
+    def train_batch(self, raw_data: nakdimon_dataset.Data, #optimizer, criterion,
+                    labels = ['N', 'D', 'S']):
+        # Forward pass
+        outputs = self.model(raw_data.normalized)
+        losses = []
+        self.optimizer.zero_grad()
+        for i,k in enumerate(labels):
+            # Evaluate loss
+            loss = self.criterion(outputs[i].permute(0, 2, 1), \
+                                  dots_idces[i].long())
+            # Backward pass
+            loss.backward(retain_graph=True)
+            # Step with optimizer
+            losses.append((labels[i], float(loss)))
+        self.optimizer.step()
+
+        return dict(losses)
+
+    """
     def run_one_step(self, batch_inputs: Dict[str, torch.Tensor]):
+
         batch_inputs["src"] = batch_inputs["src"].to(self.device)
         batch_inputs["lengths"] = batch_inputs["lengths"].to("cpu")
         batch_inputs["target"] = batch_inputs["target"].to(self.device)
@@ -385,6 +400,7 @@ class GeneralTrainer(Trainer):
                               targets.to(self.device))
         outputs.update({"loss": loss})
         return outputs
+    """
 
     def predict(self, iterator):
         pass
