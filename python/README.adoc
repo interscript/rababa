@@ -5,22 +5,31 @@
 Rababa Python is used for both:
 
 * Training of the Rababa diacriticization models
-* Conversion of non-diacriticized Arabic into diacriticized Arabic
+* Conversion of non-diacriticized Hebraic into diacriticized Hebraic
   (i.e. running of the Rababa diacriticization models)
 
 == Introduction
 
-Rababa uses deep Learning models for recovering Arabic language diacritics.
+Rababa uses deep Learning models for recovering Hebraic language diacritics.
 
-Rababa implements the models described in the paper
+Rababa originally implements and modifies the models described in the paper
 https://ieeexplore.ieee.org/document/9274427[Effective Deep Learning Models for Automatic Diacritization of Arabic Text]
-and refers to the implementation models from
-https://github.com/almodhfer/Arabic_Diacritization[almodhfer],
-which we have selected for this project from a list of alternatives listed in
-the README.
+and the implementation models from
+https://github.com/almodhfer/Arabic_Diacritization[almodhfer].
+
+This version of the code is based on our own
+https://github.com/interscript/rababa/tree/main/python[implementation for arabic]
+and also strongly inspired from the work of
+https://arxiv.org/pdf/2105.05209.pdf[nakdimon paper]
+and https://github.com/elazarg/nakdimon/blob/master/hebrew.py[nakdimon library].
+We have have overtaken the NLP and decomposition of diacritics into:
+NIQQUD, SIN and DAGESH and a lot of code from the later.
+We were also lucky to benefit from that previous work and also of an access
+to the author's generously shared
+ https://github.com/elazarg/hebrew_diacritized[dataset]
 
 Out of the four models that https://github.com/almodhfer[almodhfer] has
-implemented, we selected the simplest and most performant ones:
+implemented, we selected just the simplest and most performant ones:
 
 * The baseline model (`baseline`): consists of 3 bidirectional LSTM layers with
   optional batch norm layers.
@@ -60,8 +69,9 @@ pip install .
 . Setup prerequisites
 
 . Download the released model
-  https://github.com/secryst/rababa-models/releases/download/0.1/2000000-snapshot.pt[here]
-  and place under `python/log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt`
+  ADD NEW LINK WITH CLEANED/MERGED DATASETS!!!
+  %%
+  %% and place under `python/log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt`
 
 . Single sentences and text can now be diacritized as below:
 
@@ -71,9 +81,9 @@ python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'قطر
 python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file relative_path_to_text_file
 ----
 
-The maximal string length is set in configs at `600`.
+The maximal string length is set at `600` chars and is a parameter in config.
 
-Longer lines need to be broken down, for instance using the library
+Longer lines than above would  need to be broken down, for instance using the library
 introduced in the link:../lib/README.adoc[Ruby quickstart] section.
 
 
@@ -81,11 +91,10 @@ introduced in the link:../lib/README.adoc[Ruby quickstart] section.
 
 === Datasets
 
-* We have chosen the "`Tashkeela processed`" corpus ~2,800,000 sentences:
-** https://github.com/interscript/rababa-tashkeela
+* We have used the hebrew diacritized  https://github.com/elazarg/hebrew_diacritized[dataset]
+that we have cleaned as
+*** link cleaned data
 
-Other datasets are discussed in the reviewed literature or in the article
-referenced above.
 
 For training, data needs to be stored in the `data/CA_MSA` directory in such a
 format:
@@ -142,17 +151,9 @@ We go for the simplest raw version here:
 - As mentioned above, corpus must have `test.csv`,
   `train.csv`, and `valid.csv`.
 
-- Specify that the data is not preprocessed in the config.
-  In that case, each batch will be processed and the text and diacritics
-  will be extracted from the original text.
 
-- You also have to specify the text encoder and the cleaner functions.
-  Two text encoders were included: `BasicArabicEncoder`,
-  `ArabicEncoderWithStartSymbol`.
+HERE CODE WAS SIMPLIFIED
 
-  Moreover, we have one cleaning function: `valid_arabic_cleaners`, which clean
-  all characters except valid Arabic characters, which include Arabic letters,
-  punctuations, and diacritics.
 
 === Training
 

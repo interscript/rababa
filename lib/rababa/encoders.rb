@@ -3,7 +3,7 @@
 # and
 # https://github.com/interscript/rababa/blob/main/python/util/text_cleaners.py
 
-require_relative "arabic_constants"
+require_relative "hebrew_nlp"
 require_relative "cleaner"
 
 module Rababa::Encoders
