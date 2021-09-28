@@ -25,8 +25,7 @@ normalized = torch.Tensor([[1 for i in range(max_len)]
                     for i in range(batch_size)]).long()
 
 # example data
-batch_data = pickle.load( open('../models-data/batch_example_data.pkl', 'rb') )
-
+#batch_data = pickle.load( open('../models-data/batch_example_data.pkl', 'rb') )
 #target = batch_data['target']
 
 

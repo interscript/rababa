@@ -12,7 +12,7 @@ from dataset import (DiacritizationDataset,
 from torch.utils.data import (DataLoader,
                               Dataset)
 
-from util_nakdimon import nakdimon_dataset as dataset
+from util import nakdimon_dataset as dataset
 # import util.reconcile_original_plus_diacritized as reconcile
 
 

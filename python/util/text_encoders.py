@@ -3,8 +3,8 @@ from typing import Dict, List, Optional
 
 #from util import text_cleaners
 
-from util_nakdimon import nakdimon_dataset as dataset
-from util_nakdimon import nakdimon_hebrew_model as hebrew
+from util import nakdimon_dataset as dataset
+from util import nakdimon_hebrew_model as hebrew
 
 
 class TextEncoder:

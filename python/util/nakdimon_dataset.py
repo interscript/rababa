@@ -6,8 +6,8 @@ import torch
 
 #from cachier import cachier
 
-from util_nakdimon import nakdimon_hebrew_model as hebrew
-from util_nakdimon import nakdimon_utils as utils
+from util import nakdimon_hebrew_model as hebrew
+from util import nakdimon_utils as utils
 
 
 class CharacterTable:

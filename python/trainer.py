@@ -23,9 +23,9 @@ from util.utils import (
     # repeater,
 )
 
-from util_nakdimon import nakdimon_dataset
-from util_nakdimon import nakdimon_utils as utils
-from util_nakdimon import nakdimon_hebrew_model as hebrew
+from util import nakdimon_dataset
+from util import nakdimon_utils as utils
+from util import nakdimon_hebrew_model as hebrew
 
 
 class Trainer:
