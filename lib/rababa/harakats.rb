@@ -3,7 +3,7 @@
 # needing:
 # https://github.com/almodhfer/diacritization_evaluation/blob/master/diacritization_evaluation/constants.py
 
-require_relative "arabic_constants"
+require_relative "hebrew_nlp"
 
 module Rababa::Harakats
 

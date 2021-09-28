@@ -11,7 +11,7 @@ import utils
 # "rafe" denotes a letter to which it would have been valid to add a diacritic of some category
 # but instead it is decided not to. This makes the metrics less biased.
 Module Rababa
-  Module HebrewNLP
+  Module HebrewConst
 
     RAFE = '\u05BF'
     Niqqud = {
@@ -90,18 +90,84 @@ Module Rababa
     end
 
   end
+
+
+  Module HebrewNLP
+
+    class HebrewChar(NamedTuple)
+
+      attr_accessor :letter, :normalized, :dagesh, :sin, :niqqud
+
+      def initialise(letter, normalized, dagesh, sin, niqqud)
+        @letter = letter
+        @normalized = normalized
+        @dagesh = dagesh
+        @sin = sing
+        @niqqud = niqqud
+      end
+    end
+
+
+    def vocalize_dagesh(letter, dagesh)
+        if letter not in 'בכפ'
+            return ''
+        end
+        return dagesh.gsub(RAFE, '')
+    end
+
+
+    def vocalize_niqqud(c):
+        # FIX: HOLAM / KUBBUTZ cannot be handled here correctly
+        if c in [Niqqud.KAMATZ, Niqqud.PATAKH, Niqqud.REDUCED_PATAKH]
+            return Niqqud.PATAKH
+        end
+        if c in [Niqqud.HOLAM, Niqqud.REDUCED_KAMATZ]
+            return Niqqud.HOLAM  # TODO: Kamatz-katan
+        end
+        if c in [Niqqud.SHURUK, Niqqud.KUBUTZ]
+            return Niqqud.KUBUTZ
+        end
+        if c in [Niqqud.TZEIRE, Niqqud.SEGOL, Niqqud.REDUCED_SEGOL]
+            return Niqqud.SEGOL
+        end
+        if c == Niqqud.SHVA
+            return ''
+        end
+        return c.gsub(RAFE, '')
+
+
+    def is_hebrew_letter(letter)
+      return '\u05d0' <= letter <= '\u05ea'
+    end
+
+    def can_dagesh(letter)
+      return letter in ('בגדהוזטיכלמנספצקשת' + 'ךף')
+    end
+
+    def can_sin(letter)
+      return letter == 'ש'
+    end
+
+    def can_niqqud(letter)
+      return letter in ('אבגדהוזחטיכלמנסעפצקרשת' + 'ךן')
+    end
+
+    def can_any(letter):
+      return can_niqqud(letter) or can_dagesh(letter) or can_sin(letter)
+    end
+
+
+
+  end
 end
 
 
 
 
 
-class HebrewChar(NamedTuple):
-    letter: str
-    normalized: str
-    dagesh: str
-    sin: str
-    niqqud: str
+class HebrewChar(NamedTuple)
+
+  attr_accessor :letter, :normalized, :dagesh, :sin, :niqqud
 
     def __str__(self):
         return self.letter + self.dagesh + self.sin + self.niqqud
@@ -111,92 +177,51 @@ class HebrewChar(NamedTuple):
 
     def vocalize(self):
         return self._replace(niqqud=vocalize_niqqud(self.niqqud),
-                             sin=self.sin.replace(RAFE, ''),
+                             sin=self.sin.gsub(RAFE, ''),
                              dagesh=vocalize_dagesh(self.letter, self.dagesh))
 
 
 def items_to_text(items: List[HebrewItem]) -> str:
-    return ''.join(str(item) for item in items).replace(RAFE, '')
+    return ''.join(str(item) for item in items).gsub(RAFE, '')
 
 
-def vocalize_dagesh(letter, dagesh):
-    if letter not in 'בכפ':
-        return ''
-    return dagesh.replace(RAFE, '')
 
+def iterate_dotted_text(text) #-> Iterator[HebrewItem]:
 
-def vocalize_niqqud(c):
-    # FIX: HOLAM / KUBBUTZ cannot be handled here correctly
-    if c in [Niqqud.KAMATZ, Niqqud.PATAKH, Niqqud.REDUCED_PATAKH]:
-        return Niqqud.PATAKH
-
-    if c in [Niqqud.HOLAM, Niqqud.REDUCED_KAMATZ]:
-        return Niqqud.HOLAM  # TODO: Kamatz-katan
-
-    if c in [Niqqud.SHURUK, Niqqud.KUBUTZ]:
-        return Niqqud.KUBUTZ
-
-    if c in [Niqqud.TZEIRE, Niqqud.SEGOL, Niqqud.REDUCED_SEGOL]:
-        return Niqqud.SEGOL
-
-    if c == Niqqud.SHVA:
-        return ''
-
-    return c.replace(RAFE, '')
-
-
-def is_hebrew_letter(letter: str) -> bool:
-    return '\u05d0' <= letter <= '\u05ea'
-
-
-def can_dagesh(letter):
-    return letter in ('בגדהוזטיכלמנספצקשת' + 'ךף')
-
-
-def can_sin(letter):
-    return letter == 'ש'
-
-
-def can_niqqud(letter):
-    return letter in ('אבגדהוזחטיכלמנסעפצקרשת' + 'ךן')
-
-
-def can_any(letter):
-    return can_niqqud(letter) or can_dagesh(letter) or can_sin(letter)
-
-
-def iterate_dotted_text(text: str) -> Iterator[HebrewItem]:
-    n = len(text)
+    n = text.length
     text += '  '
     i = 0
     while i < n:
         letter = text[i]
 
-        dagesh = RAFE if can_dagesh(letter) else ''
-        sin = RAFE if can_sin(letter) else ''
-        niqqud = RAFE if can_niqqud(letter) else ''
+        dagesh = if can_dagesh(letter) then RAFE else '' end
+        sin = if can_sin(letter) then RAFE else '' end
+        niqqud = if can_niqqud(letter) then RAFE else '' end
         normalized = normalize(letter)
         i += 1
 
-        nbrd = text[i - 15:i + 15].split()[1:-1]
+        nbrd = text[(i - 15)..(i + 15)].split()[1..-2] # check -1?
 
-        assert letter not in ANY_NIQQUD, f'{i}, {nbrd}, {[name_of(c) for word in nbrd for c in word]}'
+        # do we need something like that in ruby?
+        # assert letter not in ANY_NIQQUD, f'{i}, {nbrd}, {[name_of(c) for word in nbrd for c in word]}'
 
-        if is_hebrew_letter(normalized):
-            if text[i] == DAGESH_LETTER:
-                # assert dagesh == RAFE, (text[i-5:i+5])
+        if is_hebrew_letter(normalized)
+            if text[i] == DAGESH_LETTER
                 dagesh = text[i]
                 i += 1
-            if text[i] in NIQQUD_SIN:
-                # assert sin == RAFE, (text[i-5:i+5])
+            end
+            if text[i] in NIQQUD_SIN
                 sin = text[i]
                 i += 1
-            if text[i] in NIQQUD:
-                # assert niqqud == RAFE, (text[i-5:i+5])
+            end
+            if text[i] in NIQQUD
                 niqqud = text[i]
                 i += 1
-            if letter == 'ו' and dagesh == DAGESH_LETTER and niqqud == RAFE:
+            end
+            if letter == 'ו' and dagesh == DAGESH_LETTER and niqqud == RAFE
                 dagesh = RAFE
                 niqqud = DAGESH_LETTER
-
-        yield HebrewItem(letter, normalized, dagesh, sin, niqqud)
+            end
+        end
+        return HebrewChar(letter, normalized, dagesh, sin, niqqud)
+      end
