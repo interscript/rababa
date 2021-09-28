@@ -58,9 +58,6 @@ import onnxruntime
 onnx_model_filename = '../models-data/diacritization_model.onnx'
 
 
-print(src.shape)
-
-#exit()
 # export model
 torch.onnx.export(dia.model,
                   (src, lengths),
@@ -104,12 +101,9 @@ ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.i
 ort_outs = ort_session.run(None, ort_inputs)
 
 print('outs:: ', ort_outs)
-
-
 print('src:: ', src.detach().numpy().astype(np.int64))
 print('lengths: ',lengths.detach().numpy().astype(np.int64))
 
-#exit()
 
 for i in range(batch_size):
     np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(),
@@ -128,30 +122,13 @@ ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.i
               ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64)}
 
 
-#print('12345678910')
-#print(ort_session.get_inputs()[0].name)
-#print(ort_session.get_inputs()[1].name)
-
-print('run 3')
 ort_outs = ort_session.run(None, ort_inputs)
-print('outs:: ', ort_outs[0].shape)
-print('outs:: ', ort_outs[0][0][0])
-print('outs:: ', ort_outs[0][0][1])
-print('outs:: ', ort_outs[0][0][2])
 
 torch_out = dia.model(src, lengths)
 
-#print(torch_out['diacritics'][0])
 for i in range(batch_size):
     np.testing.assert_allclose(torch_out['diacritics'][i].detach().numpy(), \
                                ort_outs[0][i], rtol=1e-03, atol=1e-03)
-
-print('12345678910')
-print(ort_session.get_inputs()[0].name)
-print(ort_session.get_inputs()[1].name)
-
-#exit()
-
 
 
 """
@@ -162,7 +139,6 @@ import random
 test_id = 0
 
 print('***** Test MAX size :: Random Boolean vectors: *****')
-print(max_len)
 
 for test_run in range(3):
 
@@ -171,26 +147,8 @@ for test_run in range(3):
     src = torch.Tensor(vec).long()
     lengths = torch.Tensor([max_len for i in range(batch_size)]).long()
 
-    """
-    with open('test_data/test'+str(test_id)+'.txt', 'w') as f:
-        for ll in src.detach().tolist():
-            for item in ll:
-                f.write("%s " % item)
-            f.write("\n")
-    f.close()
-    """
     torch_out = dia.model(src, lengths)
-    """
-    my_list = torch_out['diacritics'].detach().numpy().tolist()
-    with open('test_data/test'+str(test_id)+'_torch.txt', 'w') as f:
-        for ll in my_list:
-            for item in ll:
-                for l in item:
-                    f.write("%s " % l)
-                f.write("\n")
-    f.close()
-    test_id+=1
-    """
+    
     # prepare onnx input
     ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.int64),
                   ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64)}
@@ -207,34 +165,15 @@ for test_run in range(3):
 
 
 print('***** Test MAX size :: Random float, vectors within 0:16 *****')
-print(max_len)
 
 for test_run in range(3):
 
     vec = [[random.randint(0, 17) for i in range(max_len)]
             for i in range(batch_size)]
     src = torch.Tensor(vec).long()
-    """
-    with open('test_data/test'+str(test_id)+'.txt', 'w') as f:
-        for ll in src.detach().tolist():
-            for item in ll:
-                f.write("%s " % item)
-            f.write("\n")
-    f.close()
-    """
     torch_out = dia.model(src, lengths)
 
     #my_list = torch_out['diacritics'].detach().numpy().tolist()
-    """
-    with open('test_data/test'+str(test_id)+'_torch.txt', 'w') as f:
-        for ll in my_list:
-            for item in ll:
-                for l in item:
-                    f.write("%s " % l)
-                f.write("\n")
-    f.close()
-    test_id+=1
-    """
     # prepare onnx input
     ort_inputs = {ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.int64),
                   ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64)}
