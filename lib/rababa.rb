@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "rababa/arabic_constants"
+# require_relative "rababa/arabic_constants"
+require_relative "rababa/hebrew_nlp"
 require_relative "rababa/diacritizer"
 require_relative "rababa/encoders"
 require_relative "rababa/reconciler"
