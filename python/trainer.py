@@ -16,7 +16,7 @@ from util.learning_rates import LearningRateDecay
 from options import OptimizerType
 
 from util.utils import (
-    # categorical_accuracy,
+    categorical_accuracy,
     count_parameters,
     # initialize_weights,
     # plot_alignment,
@@ -89,25 +89,26 @@ class GeneralTrainer(Trainer):
             self.model.apply(initialize_weights)
 
     def print_losses(self, step_results, tqdm):
-        self.summary_manager.add_scalar(
-            "loss/loss", step_results["loss"], global_step=self.global_step
-        )
+        #self.summary_manager.add_scalar(
+        #    "loss/loss", step_results, global_step=self.global_step
+        #)
 
         tqdm.display(f"loss: {step_results['loss']}", pos=3)
         for pos, n_steps in enumerate(self.config["n_steps_avg_losses"]):
             if len(self.losses) > n_steps:
+                d_losses = process_losses(step_results[-n_steps:])
+                for k in d_losses.keys():
+                    #self.summary_manager.add_scalar(
+                    #   f"loss/loss-{n_steps}",
+                    #    d_losses[k],
+                    #    global_step=self.global_step,
+                    #)
+                    tqdm.display(
+                        f"{n_steps}-steps average loss: {d_losses[k]}",
+                        pos=pos + 4,
+                    )
 
-                self.summary_manager.add_scalar(
-                    f"loss/loss-{n_steps}",
-                    sum(self.losses[-n_steps:]) / n_steps,
-                    global_step=self.global_step,
-                )
-                tqdm.display(
-                    f"{n_steps}-steps average loss: {sum(self.losses[-n_steps:]) / n_steps}",
-                    pos=pos + 4,
-                )
-
-    def get_loss(self, losses):
+    def process_losses(self, losses):
         n_losses = len(losses)
         d_loss = {}
         for k in ['N','D','S']:
@@ -153,7 +154,6 @@ class GeneralTrainer(Trainer):
             predictions = pred_data.dagesh.view(-1) + \
                             pred_data.sin.view(-1) + \
                                 pred_data.niqqud.view(-1)
-
 
             loss = self.criterion(predictions, targets.to(self.device))
             acc = categorical_accuracy(
@@ -220,6 +220,7 @@ class GeneralTrainer(Trainer):
                         load_iterators(self.config_manager)
         print("data loaded")
         print("----------------------------------------------------------")
+
         tqdm_eval = trange(0, len(validation_iterator), leave=True)
         tqdm_error_rates = trange(0, len(validation_iterator), leave=True)
         tqdm_eval.set_description("Eval")
@@ -233,11 +234,15 @@ class GeneralTrainer(Trainer):
                     self.optimizer, global_step=self.global_step
                 )
             self.optimizer.zero_grad()
+
+            step_results = self.train_batch(batch_inputs)
+
             if self.device == "cuda" and self.config["use_mixed_precision"]:
                 with autocast():
-                    step_results = self.train_batch(batch_inputs)
+
                     for k in step_results.keys():
                         scaler.scale(step_results[k]).backward(retain_graph=True)
+
                     scaler.unscale_(self.optimizer)
                     if self.config.get("CLIP"):
                         torch.nn.utils.clip_grad_norm_(
@@ -247,7 +252,6 @@ class GeneralTrainer(Trainer):
                     scaler.step(self.optimizer)
                     scaler.update()
             else:
-                step_results = self.train_batch(batch_inputs)
 
                 for k in step_results.keys():
                     step_results[k].backward(retain_graph=True)
@@ -259,6 +263,7 @@ class GeneralTrainer(Trainer):
                 self.optimizer.step()
 
             self.losses.append(step_results)
+
 
             self.print_losses(step_results, tqdm)
 
@@ -344,7 +349,6 @@ class GeneralTrainer(Trainer):
                 return
 
             tqdm.update()
-
 
     def train_batch(self, raw_data: nakdimon_dataset.Data, #optimizer, criterion,
                     labels = ['N', 'D', 'S']):
