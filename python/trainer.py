@@ -103,10 +103,11 @@ class GeneralTrainer(Trainer):
                     #    d_losses[k],
                     #    global_step=self.global_step,
                     #)
-                    tqdm.display(
-                        f"{n_steps}-steps average loss: {d_losses[k]}",
-                        pos=pos + 4,
-                    )
+                    for i,k in enumerate(d_losses.keys())
+                        tqdm.display(
+                            f"{n_steps}-steps average {k}_loss: {d_losses[k]}",
+                            pos=pos + 4 + i,
+                        )
 
     def process_losses(self, losses):
         n_losses = len(losses)

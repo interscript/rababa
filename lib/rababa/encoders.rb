@@ -20,27 +20,6 @@ module Rababa::Encoders
             # cleaner fcts
             @cleaner = get_text_cleaner(cleaner_type)
 
-            @pad = "P"
-            @input_symbols = [@pad] + input_chars
-            @target_symbols = [@pad] + target_chars
-
-            # encoding of arabic without diacritics
-            @input_symbol_to_id = Hash[*@input_symbols.map.with_index \
-                                                  {|s, i| [s, i] }.flatten]
-            @input_id_to_symbol = Hash[*@input_symbols.map.with_index \
-                                                  {|s, i| [i, s] }.flatten]
-            # encoding of haraqats
-            @target_symbol_to_id = Hash[*@target_symbols.map.with_index \
-                                                  {|s, i| [s, i] }.flatten]
-            @target_id_to_symbol = Hash[*@target_symbols.map.with_index \
-                                                  {|s, i| [i, s] }.flatten]
-            @utarget_id_to_symbol = Hash[ \
-                *Rababa::ArabicConstants::UALL_POSSIBLE_HARAQAT.keys.map.with_index \
-                                                      {|s, i| [i, s] }.flatten]
-
-            @reverse_input = reverse_input
-            @input_pad_id = @input_symbol_to_id[@pad]
-            @start_symbol_id = nil
         end
 
         def get_text_cleaner(type)
