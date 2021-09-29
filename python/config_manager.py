@@ -1,3 +1,4 @@
+
 from enum import Enum
 import os
 from pathlib import Path
@@ -171,7 +172,8 @@ class ConfigManager:
 
         return last_model_path
 
-    def load_model(self, model_path: str = None):
+    def load_model(self,
+                   model_path: str = None, load_optimizer: bool = False):
         """
         loading a model from path
         Args:
@@ -187,20 +189,23 @@ class ConfigManager:
             file.write(str(model))
 
         if model_path is None:
-            last_model_path = self.get_last_model_path()
-            if last_model_path is None:
-                return model, 1
+            if not self.config('model_path', None) is None:
+                model_path = model_path = self.config['model_path']
+
+        if not model_path is None:
+            saved_model = torch.load(last_model_path) \
+                    if torch.cuda.is_available() else \
+                    torch.load(last_model_path, map_location=torch.device('cpu'))
+            check = model.load_state_dict(saved_model["model_state_dict"])
+            # print(check) check...
+            if load_optimizer:
+                optimizer_stat_dict = saved_model["optimizer_state_dict"]
+            global_step = saved_model["global_step"] + 1
         else:
-            last_model_path = model_path
+            saved_model, optimizer_stat_dict, global_step = \
+                model, None, None
 
-        saved_model = torch.load(last_model_path) \
-            if torch.cuda.is_available() else \
-                torch.load(last_model_path, map_location=torch.device('cpu'))
-
-        out = model.load_state_dict(saved_model["model_state_dict"])
-        # print(out) check...
-        global_step = saved_model["global_step"] + 1
-        return model, global_step
+        return saved_model, optimizer_stat_dict, global_step
 
     def get_model(self, ignore_hash=True):
         if not ignore_hash:

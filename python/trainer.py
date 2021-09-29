@@ -1,3 +1,4 @@
+
 import os
 from typing import Dict
 
@@ -103,7 +104,7 @@ class GeneralTrainer(Trainer):
                     #    d_losses[k],
                     #    global_step=self.global_step,
                     #)
-                    for i,k in enumerate(d_losses.keys())
+                    for i,k in enumerate(d_losses.keys()):
                         tqdm.display(
                             f"{n_steps}-steps average {k}_loss: {d_losses[k]}",
                             pos=pos + 4 + i,
@@ -331,7 +332,7 @@ class GeneralTrainer(Trainer):
                         global_step=self.global_step,
                     )
 
-                    error_rates = f"DEC: {DEC]}, CHA: {CHA}, WOR: {WOR}, VOC: {VOC}"
+                    error_rates = f"DEC: {DEC}, CHA: {CHA}, WOR: {WOR}, VOC: {VOC}"
                     tqdm.display(f"metrics {self.global_step}: {error_rates}", pos=9)
 
                     for tag, text in summery_texts:
@@ -396,27 +397,16 @@ class GeneralTrainer(Trainer):
     def predict(self, iterator):
         pass
 
-    def load_model(self, model_path: str = None, load_optimizer: bool = True):
-        with open(
-            self.config_manager.base_dir / f"{self.model_kind}_network.txt", "w"
-        ) as file:
-            file.write(str(self.model))
+    def load_model(self,
+                   model_path: str = None,
+                   load_optimizer: bool = True):
 
-        if model_path is None:
-            last_model_path = self.config_manager.get_last_model_path()
-            if last_model_path is None:
-                self.global_step = 1
-                return
-        else:
-            last_model_path = model_path
+        saved_model, optimizer_stat_dict, global_step = \
+            self.config_manager.load_model(model_path, load_optimizer)
 
-        print(f"loading from {last_model_path}")
-        saved_model = torch.load(last_model_path) if torch.cuda.is_available() \
-            else torch.load(last_model_path, map_location=torch.device('cpu'))
-        self.model.load_state_dict(saved_model["model_state_dict"])
-        if load_optimizer:
-            self.optimizer.load_state_dict(saved_model["optimizer_state_dict"])
-        self.global_step = saved_model["global_step"] + 1
+        self.model = saved_model
+        self.optimizer.load_state_dict(optimizer_stat_dict)
+        elf.global_step = global_step
 
     def get_optimizer(self):
         if self.config["optimizer"] == OptimizerType.Adam:
