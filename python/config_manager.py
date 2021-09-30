@@ -177,35 +177,31 @@ class ConfigManager:
         """
         loading a model from path
         Args:
-        checkpoint (str): the path to the model
-        name (str): the name of the model, which is in the path
-        model (Tacotron): the model  to load its save state
-        optimizer: the optimizer to load its saved state
+        model_path (str): the path to the model
+        load_optimizer: load optimizer for training
         """
+
+        # print('config:: ', self.config)
 
         model = self.get_model()
 
         with open(self.base_dir / f"{self.model_kind}_network.txt", "w") as file:
             file.write(str(model))
 
-        if model_path is None:
-            if not self.config('model_path', None) is None:
-                model_path = model_path = self.config['model_path']
+        model_path = self.config['model_path'] \
+                        if model_path is None else model_path
 
-        if not model_path is None:
-            saved_model = torch.load(last_model_path) \
-                    if torch.cuda.is_available() else \
-                    torch.load(last_model_path, map_location=torch.device('cpu'))
-            check = model.load_state_dict(saved_model["model_state_dict"])
-            # print(check) check...
-            if load_optimizer:
-                optimizer_stat_dict = saved_model["optimizer_state_dict"]
-            global_step = saved_model["global_step"] + 1
-        else:
-            saved_model, optimizer_stat_dict, global_step = \
-                model, None, None
+        saved_model = torch.load(model_path) \
+                if torch.cuda.is_available() else \
+                    torch.load(model_path, map_location=torch.device('cpu'))
+        check = model.load_state_dict(saved_model["model_state_dict"])
+        print('Load model state dict:: ', check) # check...
 
-        return saved_model, optimizer_stat_dict, global_step
+        optimizer_stat_dict = saved_model["optimizer_state_dict"] \
+                                    if load_optimizer else None
+        global_step = saved_model["global_step"] + 1
+
+        return model, optimizer_stat_dict, global_step
 
     def get_model(self, ignore_hash=True):
         if not ignore_hash:

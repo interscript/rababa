@@ -21,7 +21,7 @@ from util.utils import (
     count_parameters,
     # initialize_weights,
     # plot_alignment,
-    # repeater,
+    repeater,
 )
 
 from util import nakdimon_dataset
@@ -37,10 +37,11 @@ class Trainer:
 class GeneralTrainer(Trainer):
 
     def __init__(self, config_path: str, model_kind: str) -> None:
+
         self.config_path = config_path
         self.model_kind = model_kind
         self.config_manager = ConfigManager(
-            config_path=config_path, model_kind=model_kind
+            config_path=self.config_path, model_kind=self.model_kind
         )
         self.config = self.config_manager.config
         self.losses = []
@@ -60,7 +61,7 @@ class GeneralTrainer(Trainer):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = self.model.to(self.device)
 
-        self.load_model(model_path=self.config.get("train_resume_model_path"))
+        self.load_model() #model_path=self.config.get("train_resume_model_path"))
         self.load_diacritizer()
         self.initialize_model()
         self.print_config()
@@ -118,9 +119,9 @@ class GeneralTrainer(Trainer):
             d_loss[k+'_loss'] = loss
         return d_loss
 
-    def get_benchmarks(self, test_data_iterator): # nakdimon_dataset.Data):
+    def get_benchmarks(self, test_data_iterator,
+                       d_scores = {'N': 0, 'D': 0, 'S': 0}):
 
-        d_scores = {'N': 0, 'D': 0, 'S': 0}
         # Run the model on some test examples
         with torch.no_grad():
 
@@ -149,7 +150,6 @@ class GeneralTrainer(Trainer):
 
             raw_data, pred_data = self.diacritizer. \
                                     diacritize_data_iterator(iterator)
-
             targets = raw_data.dagesh.view(-1) + \
                         raw_data.sin.view(-1) + \
                             raw_data.niqqud.view(-1)
@@ -228,6 +228,7 @@ class GeneralTrainer(Trainer):
         tqdm_eval.set_description("Eval")
         tqdm_error_rates.set_description("DEC/CHA/WOR/VOC : ")
         tqdm = trange(self.global_step, self.config["max_steps"] + 1, leave=True)
+
 
         for batch_inputs in repeater(train_iterator):
             tqdm.set_description(f"Global Step {self.global_step}")
@@ -401,12 +402,13 @@ class GeneralTrainer(Trainer):
                    model_path: str = None,
                    load_optimizer: bool = True):
 
-        saved_model, optimizer_stat_dict, global_step = \
+        saved_model, optimizer_states_dict, global_step = \
             self.config_manager.load_model(model_path, load_optimizer)
 
         self.model = saved_model
-        self.optimizer.load_state_dict(optimizer_stat_dict)
-        elf.global_step = global_step
+        if not optimizer_states_dict is None:
+            self.optimizer.load_state_dict(optimizer_states_dict)
+        self.global_step = global_step if not global_step is None else 0
 
     def get_optimizer(self):
         if self.config["optimizer"] == OptimizerType.Adam:
