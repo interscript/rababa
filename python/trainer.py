@@ -95,7 +95,7 @@ class GeneralTrainer(Trainer):
         #    "loss/loss", step_results, global_step=self.global_step
         #)
 
-        tqdm.display(f"loss: {step_results['loss']}", pos=3)
+        #tqdm.display(f"loss: {step_results['loss']}", pos=3)
         for pos, n_steps in enumerate(self.config["n_steps_avg_losses"]):
             if len(self.losses) > n_steps:
                 d_losses = process_losses(step_results[-n_steps:])
@@ -108,7 +108,7 @@ class GeneralTrainer(Trainer):
                     for i,k in enumerate(d_losses.keys()):
                         tqdm.display(
                             f"{n_steps}-steps average {k}_loss: {d_losses[k]}",
-                            pos=pos + 4 + i,
+                            pos=pos + 3 + i,
                         )
 
     def process_losses(self, losses):
@@ -371,19 +371,12 @@ class GeneralTrainer(Trainer):
         #self.optimizer.zero_grad()
         for i,k in enumerate(labels):
             # Evaluate loss
-            #print(0, labels[i])
-            #print(1, outputs[i].shape)
-            #print(2, outputs[i].permute(0, 2, 1).shape)
-            #print(3, targets[i].shape)
-            #print(4, outputs[i])
-            #print(5, targets[i])
-
             loss = self.criterion(outputs[i].permute(0, 2, 1), \
                                   targets[i].long())
             # Backward pass
             #loss.backward(retain_graph=True)
             # Step with optimizer
-            losses.append((labels[i], float(loss)))
+            losses.append((labels[i], loss))
         #self.optimizer.step()
         return dict(losses)
 
