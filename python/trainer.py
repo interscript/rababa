@@ -58,12 +58,12 @@ class GeneralTrainer(Trainer):
         self.optimizer = self.get_optimizer()
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.pad_idx)
 
+        self.load_model() #model_path=self.config.get("train_resume_model_path"))
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = self.model.to(self.device)
 
-        self.load_model() #model_path=self.config.get("train_resume_model_path"))
         self.load_diacritizer()
-        self.initialize_model()
+        # self.initialize_model()
         self.print_config()
 
     def print_config(self):
@@ -83,12 +83,14 @@ class GeneralTrainer(Trainer):
             print('model not found')
             exit()
 
+    """
     def initialize_model(self):
         if self.global_step > 1:
             return
         if self.model_kind == "transformer":
             print("Initializing using xavier_uniform_")
             self.model.apply(initialize_weights)
+    """
 
     def print_losses(self, step_results, tqdm):
         #self.summary_manager.add_scalar(

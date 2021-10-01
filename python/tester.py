@@ -10,13 +10,14 @@ from tqdm import trange
 from dataset import load_iterators
 from trainer import GeneralTrainer
 
-from util_nakdimon import nakdimon_dataset
-from util_nakdimon import nakdimon_utils as utils
-from util_nakdimon import nakdimon_hebrew_model as hebrew
+from util import nakdimon_dataset
+from util import nakdimon_utils as utils
+from util import nakdimon_hebrew_model as hebrew
 
 
 class DiacritizationTester(GeneralTrainer):
     def __init__(self, config_path: str, model_kind: str) -> None:
+
         self.config_path = config_path
         self.model_kind = model_kind
         self.config_manager = ConfigManager(
@@ -28,24 +29,29 @@ class DiacritizationTester(GeneralTrainer):
         self.device = self.config_manager.device
 
         self.text_encoder = self.config_manager.text_encoder
-        self.start_symbol_id = self.text_encoder.start_symbol_id
 
         self.model = self.config_manager.get_model()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = self.model.to(self.device)
 
-        self.load_model(model_path=self.config["test_model_path"], load_optimizer=False)
+        self.load_model(model_path=self.config["test_model_path"],
+                        load_optimizer=False)
+        self.model, opt, self.global_step =  \
+            self.config_manager.load_model(model_path=self.config["test_model_path"],
+                                           load_optimizer=False)
+        self.model = self.model.to(self.device)
         self.load_diacritizer()
         self.diacritizer.set_model(self.model)
 
-        self.initialize_model()
-
+        # self.initialize_model()
         self.print_config()
 
     def run(self):
+
         self.config_manager.config["load_training_data"] = False
         self.config_manager.config["load_validation_data"] = False
         self.config_manager.config["load_test_data"] = True
+
         _, test_iterator, _ = load_iterators(self.config_manager)
         tqdm_eval = trange(0, len(test_iterator), leave=True)
         tqdm_error_rates = trange(0, len(test_iterator), leave=True)

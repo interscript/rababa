@@ -12,7 +12,7 @@ from dataset import (DiacritizationDataset,
 from torch.utils.data import (DataLoader,
                               Dataset)
 
-from util import nakdimon_dataset as dataset
+from util import nakdimon_dataset # as dataset
 # import util.reconcile_original_plus_diacritized as reconcile
 
 
@@ -83,21 +83,22 @@ class Diacritizer:
         return text
 
     def diacritize_data_iterator(self, data_iterator): #model):
-        aw_data, diacritized_data = [], []
+        raw_data, dia_data = [], []
         for data_batch in tqdm.tqdm(data_iterator):
+            data_batch.to_device(self.device)
             raw_data.append(data_batch)
             dia_data.append(self.predict_batch(data_batch))
 
-        raw_data = Data.concatenate(raw_data)
-        dia_data = Data.concatenate(dia_data)
+        raw_data = nakdimon_dataset.Data.concatenate(raw_data)
+        dia_data = nakdimon_dataset.Data.concatenate(dia_data)
         return raw_data, dia_data
 
 
-    def predict_batch(self, data_batch: dataset.Data):
+    def predict_batch(self, data_batch: nakdimon_dataset.Data):
         # Forward pass
         niqqud, dagesh, sin = self.model(data_batch.normalized)
 
-        return dataset.Data(data_batch.text, data_batch.normalized, \
+        return nakdimon_dataset.Data(data_batch.text, data_batch.normalized, \
                             torch.max(dagesh.permute(0, 2, 1), 1). \
                                     indices.detach().cpu().numpy(), \
                             torch.max(sin.permute(0, 2, 1), 1). \
