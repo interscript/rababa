@@ -238,6 +238,7 @@ class GeneralTrainer(Trainer):
                 )
             self.optimizer.zero_grad()
 
+            batch_inputs.to_device(self.device)
             step_results = self.train_batch(batch_inputs)
 
             if self.device == "cuda" and self.config["use_mixed_precision"]:
@@ -353,16 +354,32 @@ class GeneralTrainer(Trainer):
 
             tqdm.update()
 
-    def train_batch(self, raw_data: nakdimon_dataset.Data, #optimizer, criterion,
+    def train_batch(self, raw_data: nakdimon_dataset.Data,
                     labels = ['N', 'D', 'S']):
         # Forward pass
+        #print(type(raw_data))
+        #print('lllllllll:: ', raw_data.normalized.shape)
+        #print('qqqqqqqqq:: ', type(raw_data.normalized))
+        targets = raw_data.niqqud, raw_data.dagesh, raw_data.sin
+
+        #print(11, raw_data.niqqud)
+        #print(22, raw_data.dagesh)
+        #print(33, raw_data.sin)
+
         outputs = self.model(raw_data.normalized)
         losses = []
         #self.optimizer.zero_grad()
         for i,k in enumerate(labels):
             # Evaluate loss
+            #print(0, labels[i])
+            #print(1, outputs[i].shape)
+            #print(2, outputs[i].permute(0, 2, 1).shape)
+            #print(3, targets[i].shape)
+            #print(4, outputs[i])
+            #print(5, targets[i])
+
             loss = self.criterion(outputs[i].permute(0, 2, 1), \
-                                  dots_idces[i].long())
+                                  targets[i].long())
             # Backward pass
             #loss.backward(retain_graph=True)
             # Step with optimizer

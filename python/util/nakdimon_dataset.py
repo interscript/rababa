@@ -112,13 +112,13 @@ class Data:
 
     @staticmethod
     def concatenate(others):
-        self = Data()
-        self.text = np.concatenate([x.text for x in others])
-        self.normalized = np.concatenate([x.normalized for x in others])
-        self.dagesh = np.concatenate([x.dagesh for x in others])
-        self.sin = np.concatenate([x.sin for x in others])
-        self.niqqud = np.concatenate([x.niqqud for x in others])
-        return self
+        #self = Data()
+        text = np.concatenate([x.text for x in others])
+        normalized = np.concatenate([x.normalized for x in others])
+        dagesh = np.concatenate([x.dagesh for x in others])
+        sin = np.concatenate([x.sin for x in others])
+        niqqud = np.concatenate([x.niqqud for x in others])
+        return Data(text, normalized, dagesh, sin, niqqud)
 
     def shapes(self):
         return self.text.shape, self.normalized.shape, self.dagesh.shape, \
@@ -146,9 +146,9 @@ class Data:
             idces = [idces]
         return Data(self.text[idces], \
                     self.normalized[idces], \
-                    self.niqqud[idces], \
                     self.dagesh[idces], \
-                    self.sin[idces])
+                    self.sin[idces], \
+                    self.niqqud[idces])
 
     def __getitem__(self, item):
         return self.get_idces(item)
@@ -156,7 +156,6 @@ class Data:
     @staticmethod
     def from_text(heb_items, maxlen: int) -> 'Data':
         assert heb_items
-        self = Data()
         text, normalized, dagesh, sin, niqqud = zip(*(zip(*line)
                 for line in hebrew.split_by_length(heb_items, maxlen)))
 
@@ -164,12 +163,13 @@ class Data:
             return utils.pad_sequences(ords,
                                        maxlen=maxlen, dtype=dtype, value=value)
 
-        self.normalized = pad(letters_table.to_ids(normalized))
-        self.dagesh = pad(dagesh_table.to_ids(dagesh))
-        self.sin = pad(sin_table.to_ids(sin))
-        self.niqqud = pad(niqqud_table.to_ids(niqqud))
-        self.text = pad(text, dtype='<U1', value=0)
-        return self
+        normalized = pad(letters_table.to_ids(normalized))
+        dagesh = pad(dagesh_table.to_ids(dagesh))
+        sin = pad(sin_table.to_ids(sin))
+        niqqud = pad(niqqud_table.to_ids(niqqud))
+        text = pad(text, dtype='<U1', value=0)
+
+        return Data(text, normalized, dagesh, sin, niqqud)
 
     def __len__(self):
         return self.normalized.shape[0]
@@ -186,6 +186,7 @@ def read_corpora(base_paths):
 
 def load_data(corpora, validation_rate: float, maxlen: int,
               shuffle=True, subtraining_rate=1) -> Tuple[Data, Data]:
+
     corpus = [(filename, Data.from_text(heb_items, maxlen))
               for (filename, heb_items) in corpora]
 

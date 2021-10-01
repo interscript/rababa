@@ -91,7 +91,7 @@ class CBHGModel(nn.Module):
         self,
         src: torch.Tensor,
         lengths: Optional[torch.Tensor] = None,
-        #target: Optional[torch.Tensor] = None  # not required in this model
+        target: Optional[torch.Tensor] = None  # not required in this model
     ):
         """Compute forward propagation"""
 

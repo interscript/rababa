@@ -33,6 +33,10 @@ class DiacritizationDataset(Dataset):
         self.data, _ = nakdimon_dataset.get_data([self.data_file_path],
                                                  self.config['max_len'])
 
+        print(self.device)
+        self.data.to_device(self.device)
+
+
     def __len__(self):
         "Denotes the total number of samples"
         return self.data.size()
@@ -46,6 +50,14 @@ def collate_fn(data):
     """
     Padding the input and output sequences
     """
+    #print(type(data))
+    #print(data[0])
+    #print(type(data[0]))
+    #dd = nakdimon_dataset.Data.concatenate(data)
+    #print('niqqud: ', dd.niqqud)
+    #print('dagesh: ', dd.dagesh)
+    #print('sin: ', dd.sin)
+    #exit()
     return nakdimon_dataset.Data.concatenate(data)
 
 
