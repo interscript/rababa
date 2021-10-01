@@ -9,6 +9,7 @@ from torch.cuda.amp import autocast
 from torch.utils.tensorboard.writer import SummaryWriter
 from tqdm import tqdm
 from tqdm import trange
+import numpy as np
 
 from config_manager import ConfigManager
 from dataset import load_iterators
@@ -121,28 +122,30 @@ class GeneralTrainer(Trainer):
             d_loss[k+'_loss'] = loss
         return d_loss
 
-    def get_benchmarks(self, test_data_iterator,
-                       d_scores = {'N': 0, 'D': 0, 'S': 0}):
+    def get_benchmarks(self, test_data_iterator, dims = ['N','D','S']): # tqdm
 
+        d_scores = {}
         # Run the model on some test examples
         with torch.no_grad():
 
-            raw_data, dia_data = \
-                self.diacritizer.diacritize_data_iterator(test_data_iterator)
+            raw_data, dia_data, losses = \
+                self.diacritizer.diacritize_data_iterator(test_data_iterator,
+                                                          self.criterion)
 
-            d_raw_data = \
-                {'N': raw_data.niqqud, 'D': raw_data.dagesh, 'S': raw_data.sin}
-            d_dia_data = \
-                {'N': dia_data.niqqud, 'D': dia_data.dagesh, 'S': dia_data.sin}
+            l_raw_data = [raw_data.niqqud, raw_data.dagesh, raw_data.sin]
+            l_dia_data = [dia_data.niqqud, dia_data.dagesh, dia_data.sin]
 
-            for i,k in enumerate(d_scores.keys()):
-                labels = d_raw_data[k]
-                predicted = torch.max(d_dia_data[k].permute(0, 2, 1), 1).indices
-                d_scores[k] = (predicted == labels).sum().item() / predicted.shape[0]
+            for i,k in enumerate(dims):
+                labels = l_raw_data[i].flatten()
+                preds = l_dia_data[i].flatten()
+                d_scores[k+'_accu'] = \
+                        (labels == preds).sum().item() / preds.shape[0]
+                d_scores[k+'_loss'] = float(sum(losses[i]) / len(losses[i]))
 
-            return dict([(k+'_accu', scores[k]) for k in d_scores.keys()])
+        return d_scores
 
-    def evaluate(self, iterator, tqdm, use_target=True):
+    """
+    def evaluate(self, iterator, tqdm, use_target=True, d_targets=['D','S','N']):
 
         epoch_loss = 0
         epoch_acc = 0
@@ -152,16 +155,13 @@ class GeneralTrainer(Trainer):
 
             raw_data, pred_data = self.diacritizer. \
                                     diacritize_data_iterator(iterator)
-            targets = raw_data.dagesh.view(-1) + \
-                        raw_data.sin.view(-1) + \
-                            raw_data.niqqud.view(-1)
-            predictions = pred_data.dagesh.view(-1) + \
-                            pred_data.sin.view(-1) + \
-                                pred_data.niqqud.view(-1)
+            targets = [raw_data.dagesh, raw_data.sin, raw_data.niqqud]
+            predicts = [pred_data.dagesh, pred_data.sin, pred_data.niqqud]
+            for i.k in enumerate(d_targets):
 
-            loss = self.criterion(predictions, targets.to(self.device))
+            loss = self.criterion(predicts, targets.to(self.device))
             acc = categorical_accuracy(
-                predictions, targets.to(self.device), self.pad_idx, self.device
+                predicts, targets.to(self.device), self.pad_idx, self.device
             )
             epoch_loss += loss.item()
             epoch_acc += acc.item()
@@ -169,6 +169,7 @@ class GeneralTrainer(Trainer):
 
         tqdm.reset()
         return epoch_loss / len(iterator), epoch_acc / len(iterator)
+    """
 
     def evaluate_with_error_rates(self, iterator, tqdm):
         all_orig = []
@@ -177,6 +178,8 @@ class GeneralTrainer(Trainer):
         self.diacritizer.set_model(self.model)
         evaluated_batches = 0
         tqdm.set_description(f"Calculating DEC/CHA/WOR/VOC {self.global_step}: ")
+
+        """
         for batch in iterator:
             if evaluated_batches > int(self.config["error_rates_n_batches"]):
                 break
@@ -185,25 +188,30 @@ class GeneralTrainer(Trainer):
             all_predicted += predicted
             all_orig += batch["original"]
             tqdm.update()
-
-        summary_texts = []
+        """
+        #summary_texts = []
         orig_path = os.path.join(self.config_manager.prediction_dir,
                                  f"original.txt")
         predicted_path = os.path.join(self.config_manager.prediction_dir,
                                       f"predicted.txt")
 
+        print('op:: ', orig_path)
+        print('pp:: ', predicted_path)
+
         with open(orig_path, "w", encoding="utf8") as file:
             for sentence in all_orig:
                 file.write(f"{sentence}\n")
+        print('abc')
 
-        self.diacritizer.diacritize_file(predicted_path)
+        self.diacritizer.diacritize_file(orig_path)
+
         with open(predicted_path, "w", encoding="utf8") as file:
             for sentence in all_predicted:
                 file.write(f"{sentence}\n")
 
         results = nakdimon_metrics. \
                     all_metrics_for_files(test_file_path, tmp_path)
-
+        print('results:: ', results)
         """
         for i in range(int(self.config["n_predicted_text_tensorboard"])):
             if i > len(all_predicted):
@@ -291,7 +299,9 @@ class GeneralTrainer(Trainer):
                 )
 
             if self.global_step % self.config["evaluate_frequency"] == 0:
-                loss, acc = self.evaluate(validation_iterator, tqdm_eval)
+                #loss, acc = self.evaluate(validation_iterator, tqdm_eval)
+                d_loss, d_acc = get_benchmarks(validation_iterator)
+
                 self.summary_manager.add_scalar(
                     "evaluate/loss", loss, global_step=self.global_step
                 )

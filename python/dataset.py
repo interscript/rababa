@@ -30,9 +30,10 @@ class DiacritizationDataset(Dataset):
         self.device = config_manager.device
 
         self.data_file_path = data_file_path
+        print('bloooo:: ', self.data_file_path)
         self.data, _ = nakdimon_dataset.get_data([self.data_file_path],
                                                  self.config['max_len'])
-
+        print('bliii')
         print(self.device)
         self.data.to_device(self.device)
 

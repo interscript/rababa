@@ -56,8 +56,9 @@ class Diacritizer:
                          "shuffle": False,
                          "num_workers": 2}
 
-        dataset = DiacritizationDataset(path)
-
+        print('data:: ', path)
+        dataset = DiacritizationDataset(self.config_manager, path)
+        print('diti')
         data_iterator = DataLoader(dataset.data,
                                    collate_fn=collate_fn,
                                    **loader_params,
@@ -82,21 +83,40 @@ class Diacritizer:
                         replace('  ', ' ').replace(hebrew.RAFE, '')
         return text
 
-    def diacritize_data_iterator(self, data_iterator): #model):
+    def diacritize_data_iterator(self, data_iterator,
+                                 criterion=None):
         raw_data, dia_data = [], []
+        losses = []
         for data_batch in tqdm.tqdm(data_iterator):
             data_batch.to_device(self.device)
             raw_data.append(data_batch)
-            dia_data.append(self.predict_batch(data_batch))
+            preds, loss = self.predict_batch(data_batch, criterion)
+            dia_data.append(preds)
+            if not criterion is None:
+                losses.append(loss)
 
         raw_data = nakdimon_dataset.Data.concatenate(raw_data)
         dia_data = nakdimon_dataset.Data.concatenate(dia_data)
-        return raw_data, dia_data
+        losses = [l[0] for l in losses], [l[1] for l in losses], [l[2] for l in losses]
+        return raw_data, dia_data, losses
 
 
-    def predict_batch(self, data_batch: nakdimon_dataset.Data):
+    def predict_batch(self, data_batch: nakdimon_dataset.Data,
+                      criterion=None):
+
+        def process_dim(dim):
+            return niqqud.permute(0, 2, 1) # if self.device=='cpu' else \
+        #        np.transpose(l_dia_data[i], (0, 2, 1))
+
         # Forward pass
         niqqud, dagesh, sin = self.model(data_batch.normalized)
+
+        losses = None
+        if not criterion is None:
+
+            losses = [criterion(process_dim(niqqud), data_batch.niqqud.long()),
+                      criterion(process_dim(dagesh), data_batch.dagesh.long()),
+                      criterion(process_dim(sin), data_batch.sin.long())]
 
         return nakdimon_dataset.Data(data_batch.text, data_batch.normalized, \
                             torch.max(dagesh.permute(0, 2, 1), 1). \
@@ -104,7 +124,9 @@ class Diacritizer:
                             torch.max(sin.permute(0, 2, 1), 1). \
                                     indices.detach().cpu().numpy(), \
                             torch.max(niqqud.permute(0, 2, 1), 1). \
-                                            indices.detach().cpu().numpy())
+                                            indices.detach().cpu().numpy()), \
+                losses
+
 
     def diacritize_iterators(self, iterator):
         pass
