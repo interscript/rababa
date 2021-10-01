@@ -30,7 +30,7 @@ class Diacritizer:
         self.device = self.config_manager.device
 
         if load_model:
-            self.model, self.global_step = self.config_manager.load_model()
+            self.model, opt, self.global_step = self.config_manager.load_model()
             self.model = self.model.to(self.device)
 
     def set_model(self, model: torch.nn.Module):

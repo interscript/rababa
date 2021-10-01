@@ -181,8 +181,6 @@ class ConfigManager:
         load_optimizer: load optimizer for training
         """
 
-        # print('config:: ', self.config)
-
         model = self.get_model()
 
         with open(self.base_dir / f"{self.model_kind}_network.txt", "w") as file:
