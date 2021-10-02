@@ -28,13 +28,16 @@ class DiacritizationDataset(Dataset):
 
         self.config = config_manager.config
         self.device = config_manager.device
-
         self.data_file_path = data_file_path
-        print('bloooo:: ', self.data_file_path)
-        self.data, _ = nakdimon_dataset.get_data([self.data_file_path],
-                                                 self.config['max_len'])
-        print('bliii')
-        print(self.device)
+
+        with utils.smart_open(self.data_file_path, 'r', encoding='utf-8') as f:
+            text = f.read() # hebrew.remove_niqqud(f.read())
+
+        self.data = nakdimon_dataset.Data.from_text(hebrew.iterate_dotted_text(text), \
+                                                    self.config['max_len'])
+
+        # self.data, _ = nakdimon_dataset.get_data([self.data_file_path],
+        #                                          self.config['max_len'])
         self.data.to_device(self.device)
 
 
@@ -51,14 +54,6 @@ def collate_fn(data):
     """
     Padding the input and output sequences
     """
-    #print(type(data))
-    #print(data[0])
-    #print(type(data[0]))
-    #dd = nakdimon_dataset.Data.concatenate(data)
-    #print('niqqud: ', dd.niqqud)
-    #print('dagesh: ', dd.dagesh)
-    #print('sin: ', dd.sin)
-    #exit()
     return nakdimon_dataset.Data.concatenate(data)
 
 
@@ -66,11 +61,9 @@ def load_training_data(config_manager: ConfigManager, loader_parameters):
     """
     Loading the training data using pandas
     """
-
     if not config_manager.config["load_training_data"]:
         return []
 
-    # train_file_name = config_manager.config.get("train_file_name", "train.txt")
     path = os.path.join(config_manager.data_dir, 'train', \
                         config_manager.config['train_file_name'])
 

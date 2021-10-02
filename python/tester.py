@@ -56,20 +56,19 @@ class DiacritizationTester(GeneralTrainer):
         tqdm_eval = trange(0, len(test_iterator), leave=True)
         tqdm_error_rates = trange(0, len(test_iterator), leave=True)
 
-        # loss, acc = self.evaluate(test_iterator, tqdm_eval)
         d_scores = self.get_benchmarks(test_iterator)
         error_rates, _ = self.evaluate_with_error_rates(test_iterator, tqdm_error_rates)
 
         tqdm_eval.close()
         tqdm_error_rates.close()
 
-        WER = error_rates["WER"]
-        DER = error_rates["DER"]
-        DER1 = error_rates["DER*"]
-        WER1 = error_rates["WER*"]
+        DEC = error_rates["dec"]
+        CHA = error_rates["cha"]
+        WOR = error_rates["wor"]
+        VOC = error_rates["voc"]
 
-        error_rates = f"DER: {DER}, WER: {WER}, DER*: {DER1}, WER*: {WER1}"
+        error_rates = f"DEC: {DEC}, CHA: {CHA}, WOR: {WOR}, VOC: {VOC}"
 
         print(f"global step : {self.global_step}")
-        print(f"Evaluate {self.global_step}: accuracy, {acc}, loss: {loss}")
-        print(f"WER/DER {self.global_step}: {error_rates}")
+        print(f"Acc/loss: {d_scores}")
+        print(f"Scores: {error_rates}")

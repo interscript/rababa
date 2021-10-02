@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
-import hebrew
+from util import nakdimon_hebrew_model as hebrew
 
 
 basepath = Path('tests/validation/expected')

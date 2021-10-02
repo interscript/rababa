@@ -28,6 +28,8 @@ from util.utils import (
 from util import nakdimon_dataset
 from util import nakdimon_utils as utils
 from util import nakdimon_hebrew_model as hebrew
+from util import nakdimon_metrics
+
 
 
 class Trainer:
@@ -171,59 +173,62 @@ class GeneralTrainer(Trainer):
         return epoch_loss / len(iterator), epoch_acc / len(iterator)
     """
 
+    def diacritise_file(self, model, input_filename, output_filename,
+                        config={'max_len': 90}):
+
+        # load data
+        with utils.smart_open(input_filename, 'r', encoding='utf-8') as f:
+            text = f.read() # hebrew.remove_niqqud(f.read())
+
+        data = nakdimon_dataset.Data.from_text(hebrew.iterate_dotted_text(text),
+                                      config['max_len'])
+
+        # do predictions
+        normalized, niqqud, dagesh, sin = predict_data(model, data, config)
+
+        diacritized_total = nakdimon_torch.merge_unconditional(data.text, data.normalized, niqqud, dagesh, sin)
+
+        text_total = ' '.join(diacritized_total).replace('\ufeff', '').replace('  ', ' ').replace(hebrew.RAFE, '')
+
+        # write to file
+        with utils.smart_open(output_filename, 'w', encoding='utf-8') as f:
+            f.write(text_total)
+
+
     def evaluate_with_error_rates(self, iterator, tqdm):
-        all_orig = []
-        all_predicted = []
-        results = {}
+
         self.diacritizer.set_model(self.model)
-        evaluated_batches = 0
+
         tqdm.set_description(f"Calculating DEC/CHA/WOR/VOC {self.global_step}: ")
 
-        """
-        for batch in iterator:
-            if evaluated_batches > int(self.config["error_rates_n_batches"]):
-                break
+        test_path = os.path.join(self.config_manager.data_dir, 'test',
+                                 self.config_manager.config['test_file_name'])
 
-            predicted = self.diacritizer.diacritize_batch(batch)
-            all_predicted += predicted
-            all_orig += batch["original"]
-            tqdm.update()
-        """
-        #summary_texts = []
         orig_path = os.path.join(self.config_manager.prediction_dir,
                                  f"original.txt")
-        predicted_path = os.path.join(self.config_manager.prediction_dir,
+        predicts_path = os.path.join(self.config_manager.prediction_dir,
                                       f"predicted.txt")
 
-        print('op:: ', orig_path)
-        print('pp:: ', predicted_path)
-
+        f = open(test_path, "r")
+        all_orig = f.readlines()
+        f.close()
+        
         with open(orig_path, "w", encoding="utf8") as file:
             for sentence in all_orig:
-                file.write(f"{sentence}\n")
-        print('abc')
+                file.write(f"{sentence}")
+        file.close()
 
-        self.diacritizer.diacritize_file(orig_path)
+        # diacritize and write to file
+        text_total = self.diacritizer.diacritize_file(orig_path)
+        with utils.smart_open(predicts_path, 'w', encoding='utf-8') as f:
+            f.write(text_total)
 
-        with open(predicted_path, "w", encoding="utf8") as file:
-            for sentence in all_predicted:
-                file.write(f"{sentence}\n")
-
+        # evaluate metrics
         results = nakdimon_metrics. \
-                    all_metrics_for_files(test_file_path, tmp_path)
-        print('results:: ', results)
-        """
-        for i in range(int(self.config["n_predicted_text_tensorboard"])):
-            if i > len(all_predicted):
-                break
-
-            summary_texts.append(
-                (f"eval-text/{i}", f"{ all_orig[i]} |->  {all_predicted[i]}")
-            )
-        """
+                    all_metrics_for_files(orig_path, predicts_path)
 
         tqdm.reset()
-        return results, summary_texts
+        return results, None
 
     def run(self):
 

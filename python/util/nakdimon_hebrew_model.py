@@ -202,3 +202,65 @@ def is_space(c):
     elif isinstance(c, str):
         return c == ' '
     assert False
+
+
+class Token:
+    def __init__(self, items: List[HebrewChar]):
+        self.items = items
+
+    def __str__(self):
+        return ''.join(str(c) for c in self.items)
+
+    def __repr__(self):
+        return 'Token(' + repr(self.items) + ')'
+
+    def __lt__(self, other: 'Token'):
+        return (self.to_undotted(), str(self)) < (other.to_undotted(), str(other))
+
+    def strip_nonhebrew(self) -> 'Token':
+        start = 0
+        end = len(self.items) - 1
+        while True:
+            if start >= len(self.items):
+                return Token([])
+            if self.items[start].letter in HEBREW_LETTERS + ANY_NIQQUD:
+                break
+            start += 1
+        while self.items[end].letter not in HEBREW_LETTERS + ANY_NIQQUD:
+            end -= 1
+        return Token(self.items[start:end+1])
+
+    def __bool__(self):
+        return bool(self.items)
+
+    def __eq__(self, other):
+        return self.items == other.items
+
+    @lru_cache()
+    def to_undotted(self):
+        return ''.join(str(c.letter) for c in self.items)
+
+    def is_undotted(self):
+        return len(self.items) > 1 and all(c.niqqud in [RAFE, ''] for c in self.items)
+
+    def is_definite(self):
+        return len(self.items) > 2 and self.items[0].niqqud == 'הַ'[-1] and self.items[0].letter in 'כבלה'
+
+
+def tokenize_into(tokens_list: List[Token], char_iterator: Iterator[HebrewChar]) -> Iterator[HebrewChar]:
+    current = []
+    for c in char_iterator:
+        if c.letter.isspace() or c.letter == '-':
+            if current:
+                tokens_list.append(Token(current).strip_nonhebrew())
+            current = []
+        else:
+            current.append(c)
+        yield c
+    if current:
+        tokens_list.append(Token(current).strip_nonhebrew())
+
+def tokenize(iterator: Iterator[HebrewChar]) -> List[Token]:
+    tokens = []
+    _ = list(tokenize_into(tokens, iterator))
+    return tokens

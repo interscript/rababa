@@ -13,7 +13,11 @@ from torch.utils.data import (DataLoader,
                               Dataset)
 
 from util import nakdimon_dataset # as dataset
-# import util.reconcile_original_plus_diacritized as reconcile
+from util import nakdimon_hebrew_model as hebrew
+from util import nakdimon_metrics
+from util import nakdimon_utils as utils
+
+#import util.reconcile_original_plus_diacritized as reconcile
 
 
 class Diacritizer:
@@ -42,7 +46,7 @@ class Diacritizer:
         raw_data = dataset.Data.from_text(text)
         dia_data = self.predict_batch(data_batch)
 
-        dia_total = dataset.merge_unconditional( \
+        dia_total = nakdimon_dataset.merge_unconditional( \
                                 raw_data.text, raw_data.normalized, \
                                 dia_data.niqqud, dia_data.dagesh, dia_data.sin)
 
@@ -56,13 +60,10 @@ class Diacritizer:
                          "shuffle": False,
                          "num_workers": 2}
 
-        print('data:: ', path)
         dataset = DiacritizationDataset(self.config_manager, path)
-        print('diti')
         data_iterator = DataLoader(dataset.data,
                                    collate_fn=collate_fn,
-                                   **loader_params,
-                                   shuffle=False)
+                                   **loader_params)
 
         print(f"Length of data iterator = {len(data_iterator)}")
         return data_iterator
@@ -71,22 +72,26 @@ class Diacritizer:
         """
             download data from relative path and diacritize it batch by batch
         """
+
+        path = 'data/test/test.txt'
         data_iterator = self.get_data_from_file(path)
 
-        raw_data, dia_data = diacritize_data_iterator(self, data_iterator)
+        raw_data, dia_data, _ = self.diacritize_data_iterator(data_iterator)
 
-        dia_total = dataset.merge_unconditional( \
+        dia_total = nakdimon_dataset.merge_unconditional( \
                                 raw_data.text, raw_data.normalized, \
                                 dia_data.niqqud, dia_data.dagesh, dia_data.sin)
 
-        text = ' '.join(dia_total).replace('\ufeff', ''). \
-                        replace('  ', ' ').replace(hebrew.RAFE, '')
+        text = ' '.join(dia_total).replace('\ufeff', '').replace('  ', ' '). \
+                    replace(hebrew.RAFE, '')
+
         return text
 
     def diacritize_data_iterator(self, data_iterator,
                                  criterion=None):
-        raw_data, dia_data = [], []
-        losses = []
+
+        raw_data, dia_data, losses = [], [], []
+
         for data_batch in tqdm.tqdm(data_iterator):
             data_batch.to_device(self.device)
             raw_data.append(data_batch)
@@ -97,9 +102,13 @@ class Diacritizer:
 
         raw_data = nakdimon_dataset.Data.concatenate(raw_data)
         dia_data = nakdimon_dataset.Data.concatenate(dia_data)
-        losses = [l[0] for l in losses], [l[1] for l in losses], [l[2] for l in losses]
-        return raw_data, dia_data, losses
 
+        if not criterion is None:
+            losses = [l[0] for l in losses], [l[1] for l in losses], [l[2] for l in losses]
+        else:
+            losses = None
+
+        return raw_data, dia_data, losses
 
     def predict_batch(self, data_batch: nakdimon_dataset.Data,
                       criterion=None):
@@ -124,9 +133,5 @@ class Diacritizer:
                             torch.max(sin.permute(0, 2, 1), 1). \
                                     indices.detach().cpu().numpy(), \
                             torch.max(niqqud.permute(0, 2, 1), 1). \
-                                            indices.detach().cpu().numpy()), \
+                                    indices.detach().cpu().numpy()), \
                 losses
-
-
-    def diacritize_iterators(self, iterator):
-        pass
