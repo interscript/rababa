@@ -36,13 +36,18 @@ class ConfigManager:
         self.config: Dict[str, Any] = self._load_config()
         self.set_device()
         self.session_name = ".".join(
-            [# self.config["data_type"],
+            [#self.config["data_type"],
              self.config["session_name"],
              f"{model_kind}"])
 
         self.data_dir = Path(
             os.path.join(self.config["data_directory"]) #, self.config["data_type"])
         )
+
+        #print(self.config["session_name"])
+        #print(self.config["log_directory"])
+        #print(self.session_name)
+        #exit()
         self.base_dir = Path(
             os.path.join(self.config["log_directory"], self.session_name)
         )

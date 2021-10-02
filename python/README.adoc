@@ -77,8 +77,9 @@ pip install .
 
 [source,bash]
 ----
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'قطر'
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file relative_path_to_text_file
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml \
+    --text_file relative_path_to_text_file --diacritized_text_file path_to_diacrit_text_file
 ----
 
 The maximal string length is set at `600` chars and is a parameter in config.

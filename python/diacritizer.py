@@ -42,10 +42,10 @@ class Diacritizer:
 
     def diacritize_text(self, text: str):
         # convert string into indices
-        text = text.strip()
-        raw_data = dataset.Data.from_text(text)
-        dia_data = self.predict_batch(data_batch)
-
+        h_it = hebrew.iterate_dotted_text(text)
+        raw_data = nakdimon_dataset.Data.from_text(h_it, self.config['max_len'])
+        raw_data.to_device(self.device)
+        dia_data, _ = self.predict_batch(raw_data)
         dia_total = nakdimon_dataset.merge_unconditional( \
                                 raw_data.text, raw_data.normalized, \
                                 dia_data.niqqud, dia_data.dagesh, dia_data.sin)
@@ -68,7 +68,7 @@ class Diacritizer:
         print(f"Length of data iterator = {len(data_iterator)}")
         return data_iterator
 
-    def diacritize_file(self, path: str):
+    def diacritize_file(self, path: str, path_out: str):
         """
             download data from relative path and diacritize it batch by batch
         """
@@ -84,8 +84,9 @@ class Diacritizer:
 
         text = ' '.join(dia_total).replace('\ufeff', '').replace('  ', ' '). \
                     replace(hebrew.RAFE, '')
-
-        return text
+        with utils.smart_open(path_out, 'w', encoding='utf-8') as f:
+            f.write(text)
+        #return text
 
     def diacritize_data_iterator(self, data_iterator,
                                  criterion=None):

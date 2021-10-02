@@ -173,6 +173,7 @@ class GeneralTrainer(Trainer):
         return epoch_loss / len(iterator), epoch_acc / len(iterator)
     """
 
+    """
     def diacritise_file(self, model, input_filename, output_filename,
                         config={'max_len': 90}):
 
@@ -193,7 +194,7 @@ class GeneralTrainer(Trainer):
         # write to file
         with utils.smart_open(output_filename, 'w', encoding='utf-8') as f:
             f.write(text_total)
-
+    """
 
     def evaluate_with_error_rates(self, iterator, tqdm):
 
@@ -212,16 +213,17 @@ class GeneralTrainer(Trainer):
         f = open(test_path, "r")
         all_orig = f.readlines()
         f.close()
-        
+
         with open(orig_path, "w", encoding="utf8") as file:
             for sentence in all_orig:
                 file.write(f"{sentence}")
         file.close()
 
         # diacritize and write to file
-        text_total = self.diacritizer.diacritize_file(orig_path)
-        with utils.smart_open(predicts_path, 'w', encoding='utf-8') as f:
-            f.write(text_total)
+        #text_total =
+        self.diacritizer.diacritize_file(orig_path, predicts_path)
+        #with utils.smart_open(predicts_path, 'w', encoding='utf-8') as f:
+        #    f.write(text_total)
 
         # evaluate metrics
         results = nakdimon_metrics. \
