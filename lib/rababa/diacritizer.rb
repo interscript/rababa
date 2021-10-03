@@ -156,6 +156,8 @@ module Rababa
 
         # Initialise text encoder from config params
         def get_text_encoder
+            #Encoders::TextEncoder.new(['a','b','c'])
+            #a = Encoders::CharacterTable.new(['a'])
             Encoders::TextEncoder.new()
         end
 
