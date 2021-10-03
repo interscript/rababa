@@ -1,3 +1,4 @@
+
 module Rababa::Cleaner
 
   class BasicCleaner
@@ -22,4 +23,3 @@ module Rababa::Cleaner
   end
 
 end
-

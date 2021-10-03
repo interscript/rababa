@@ -1,17 +1,17 @@
 
-import itertools
-from collections import defaultdict, Counter
-from typing import NamedTuple, Iterator, Iterable, List, Tuple
-from functools import lru_cache
-import re
+#import itertools
+#from collections import defaultdict, Counter
+#from typing import NamedTuple, Iterator, Iterable, List, Tuple
+#from functools import lru_cache
+#import re
 
-import utils
+#import utils
 
 
 # "rafe" denotes a letter to which it would have been valid to add a diacritic of some category
 # but instead it is decided not to. This makes the metrics less biased.
-Module Rababa
-  Module HebrewConst
+module Rababa
+  module HebrewConst
 
     RAFE = '\u05BF'
     Niqqud = {
@@ -50,10 +50,10 @@ Module Rababa
                 HEBREW_LETTERS
     SPECIAL_TOKENS = ['H', 'O', '5']
 
-    ENDINGS_TO_REGULAR = Hash[*('כמנפצ'.zip 'ךםןףץ').map {|x,y| [x,y]}].flatten
+    ENDINGS_TO_REGULAR = Hash[*('כמנפצ'.chars.zip 'ךםןףץ'.chars).map {|x,y| [x,y]}.flatten]
+    print(ENDINGS_TO_REGULAR)
 
     def normalize(c)
-      #=begin
       if VALID_LETTERS.include? c
         return c
       end
@@ -87,16 +87,14 @@ Module Rababa
       if ['ײ', 'װ', 'ױ'].include? c
         return 'H'
       end
-      #=end
       return 'O'
     end
 
   end
 
-  Module HebrewNLP
+  module HebrewNLP
 
-    class HebrewChar(NamedTuple)
-
+    class HebrewChar
       attr_accessor :letter, :normalized, :dagesh, :sin, :niqqud
 
       def initialise(letter, normalized, dagesh, sin, niqqud)
@@ -106,11 +104,11 @@ Module Rababa
         @sin = sing
         @niqqud = niqqud
       end
+
     end
 
-
     def vocalize_dagesh(letter, dagesh)
-        if letter not in 'בכפ'
+        if ! 'בכפ'.include? letter
             return ''
         end
         return dagesh.gsub(RAFE, '')
@@ -119,16 +117,16 @@ Module Rababa
 
     def vocalize_niqqud(c)
       # FIX: HOLAM / KUBBUTZ cannot be handled here correctly
-      if c in [Niqqud.KAMATZ, Niqqud.PATAKH, Niqqud.REDUCED_PATAKH]
+      if [Niqqud.KAMATZ, Niqqud.PATAKH, Niqqud.REDUCED_PATAKH].include? c
         return Niqqud.PATAKH
       end
-      if c in [Niqqud.HOLAM, Niqqud.REDUCED_KAMATZ]
+      if [Niqqud.HOLAM, Niqqud.REDUCED_KAMATZ].include? c
         return Niqqud.HOLAM  # TODO: Kamatz-katan
       end
-      if c in [Niqqud.SHURUK, Niqqud.KUBUTZ]
+      if [Niqqud.SHURUK, Niqqud.KUBUTZ].include? c
         return Niqqud.KUBUTZ
       end
-      if c in [Niqqud.TZEIRE, Niqqud.SEGOL, Niqqud.REDUCED_SEGOL]
+      if [Niqqud.TZEIRE, Niqqud.SEGOL, Niqqud.REDUCED_SEGOL].include? c
         return Niqqud.SEGOL
       end
       if c == Niqqud.SHVA
@@ -139,11 +137,11 @@ Module Rababa
 
 
     def is_hebrew_letter(letter)
-      return '\u05d0' <= letter <= '\u05ea'
+      return ('\u05d0' <= letter) && (letter <= '\u05ea')
     end
 
     def can_dagesh(letter)
-      return letter in ('בגדהוזטיכלמנספצקשת' + 'ךף')
+      return ('בגדהוזטיכלמנספצקשת' + 'ךף').include? letter
     end
 
     def can_sin(letter)
@@ -151,11 +149,11 @@ Module Rababa
     end
 
     def can_niqqud(letter)
-      return letter in ('אבגדהוזחטיכלמנסעפצקרשת' + 'ךן')
+      return ('אבגדהוזחטיכלמנסעפצקרשת' + 'ךן').include? letter
     end
 
-    def can_any(letter):
-      return can_niqqud(letter) or can_dagesh(letter) or can_sin(letter)
+    def can_any(letter)
+      return can_niqqud(letter) || can_dagesh(letter) || can_sin(letter)
     end
 
   end
