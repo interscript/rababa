@@ -323,14 +323,7 @@ class GeneralTrainer(Trainer):
     def train_batch(self, raw_data: nakdimon_dataset.Data,
                     labels = ['N', 'D', 'S']):
         # Forward pass
-        #print(type(raw_data))
-        #print('lllllllll:: ', raw_data.normalized.shape)
-        #print('qqqqqqqqq:: ', type(raw_data.normalized))
         targets = raw_data.niqqud, raw_data.dagesh, raw_data.sin
-
-        #print(11, raw_data.niqqud)
-        #print(22, raw_data.dagesh)
-        #print(33, raw_data.sin)
 
         outputs = self.model(raw_data.normalized)
         losses = []
@@ -345,31 +338,6 @@ class GeneralTrainer(Trainer):
             losses.append((labels[i], loss))
         #self.optimizer.step()
         return dict(losses)
-
-    """
-    def run_one_step(self, batch_inputs: Dict[str, torch.Tensor]):
-
-        batch_inputs["src"] = batch_inputs["src"].to(self.device)
-        batch_inputs["lengths"] = batch_inputs["lengths"].to("cpu")
-        batch_inputs["target"] = batch_inputs["target"].to(self.device)
-
-        outputs = self.model(
-            src=batch_inputs["src"],
-            target=batch_inputs["target"],
-            lengths=batch_inputs["lengths"],
-        )
-
-        predictions = outputs["diacritics"].contiguous()
-        targets = batch_inputs["target"].contiguous()
-
-        predictions = predictions.view(-1, predictions.shape[-1])
-        targets = targets.view(-1)
-
-        loss = self.criterion(predictions.to(self.device),
-                              targets.to(self.device))
-        outputs.update({"loss": loss})
-        return outputs
-    """
 
     def predict(self, iterator):
         pass
