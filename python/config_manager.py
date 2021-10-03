@@ -203,6 +203,7 @@ class ConfigManager:
         optimizer_stat_dict = saved_model["optimizer_state_dict"] \
                                     if load_optimizer else None
         global_step = saved_model["global_step"] + 1
+        model.to(self.device)
 
         return model, optimizer_stat_dict, global_step
 

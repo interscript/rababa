@@ -146,56 +146,6 @@ class GeneralTrainer(Trainer):
 
         return d_scores
 
-    """
-    def evaluate(self, iterator, tqdm, use_target=True, d_targets=['D','S','N']):
-
-        epoch_loss = 0
-        epoch_acc = 0
-        self.model.eval()
-        tqdm.set_description(f"Eval: {self.global_step}")
-        with torch.no_grad():
-
-            raw_data, pred_data = self.diacritizer. \
-                                    diacritize_data_iterator(iterator)
-            targets = [raw_data.dagesh, raw_data.sin, raw_data.niqqud]
-            predicts = [pred_data.dagesh, pred_data.sin, pred_data.niqqud]
-            for i.k in enumerate(d_targets):
-
-            loss = self.criterion(predicts, targets.to(self.device))
-            acc = categorical_accuracy(
-                predicts, targets.to(self.device), self.pad_idx, self.device
-            )
-            epoch_loss += loss.item()
-            epoch_acc += acc.item()
-            tqdm.update()
-
-        tqdm.reset()
-        return epoch_loss / len(iterator), epoch_acc / len(iterator)
-    """
-
-    """
-    def diacritise_file(self, model, input_filename, output_filename,
-                        config={'max_len': 90}):
-
-        # load data
-        with utils.smart_open(input_filename, 'r', encoding='utf-8') as f:
-            text = f.read() # hebrew.remove_niqqud(f.read())
-
-        data = nakdimon_dataset.Data.from_text(hebrew.iterate_dotted_text(text),
-                                      config['max_len'])
-
-        # do predictions
-        normalized, niqqud, dagesh, sin = predict_data(model, data, config)
-
-        diacritized_total = nakdimon_torch.merge_unconditional(data.text, data.normalized, niqqud, dagesh, sin)
-
-        text_total = ' '.join(diacritized_total).replace('\ufeff', '').replace('  ', ' ').replace(hebrew.RAFE, '')
-
-        # write to file
-        with utils.smart_open(output_filename, 'w', encoding='utf-8') as f:
-            f.write(text_total)
-    """
-
     def evaluate_with_error_rates(self, iterator, tqdm):
 
         self.diacritizer.set_model(self.model)
@@ -220,10 +170,7 @@ class GeneralTrainer(Trainer):
         file.close()
 
         # diacritize and write to file
-        #text_total =
         self.diacritizer.diacritize_file(orig_path, predicts_path)
-        #with utils.smart_open(predicts_path, 'w', encoding='utf-8') as f:
-        #    f.write(text_total)
 
         # evaluate metrics
         results = nakdimon_metrics. \

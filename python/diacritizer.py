@@ -35,10 +35,11 @@ class Diacritizer:
 
         if load_model:
             self.model, opt, self.global_step = self.config_manager.load_model()
-            self.model = self.model.to(self.device)
+            self.model.to(self.device)
 
     def set_model(self, model: torch.nn.Module):
         self.model = model
+        self.model.to(self.device)
 
     def diacritize_text(self, text: str):
         # convert string into indices
