@@ -4,7 +4,7 @@
 # https://github.com/interscript/rababa/blob/main/python/util/text_cleaners.py
 
 require_relative "hebrew_nlp"
-require_relative "cleaner"
+# require_relative "cleaner"
 require_relative "dataset"
 
 module Encoders #Rababa

@@ -1,4 +1,5 @@
-
+# directly inspired from
+# https://github.com/elazarg/nakdimon/blob/master/dataset.py
 
 module Dataset
 
