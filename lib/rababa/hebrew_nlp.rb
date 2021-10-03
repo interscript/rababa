@@ -44,25 +44,26 @@ Module Rababa
     DAGESH_LETTER = '\u05bc'
     DAGESH = [RAFE, DAGESH_LETTER]  # note that DAGESH and SHURUK are one and the same
 
-    ANY_NIQQUD = [RAFE] + NIQQUD[1:] + NIQQUD_SIN[1:] + DAGESH[1:]
+    ANY_NIQQUD = [RAFE] + NIQQUD[1..] + NIQQUD_SIN[1..] + DAGESH[1..]
 
     VALID_LETTERS = [' ', '!', '"', "'", '(', ')', ',', '-', '.', ':', ';', '?'] + \
                 HEBREW_LETTERS
     SPECIAL_TOKENS = ['H', 'O', '5']
 
-    ENDINGS_TO_REGULAR =  Hash[*('כמנפצ'.zip 'ךםןףץ').map {|x,y| [x,y]}].flatten
+    ENDINGS_TO_REGULAR = Hash[*('כמנפצ'.zip 'ךםןףץ').map {|x,y| [x,y]}].flatten
 
-    def normalize(c):
-      if c in VALID_LETTERS
+    def normalize(c)
+      #=begin
+      if VALID_LETTERS.include? c
         return c
       end
-      if c in ENDINGS_TO_REGULAR
+      if ENDINGS_TO_REGULAR.include? c
         return ENDINGS_TO_REGULAR[c]
       end
-      if c in ['\n', '\t']
+      if ['\n', '\t'].include? c
         return ' '
       end
-      if c in ['־', '‒', '–', '—', '―', '−']
+      if ['־', '‒', '–', '—', '―', '−'].include? c
         return '-'
       end
       if c == '['
@@ -71,10 +72,10 @@ Module Rababa
       if c == ']'
         return ')'
       end
-      if c in ['´', '‘', '’']
+      if ['´', '‘', '’'].include? c
         return "'"
       end
-      if c in ['“', '”', '״']
+      if ['“', '”', '״'].include? c
         return '"'
       end
       if c.isdigit()
@@ -83,14 +84,14 @@ Module Rababa
       if c == '…'
         return ','
       end
-      if c in ['ײ', 'װ', 'ױ']
+      if ['ײ', 'װ', 'ױ'].include? c
         return 'H'
       end
+      #=end
       return 'O'
     end
 
   end
-
 
   Module HebrewNLP
 
@@ -158,4 +159,5 @@ Module Rababa
     end
 
   end
+
 end
