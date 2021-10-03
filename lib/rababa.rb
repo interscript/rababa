@@ -11,6 +11,14 @@ require 'onnxruntime'
 require 'yaml'
 require 'tqdm'
 
+
+print('jair')
+model = OnnxRuntime::Model.new("../models-data/diacritization_model.onnx")
+
+
+
+
+
 module Rababa
   class Error < StandardError; end
 
@@ -35,9 +43,12 @@ module Rababa
 
     end.parse!
     # required args
-    [:model_path].each {|arg| raise OptionParser::MissingArgument, arg if options[arg].nil? }
+    [:model_path].each {|arg| raise OptionParser::MissingArgument, \
+                        arg if options[arg].nil?}
     # p(options)
     options
+
+    print('jair')
 
   end
 

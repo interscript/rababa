@@ -4,12 +4,13 @@
 #   https://github.com/almodhfer/Arabic_Diacritization/blob/master/config_manager.py
 
 require_relative 'encoders'
-require_relative 'reconciler'
+#require_relative 'reconciler'
+
 
 module Rababa
 
     class Diacritizer
-        include Rababa::Reconciler
+        #include Rababa::Reconciler
 
         def initialize(onnx_model_path, config)
 
@@ -24,8 +25,6 @@ module Rababa
             # instantiate encoder's class
             @encoder = get_text_encoder
 
-            # TODO: What is start_symbol_id for? It's not used.
-            @start_symbol_id = @encoder.start_symbol_id
         end
 
         # preprocess text into indices
@@ -157,16 +156,7 @@ module Rababa
 
         # Initialise text encoder from config params
         def get_text_encoder
-          case @config['text_encoder']
-          when 'BasicArabicEncoder'
-            Encoders::BasicArabicEncoder.new(@config['text_cleaner'])
-          when 'ArabicEncoderWithStartSymbol'
-            Encoders::ArabicEncoderWithStartSymbol.new(@config['text_cleaner'])
-          else
-            raise Exception.new(
-              'text_encoder not found: ' + @config['text_encoder'].to_s
-            )
-          end
+            Encoders::TextEncoder.new()
         end
 
     end

@@ -1,17 +1,9 @@
+# This file is completely inspired from
+# https://github.com/elazarg/nakdimon/blob/master/hebrew.py
 
-#import itertools
-#from collections import defaultdict, Counter
-#from typing import NamedTuple, Iterator, Iterable, List, Tuple
-#from functools import lru_cache
-#import re
-
-#import utils
-
-
-# "rafe" denotes a letter to which it would have been valid to add a diacritic of some category
-# but instead it is decided not to. This makes the metrics less biased.
 module Rababa
-  module HebrewConst
+
+  module HebrewCONST
 
     RAFE = '\u05BF'
     Niqqud = {
@@ -42,7 +34,7 @@ module Rababa
     NIQQUD_SIN = [RAFE, SHIN_YEMANIT, SHIN_SMALIT]  # RAFE is for acronyms
 
     DAGESH_LETTER = '\u05bc'
-    DAGESH = [RAFE, DAGESH_LETTER]  # note that DAGESH and SHURUK are one and the same
+    DAGESH = [RAFE, DAGESH_LETTER]  # DAGESH and SHURUK are one and same
 
     ANY_NIQQUD = [RAFE] + NIQQUD[1..] + NIQQUD_SIN[1..] + DAGESH[1..]
 
@@ -50,8 +42,8 @@ module Rababa
                 HEBREW_LETTERS
     SPECIAL_TOKENS = ['H', 'O', '5']
 
-    ENDINGS_TO_REGULAR = Hash[*('כמנפצ'.chars.zip 'ךםןףץ'.chars).map {|x,y| [x,y]}.flatten]
-    print(ENDINGS_TO_REGULAR)
+    ENDINGS_TO_REGULAR = Hash[
+                  *('כמנפצ'.chars.zip 'ךםןףץ'.chars).map {|x,y| [x,y]}.flatten]
 
     def normalize(c)
       if VALID_LETTERS.include? c
@@ -105,6 +97,17 @@ module Rababa
         @niqqud = niqqud
       end
 
+      def to_str()
+        self.letter + self.dagesh + self.sin + self.niqqud
+      end
+
+      def vocalize()
+        niqqud = vocalize_niqqud(@niqqud)
+        sin = @sin.gsub(RAFE, '')
+        dagesh = vocalize_dagesh(@letter, @dagesh)
+        HebrewChar(@letter, @normalized, sin, dagesh, niqqud)
+      end
+
     end
 
     def vocalize_dagesh(letter, dagesh)
@@ -134,7 +137,6 @@ module Rababa
       end
       return c.gsub(RAFE, '')
     end
-
 
     def is_hebrew_letter(letter)
       return ('\u05d0' <= letter) && (letter <= '\u05ea')
