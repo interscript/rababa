@@ -4,6 +4,8 @@
 #   https://github.com/almodhfer/Arabic_Diacritization/blob/master/config_manager.py
 
 require_relative 'encoders'
+require_relative 'dataset'
+require_relative 'hebrew_nlp'
 #require_relative 'reconciler'
 
 
@@ -19,6 +21,7 @@ module Rababa
 
             # load config
             @config = config
+            p('config:: ', config)
             @max_length = @config['max_len']
             @batch_size = @config['batch_size']
 
@@ -30,48 +33,77 @@ module Rababa
         # preprocess text into indices
         def preprocess_text(text)
 
-            # Warn user if text exceeds max_length.
-            if text.length > @max_length
-                text = text[0..@max_length]
-                warn("WARNING:: string cut length > #{@max_length}:\n")
-                warn('text:: '+text)
-            end
+            p(text)
+            p(text.length)
 
-            text = @encoder.clean(text)
-            text = remove_diacritics(text)
+            # Warn user if text exceeds max_length.
+
+            #if text.length > @max_length
+            #    text = text[0..@max_length]
+            #    warn("WARNING:: string cut length > #{@max_length}:\n")
+            #    warn('text:: '+text)
+            #end
+
+            #text = @encoder.clean(text)
+            #text = remove_diacritics(text)
 
             # correct expected length for vectors with 0's
-            @encoder.input_to_sequence(text)
-        end
+            data = @encoder.encode_text(text)
 
-        def remove_diacritics(text)
-          text_dup = text.dup
-          Rababa::ArabicConstants::UBASIC_HARAQAT.keys.each do |diacritic|
-            text_dup.gsub!(diacritic, "")
-          end
+            Dataset::Data.new(data.map.each {|d| d.letter},
+                              data.map.each {|d|
+                                  @encoder.normalized_table.char_indices[d.normalized]},
+                              data.map.each {|d|
+                                  @encoder.dagesh_table.char_indices[d.dagesh]},
+                              data.map.each {|d|
+                                  @encoder.sin_table.char_indices[d.sin]},
+                              data.map.each {|d|
+                                  @encoder.niqqud_table.char_indices[d.niqqud]})
 
-          text_dup
         end
 
         # Diacritize single arabic strings
         def diacritize_text(text)
-            text = text.strip
-            seq = preprocess_text(text)
+            #text = text.strip
+            data = preprocess_text(text)
 
+            p('class:: ', data.class)
+            p(@batch_size)
+            #p(data.normalized*@batch_size)
+            #p('abc')
+            #print(data.map.each {|d| d.normalized})
+
+            #print(data.filter.each {|d| d.normalized!='O'})
             # initialize onnx computation
             # redundancy caused by batch processing of nnets
             ort_inputs = {
-                'src' => [seq]*@batch_size,
-                'lengths' => [seq.length]*@batch_size
+                'normalized' => [data.normalized] * @batch_size
+                #data.map.each {|d|
+                #    p(d)} #.text,d.normalized,d.dagesh,d.sin,d.niqqud)}
+                #[d.normalized for d in data]*@batch_size,
             }
 
             # onnx predictions
-            preds = predict_batch(ort_inputs)[0]
+            niqqud, dagesh, sin = predict_batch(ort_inputs) #[0]
 
-            reconcile_strings(
-              text,
-              combine_text_and_haraqat(seq, preds)
-            )
+            # reconcile_strings
+            n = niqqud.length
+            r_strings = (0..n).map.each {|i|
+                Rababa::HebrewNLP::HebrewChar.new(data.text[i],
+                    @encoder.normalized_table.indices_char[data.normalized[i]],
+                    @encoder.dagesh_table.indices_char[dagesh[i]],
+                    @encoder.sin_table.indices_char[sin[i]],
+                    @encoder.niqqud_table.indices_char[niqqud[i]])}
+
+            p('@@@@@@@@')
+            p(r_strings)
+            p('@@@@@@@@')
+            p(r_strings.map.each {|r| r.vocalize()})
+            #for r in r_strings])
+            #reconcile_strings(
+            #  text,
+            #  combine_text_and_haraqat(seq, preds)
+            #)
         end
 
         # download data from relative path and diacritize line by line
@@ -117,12 +149,28 @@ module Rababa
           # onnx predictions
           predicts = @onnx_session.run(nil, batch_data)
 
-          predicts[0].map do |p|
+          #p(predicts.length)
+
+          preds_niqqud = predicts[0].map do |p|
             p.map do |r|
               r.each_with_index.max[1]
             end
           end
+          preds_dagesh = predicts[1].map do |p|
+            p.map do |r|
+              r.each_with_index.max[1]
+            end
+          end
+          preds_sin = predicts[2].map do |p|
+            p.map do |r|
+              r.each_with_index.max[1]
+            end
+          end
+
+          return preds_niqqud, preds_dagesh, preds_sin
+
         end
+
 
         # Combine: text + Haraqats --> diacritised arabic
         def combine_text_and_haraqat(vec_txt, vec_haraqat, encoding_mode='std')
@@ -156,8 +204,6 @@ module Rababa
 
         # Initialise text encoder from config params
         def get_text_encoder
-            #Encoders::TextEncoder.new(['a','b','c'])
-            #a = Encoders::CharacterTable.new(['a'])
             Encoders::TextEncoder.new()
         end
 

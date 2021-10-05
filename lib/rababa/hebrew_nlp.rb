@@ -22,10 +22,12 @@ module Rababa
       'METEG' => '\u05BD'
     }
 
-    HEBREW_LETTERS = (0x05d0..0x05ea + 1).to_a {|c| c.force_encoding('utf-8')}
+    HEBREW_LETTERS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'ך', 'כ', 'ל', 'ם', 'מ', 'ן', 'נ', 'ס', 'ע', 'ף', 'פ', 'ץ', 'צ', 'ק', 'ר', 'ש', 'ת']
+    #(0x05d0..0x05ea + 1).to_a {|c| c.force_encoding('utf-8')}
 
     NIQQUD = [RAFE] + HEBREW_LETTERS + \
-            (0x05b0..0x05bc + 1).to_a {|c| c.force_encoding('utf-8')}
+            ['ְ', 'ֱ', 'ֲ', 'ֳ', 'ִ', 'ֵ', 'ֶ', 'ַ', 'ָ', 'ֹ', 'ֺ', 'ֻ', 'ּ', 'ַ']
+    #        (0x05b0..0x05bc + 1).to_a {|c| c.force_encoding('utf-8')}
 
     HOLAM = Niqqud['HOLAM']
 
@@ -45,70 +47,10 @@ module Rababa
     ENDINGS_TO_REGULAR = Hash[
                   *('כמנפצ'.chars.zip 'ךםןףץ'.chars).map {|x,y| [x,y]}.flatten]
 
-    def normalize(c)
-      if VALID_LETTERS.include? c
-        return c
-      end
-      if ENDINGS_TO_REGULAR.include? c
-        return ENDINGS_TO_REGULAR[c]
-      end
-      if ['\n', '\t'].include? c
-        return ' '
-      end
-      if ['־', '‒', '–', '—', '―', '−'].include? c
-        return '-'
-      end
-      if c == '['
-        return '('
-      end
-      if c == ']'
-        return ')'
-      end
-      if ['´', '‘', '’'].include? c
-        return "'"
-      end
-      if ['“', '”', '״'].include? c
-        return '"'
-      end
-      if c.isdigit()
-        return '5'
-      end
-      if c == '…'
-        return ','
-      end
-      if ['ײ', 'װ', 'ױ'].include? c
-        return 'H'
-      end
-      return 'O'
-    end
-
-  end
+  end # HebrewCONST
 
   module HebrewNLP
 
-    class HebrewChar
-      attr_accessor :letter, :normalized, :dagesh, :sin, :niqqud
-
-      def initialise(letter, normalized, dagesh, sin, niqqud)
-        @letter = letter
-        @normalized = normalized
-        @dagesh = dagesh
-        @sin = sing
-        @niqqud = niqqud
-      end
-
-      def to_str()
-        self.letter + self.dagesh + self.sin + self.niqqud
-      end
-
-      def vocalize()
-        niqqud = vocalize_niqqud(@niqqud)
-        sin = @sin.gsub(RAFE, '')
-        dagesh = vocalize_dagesh(@letter, @dagesh)
-        HebrewChar(@letter, @normalized, sin, dagesh, niqqud)
-      end
-
-    end
 
     def vocalize_dagesh(letter, dagesh)
         if ! 'בכפ'.include? letter
@@ -138,6 +80,104 @@ module Rababa
       return c.gsub(RAFE, '')
     end
 
+
+    class HebrewChar
+      attr_accessor :letter, :normalized, :dagesh, :sin, :niqqud
+
+      #include Niqqud #HebrewCONST::Ni
+
+      def initialize(letter, normalized, dagesh, sin, niqqud)
+        @letter = letter
+        @normalized = normalized
+        @dagesh = dagesh
+        @sin = sin
+        @niqqud = niqqud
+      end
+
+      def to_str()
+        self.letter + self.dagesh + self.sin + self.niqqud
+      end
+
+      def vocalize_dagesh(letter, dagesh)
+          if ! 'בכפ'.include? letter
+              return ''
+          end
+          return dagesh.gsub(RAFE, '')
+      end
+
+      def vocalize_niqqud(c)
+        # FIX: HOLAM / KUBBUTZ cannot be handled here correctly
+        if [HebrewCONST::Niqqud['KAMATZ'],
+            HebrewCONST::Niqqud['PATAKH'],
+            HebrewCONST::Niqqud['REDUCED_PATAKH']].include? c
+          return Niqqud['PATAKH']
+        end
+        if [HebrewCONST::Niqqud['HOLAM'], HebrewCONST::Niqqud['REDUCED_KAMATZ']].include? c
+          return HebrewCONST::Niqqud['HOLAM']  # TODO: Kamatz-katan
+        end
+        if [HebrewCONST::Niqqud['SHURUK'], HebrewCONST::Niqqud['KUBUTZ']].include? c
+          return HebrewCONST::Niqqud['KUBUTZ']
+        end
+        if [HebrewCONST::Niqqud['TZEIRE'], HebrewCONST::Niqqud['SEGOL'], HebrewCONST::Niqqud['REDUCED_SEGOL']].include? c
+          return HebrewCONST::Niqqud['SEGOL']
+        end
+        if c == HebrewCONST::Niqqud['SHVA']
+          return ''
+        end
+        return c.gsub(HebrewCONST::RAFE, '')
+      end
+
+      def vocalize()
+        niqqud = vocalize_niqqud(@niqqud)
+        sin = @sin.gsub(RAFE, '')
+        dagesh = vocalize_dagesh(@letter, @dagesh)
+        HebrewChar(@letter, @normalized, sin, dagesh, niqqud)
+      end
+
+    end # HebrewChar
+
+    def numeric?(s)
+      Float(s) != nil rescue false
+    end
+
+    def normalize(c)
+      if HebrewCONST::VALID_LETTERS.include? c
+        return c
+      end
+      if HebrewCONST::ENDINGS_TO_REGULAR.include? c
+        return HebrewCONST::ENDINGS_TO_REGULAR[c]
+      end
+      if ['\n', '\t'].include? c
+        return ' '
+      end
+      if ['־', '‒', '–', '—', '―', '−'].include? c
+        return '-'
+      end
+      if c == '['
+        return '('
+      end
+      if c == ']'
+        return ')'
+      end
+      if ['´', '‘', '’'].include? c
+        return "'"
+      end
+      if ['“', '”', '״'].include? c
+        return '"'
+      end
+      if numeric?(c)
+        return '5'
+      end
+      if c == '…'
+        return ','
+      end
+      if ['ײ', 'װ', 'ױ'].include? c
+        return 'H'
+      end
+      return 'O'
+    end
+
+
     def is_hebrew_letter(letter)
       return ('\u05d0' <= letter) && (letter <= '\u05ea')
     end
@@ -158,6 +198,6 @@ module Rababa
       return can_niqqud(letter) || can_dagesh(letter) || can_sin(letter)
     end
 
-  end
+  end # HebrewNLP
 
 end

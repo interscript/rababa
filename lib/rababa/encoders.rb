@@ -7,23 +7,27 @@ require_relative "hebrew_nlp"
 # require_relative "cleaner"
 require_relative "dataset"
 
+
 module Encoders #Rababa
 
   #module Encoders
 
     class TextEncoder
+
+      attr_accessor :normalized_table, :dagesh_table, :sin_table, :niqqud_table
       #include CharacterTable
+      include Rababa::HebrewNLP
       #attr_accessor
       def initialize()
         # cleaner fcts
         @cleaner = get_text_cleaner()
         # char tables
-        #@letters_table = CharacterTable.new(Rababa::HebrewCONST::SPECIAL_TOKENS + \
-        #                                    Rababa::HebrewCONST::VALID_LETTERS)
-        #print(Rababa::HebrewCONST::DAGESH.class)
-        #@dagesh_table = CharacterTable.new(Rababa::HebrewCONST::DAGESH)
-        #@sin_table = CharacterTable.new(Rababa::HebrewCONST::NIQQUD_SIN)
-        #@niqqud_table = CharacterTable.new(Rababa::HebrewCONST::NIQQUD)
+        @normalized_table = Dataset::CharacterTable.new(
+                                    Rababa::HebrewCONST::SPECIAL_TOKENS + \
+                                    Rababa::HebrewCONST::VALID_LETTERS)
+        @dagesh_table = Dataset::CharacterTable.new(Rababa::HebrewCONST::DAGESH)
+        @sin_table = Dataset::CharacterTable.new(Rababa::HebrewCONST::NIQQUD_SIN)
+        @niqqud_table = Dataset::CharacterTable.new(Rababa::HebrewCONST::NIQQUD)
       end
 
       def get_text_cleaner()
@@ -36,7 +40,7 @@ module Encoders #Rababa
       end
 
       # String -> Vect. of HebrewChar
-      def encode_dotted_text(str)
+      def encode_text(text)
 
         n = text.length
         text += '  '
@@ -50,6 +54,7 @@ module Encoders #Rababa
           sin = if can_sin(letter) then Rababa::HebrewCONST::RAFE else '' end
           niqqud = if can_niqqud(letter) then Rababa::HebrewCONST::RAFE else '' end
           normalized = normalize(letter)
+
           i += 1
 
           nbrd = text[(i - 15)..(i + 15)].split()[1..-1]
@@ -77,12 +82,18 @@ module Encoders #Rababa
             end
           end
 
-          iterated__.append(
-                HebrewNLP::HebrewChar(letter, normalized, dagesh, sin, niqqud))
+          if normalized != 'O'
+            iterated__.append(
+                      HebrewChar.new(letter, normalized, dagesh, sin, niqqud))
+          end
         end
 
         iterated__
       end
+
+      #def to_data(iterated__)
+      #
+      #end
 
     end # TextEncoder
 

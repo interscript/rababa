@@ -5,7 +5,9 @@ module Dataset
 
   class CharacterTable
 
-    def initialise(chars)
+    attr_accessor :char_indices, :indices_char
+
+    def initialize(chars)
       # make sure to be consistent with JS
       @MASK_TOKEN = ''
       @chars = [@MASK_TOKEN] + chars
@@ -18,7 +20,8 @@ module Dataset
     end
 
     def to_ids(css)
-      css.map.each {|cs| cs.map.each {|c| @char_indices[c]}}
+      #css.map.each {|cs| cs.map.each {|c| @char_indices[c]}}
+      css.map.each {|c| @char_indices[c]}
     end
 
     def to_str(ids)
@@ -30,12 +33,14 @@ module Dataset
 
   class Data
 
-    def initialise(text, normalized, dagesh, sin, niqqud)
-      @text = text
-      @normalized = normalized
-      @dagesh = dagesh
-      @sin = sin
-      @niqqud = niqqud
+    attr_accessor :text, :normalized, :dagesh, :sin, :niqqud
+
+    def initialize(vtext, vnormalized, vdagesh, vsin, vniqqud)
+      @text = vtext
+      @normalized = vnormalized
+      @dagesh = vdagesh
+      @sin = vsin
+      @niqqud = vniqqud
     end
 
   end # Data
