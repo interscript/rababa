@@ -25,17 +25,20 @@ module Rababa
     HEBREW_LETTERS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'ך', 'כ', 'ל', 'ם', 'מ', 'ן', 'נ', 'ס', 'ע', 'ף', 'פ', 'ץ', 'צ', 'ק', 'ר', 'ש', 'ת']
     #(0x05d0..0x05ea + 1).to_a {|c| c.force_encoding('utf-8')}
 
-    NIQQUD = [RAFE] + HEBREW_LETTERS + \
+    NIQQUD = [RAFE] + #HEBREW_LETTERS + \
             ['ְ', 'ֱ', 'ֲ', 'ֳ', 'ִ', 'ֵ', 'ֶ', 'ַ', 'ָ', 'ֹ', 'ֺ', 'ֻ', 'ּ', 'ַ']
     #        (0x05b0..0x05bc + 1).to_a {|c| c.force_encoding('utf-8')}
 
     HOLAM = Niqqud['HOLAM']
 
-    SHIN_YEMANIT = '\u05c1'
-    SHIN_SMALIT = '\u05c2'
+    SHIN_YEMANIT = 'ׁ'
+    #'\u05c1'
+    SHIN_SMALIT = 'ׂ'
+    #'\u05c2'
     NIQQUD_SIN = [RAFE, SHIN_YEMANIT, SHIN_SMALIT]  # RAFE is for acronyms
 
-    DAGESH_LETTER = '\u05bc'
+    DAGESH_LETTER = 'ּ'
+    #'\u05bc'
     DAGESH = [RAFE, DAGESH_LETTER]  # DAGESH and SHURUK are one and same
 
     ANY_NIQQUD = [RAFE] + NIQQUD[1..] + NIQQUD_SIN[1..] + DAGESH[1..]
@@ -51,40 +54,9 @@ module Rababa
 
   module HebrewNLP
 
-
-    def vocalize_dagesh(letter, dagesh)
-        if ! 'בכפ'.include? letter
-            return ''
-        end
-        return dagesh.gsub(RAFE, '')
-    end
-
-
-    def vocalize_niqqud(c)
-      # FIX: HOLAM / KUBBUTZ cannot be handled here correctly
-      if [Niqqud.KAMATZ, Niqqud.PATAKH, Niqqud.REDUCED_PATAKH].include? c
-        return Niqqud.PATAKH
-      end
-      if [Niqqud.HOLAM, Niqqud.REDUCED_KAMATZ].include? c
-        return Niqqud.HOLAM  # TODO: Kamatz-katan
-      end
-      if [Niqqud.SHURUK, Niqqud.KUBUTZ].include? c
-        return Niqqud.KUBUTZ
-      end
-      if [Niqqud.TZEIRE, Niqqud.SEGOL, Niqqud.REDUCED_SEGOL].include? c
-        return Niqqud.SEGOL
-      end
-      if c == Niqqud.SHVA
-        return ''
-      end
-      return c.gsub(RAFE, '')
-    end
-
-
     class HebrewChar
-      attr_accessor :letter, :normalized, :dagesh, :sin, :niqqud
 
-      #include Niqqud #HebrewCONST::Ni
+      attr_accessor :letter, :normalized, :dagesh, :sin, :niqqud
 
       def initialize(letter, normalized, dagesh, sin, niqqud)
         @letter = letter
@@ -102,23 +74,25 @@ module Rababa
           if ! 'בכפ'.include? letter
               return ''
           end
-          return dagesh.gsub(RAFE, '')
+          return dagesh.gsub(HebrewCONST::RAFE, '')
       end
 
       def vocalize_niqqud(c)
         # FIX: HOLAM / KUBBUTZ cannot be handled here correctly
-        if [HebrewCONST::Niqqud['KAMATZ'],
-            HebrewCONST::Niqqud['PATAKH'],
+        if [HebrewCONST::Niqqud['KAMATZ'], HebrewCONST::Niqqud['PATAKH'],
             HebrewCONST::Niqqud['REDUCED_PATAKH']].include? c
           return Niqqud['PATAKH']
         end
-        if [HebrewCONST::Niqqud['HOLAM'], HebrewCONST::Niqqud['REDUCED_KAMATZ']].include? c
-          return HebrewCONST::Niqqud['HOLAM']  # TODO: Kamatz-katan
+        if [HebrewCONST::Niqqud['HOLAM'],
+            HebrewCONST::Niqqud['REDUCED_KAMATZ']].include? c
+          return HebrewCONST::Niqqud['HOLAM']
         end
-        if [HebrewCONST::Niqqud['SHURUK'], HebrewCONST::Niqqud['KUBUTZ']].include? c
+        if [HebrewCONST::Niqqud['SHURUK'],
+            HebrewCONST::Niqqud['KUBUTZ']].include? c
           return HebrewCONST::Niqqud['KUBUTZ']
         end
-        if [HebrewCONST::Niqqud['TZEIRE'], HebrewCONST::Niqqud['SEGOL'], HebrewCONST::Niqqud['REDUCED_SEGOL']].include? c
+        if [HebrewCONST::Niqqud['TZEIRE'], HebrewCONST::Niqqud['SEGOL'],
+            HebrewCONST::Niqqud['REDUCED_SEGOL']].include? c
           return HebrewCONST::Niqqud['SEGOL']
         end
         if c == HebrewCONST::Niqqud['SHVA']
@@ -129,9 +103,9 @@ module Rababa
 
       def vocalize()
         niqqud = vocalize_niqqud(@niqqud)
-        sin = @sin.gsub(RAFE, '')
+        sin = @sin.gsub(HebrewCONST::RAFE, '')
         dagesh = vocalize_dagesh(@letter, @dagesh)
-        HebrewChar(@letter, @normalized, sin, dagesh, niqqud)
+        HebrewChar.new(@letter, @normalized, sin, dagesh, niqqud)
       end
 
     end # HebrewChar
@@ -176,7 +150,6 @@ module Rababa
       end
       return 'O'
     end
-
 
     def is_hebrew_letter(letter)
       return ('\u05d0' <= letter) && (letter <= '\u05ea')

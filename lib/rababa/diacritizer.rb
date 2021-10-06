@@ -64,46 +64,34 @@ module Rababa
 
         # Diacritize single arabic strings
         def diacritize_text(text)
-            #text = text.strip
+
             data = preprocess_text(text)
 
-            p('class:: ', data.class)
-            p(@batch_size)
-            #p(data.normalized*@batch_size)
-            #p('abc')
-            #print(data.map.each {|d| d.normalized})
-
-            #print(data.filter.each {|d| d.normalized!='O'})
-            # initialize onnx computation
-            # redundancy caused by batch processing of nnets
             ort_inputs = {
                 'normalized' => [data.normalized] * @batch_size
-                #data.map.each {|d|
-                #    p(d)} #.text,d.normalized,d.dagesh,d.sin,d.niqqud)}
-                #[d.normalized for d in data]*@batch_size,
             }
 
             # onnx predictions
-            niqqud, dagesh, sin = predict_batch(ort_inputs) #[0]
+            niqqud, dagesh, sin = predict_batch(ort_inputs)
 
-            # reconcile_strings
-            n = niqqud.length
-            r_strings = (0..n).map.each {|i|
+            l_pred = data.normalized.length
+
+
+            dia_text = ''
+            (0..l_pred-1).map.each {|i|
+                dia_text +=
                 Rababa::HebrewNLP::HebrewChar.new(data.text[i],
                     @encoder.normalized_table.indices_char[data.normalized[i]],
-                    @encoder.dagesh_table.indices_char[dagesh[i]],
-                    @encoder.sin_table.indices_char[sin[i]],
-                    @encoder.niqqud_table.indices_char[niqqud[i]])}
+                    @encoder.dagesh_table.indices_char[dagesh[0][i]],
+                    @encoder.sin_table.indices_char[sin[0][i]],
+                    @encoder.niqqud_table.indices_char[niqqud[0][i]]).
+                                                                vocalize().
+                                                                to_str()
+            }
 
-            p('@@@@@@@@')
-            p(r_strings)
-            p('@@@@@@@@')
-            p(r_strings.map.each {|r| r.vocalize()})
-            #for r in r_strings])
-            #reconcile_strings(
-            #  text,
-            #  combine_text_and_haraqat(seq, preds)
-            #)
+
+
+            dia_text
         end
 
         # download data from relative path and diacritize line by line

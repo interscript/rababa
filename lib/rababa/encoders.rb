@@ -17,7 +17,7 @@ module Encoders #Rababa
       attr_accessor :normalized_table, :dagesh_table, :sin_table, :niqqud_table
       #include CharacterTable
       include Rababa::HebrewNLP
-      #attr_accessor
+
       def initialize()
         # cleaner fcts
         @cleaner = get_text_cleaner()
@@ -30,12 +30,11 @@ module Encoders #Rababa
         @niqqud_table = Dataset::CharacterTable.new(Rababa::HebrewCONST::NIQQUD)
       end
 
-      def get_text_cleaner()
-      end
+      # def get_text_cleaner()
+      # end
 
       # cleaner, instantiated at initialization
       def clean(text)
-        # @cleaner.clean(text)
         text
       end
 
@@ -57,7 +56,6 @@ module Encoders #Rababa
 
           i += 1
 
-          nbrd = text[(i - 15)..(i + 15)].split()[1..-1]
           # assert letter not in ANY_NIQQUD,
           # f'{i}, {nbrd}, {[name_of(c) for word in nbrd for c in word]}'
 
@@ -84,16 +82,38 @@ module Encoders #Rababa
 
           if normalized != 'O'
             iterated__.append(
-                      HebrewChar.new(letter, normalized, dagesh, sin, niqqud))
+                    HebrewChar.new(letter, normalized, dagesh, sin, niqqud))
           end
         end
 
         iterated__
       end
 
-      #def to_data(iterated__)
-      #
-      #end
+      def decode_idces(text, normalized, dagesh, sin, niqqud)
+        Rababa::HebrewNLP::HebrewChar.new(text,
+            @normalized_table.indices_char[normalized],
+            @dagesh_table.indices_char[dagesh],
+            @sin_table.indices_char[sin,
+            @niqqud_table.indices_char[niqqud]).vocalize().to_str()
+      end
+
+      def decode_data(vtext, vnormalized, vdagesh, vsin, vniqqud)
+
+        dia_text = ''
+        l_pred = vnormalized.length
+        (0..l_pred-1).map.each {|i|
+            dia_text +=
+            Rababa::HebrewNLP::HebrewChar.new(vtext[i],
+                @encoder.normalized_table.indices_char[vnormalized[i]],
+                @encoder.dagesh_table.indices_char[vdagesh[i]],
+                @encoder.sin_table.indices_char[vsin[i]],
+                @encoder.niqqud_table.indices_char[vniqqud[i]]).
+                                                            vocalize().
+                                                            to_str()
+        }
+        dia_text
+        
+      end
 
     end # TextEncoder
 
