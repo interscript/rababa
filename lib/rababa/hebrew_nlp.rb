@@ -70,8 +70,8 @@ module Rababa
         self.letter + self.dagesh + self.sin + self.niqqud
       end
 
-      def vocalize_dagesh(letter, dagesh)
-          if ! 'בכפ'.include? letter
+      def vocalize_dagesh(normalized, dagesh)
+          if ! 'בכפ'.include? normalized # letter
               return ''
           end
           return dagesh.gsub(HebrewCONST::RAFE, '')
@@ -104,7 +104,7 @@ module Rababa
       def vocalize()
         niqqud = vocalize_niqqud(@niqqud)
         sin = @sin.gsub(HebrewCONST::RAFE, '')
-        dagesh = vocalize_dagesh(@letter, @dagesh)
+        dagesh = vocalize_dagesh(@normalized, @dagesh)
         HebrewChar.new(@letter, @normalized, sin, dagesh, niqqud)
       end
 

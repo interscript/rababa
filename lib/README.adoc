@@ -26,6 +26,7 @@ One can diacritize either single strings:
 
 [source,sh]
 ----
+ruby script.rb -m ../models-data/diacritization_model.onnx --t 'מה שלומך'
 rababa -t 'قطر' -m diacritization_model_max_len_200.onnx
 # or when inside the gem directory during development
 bundle exec exe/rababa -t 'قطر' -m diacritization_model.onnx

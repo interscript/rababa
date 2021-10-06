@@ -4,7 +4,6 @@
 # https://github.com/interscript/rababa/blob/main/python/util/text_cleaners.py
 
 require_relative "hebrew_nlp"
-# require_relative "cleaner"
 require_relative "dataset"
 
 
@@ -20,7 +19,8 @@ module Encoders #Rababa
 
       def initialize()
         # cleaner fcts
-        @cleaner = get_text_cleaner()
+        #@cleaner = get_text_cleaner()
+
         # char tables
         @normalized_table = Dataset::CharacterTable.new(
                                     Rababa::HebrewCONST::SPECIAL_TOKENS + \
@@ -34,11 +34,11 @@ module Encoders #Rababa
       # end
 
       # cleaner, instantiated at initialization
-      def clean(text)
-        text
-      end
+      # def clean(text)
+      #   text
+      # end
 
-      # String -> Vect. of HebrewChar
+      # Map string into Vector of HebrewChar
       def encode_text(text)
 
         n = text.length
@@ -82,41 +82,64 @@ module Encoders #Rababa
 
           if normalized != 'O'
             iterated__.append(
-                    HebrewChar.new(letter, normalized, dagesh, sin, niqqud))
+                    HebrewChar.new(letter, normalized, dagesh, sin, niqqud)
+            )
           end
         end
 
         iterated__
       end
 
+      # encode string into a Dataset::Data object
+      def encode_data(text)
+        # hebrew data
+        data = encode_text(text)
+        # Wrap data within Data structure representing language dims
+        Dataset::Data.new(data.map.each {|d| d.letter},
+                          data.map.each {|d|
+                              @normalized_table.char_indices[d.normalized]},
+                          data.map.each {|d|
+                              @dagesh_table.char_indices[d.dagesh]},
+                          data.map.each {|d|
+                              @sin_table.char_indices[d.sin]},
+                          data.map.each {|d|
+                              @niqqud_table.char_indices[d.niqqud]})
+      end
+
+      # Combine initial original char and indices into a diacritised string
+      # Args:
+      #  text: char
+      #  normalised: integer
+      #  dagesh, dagesh, sin: integers
+      # Returns:
+      #   string
       def decode_idces(text, normalized, dagesh, sin, niqqud)
         Rababa::HebrewNLP::HebrewChar.new(text,
             @normalized_table.indices_char[normalized],
             @dagesh_table.indices_char[dagesh],
-            @sin_table.indices_char[sin,
-            @niqqud_table.indices_char[niqqud]).vocalize().to_str()
+            @sin_table.indices_char[sin],
+            @niqqud_table.indices_char[niqqud]).
+                                      vocalize().to_str()
       end
 
+      # Combine original and prediction vectors and return a string
+      # Args:
+      #   vtext: Array{str}, original text to be diacritized
+      #   vnormalized: Array{integer}, hebrew indices
+      #   vnormalized, vdagesh, vsin: Array{integer}, arrays of predicitions
+      # Returns:
+      #     text: the diacritized string
       def decode_data(vtext, vnormalized, vdagesh, vsin, vniqqud)
-
         dia_text = ''
         l_pred = vnormalized.length
         (0..l_pred-1).map.each {|i|
             dia_text +=
-            Rababa::HebrewNLP::HebrewChar.new(vtext[i],
-                @encoder.normalized_table.indices_char[vnormalized[i]],
-                @encoder.dagesh_table.indices_char[vdagesh[i]],
-                @encoder.sin_table.indices_char[vsin[i]],
-                @encoder.niqqud_table.indices_char[vniqqud[i]]).
-                                                            vocalize().
-                                                            to_str()
+              decode_idces(vtext[i],vnormalized[i],vdagesh[i],vsin[i],vniqqud[i])
         }
         dia_text
-        
       end
 
     end # TextEncoder
 
-  # end
 
 end # Encoders
