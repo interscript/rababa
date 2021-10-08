@@ -38,6 +38,7 @@ class DiacritizationDataset(Dataset):
 
         # self.data, _ = nakdimon_dataset.get_data([self.data_file_path],
         #                                          self.config['max_len'])
+        print('self.device:: ', self.device)
         self.data.to_device(self.device)
 
 
@@ -125,7 +126,7 @@ def load_iterators(config_manager: ConfigManager):
     params = {
         "batch_size": config_manager.config["batch_size"],
         "shuffle": True,
-        "num_workers": 2,
+        "num_workers": 0,
     }
 
     train_iterator = load_training_data(config_manager, loader_parameters=params)

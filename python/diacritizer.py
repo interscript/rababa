@@ -59,7 +59,7 @@ class Diacritizer:
         """get data from relative path"""
         loader_params = {"batch_size": self.config_manager.config["batch_size"],
                          "shuffle": False,
-                         "num_workers": 2}
+                         "num_workers": 0}
 
         dataset = DiacritizationDataset(self.config_manager, path)
         data_iterator = DataLoader(dataset.data,
@@ -79,15 +79,18 @@ class Diacritizer:
 
         raw_data, dia_data, _ = self.diacritize_data_iterator(data_iterator)
 
-        dia_total = nakdimon_dataset.merge_unconditional( \
-                                raw_data.text, raw_data.normalized, \
-                                dia_data.niqqud, dia_data.dagesh, dia_data.sin)
+        dia_total = nakdimon_dataset.merge_unconditional(raw_data.text, \
+                                                         raw_data.normalized.cpu().numpy(), \
+                                                         dia_data.niqqud.cpu().numpy(), \
+                                                         dia_data.dagesh.cpu().numpy(), \
+                                                         dia_data.sin.cpu().numpy())
 
         text = ' '.join(dia_total).replace('\ufeff', '').replace('  ', ' '). \
                     replace(hebrew.RAFE, '')
+        
         with utils.smart_open(path_out, 'w', encoding='utf-8') as f:
             f.write(text)
-        #return text
+        # return text
 
     def diacritize_data_iterator(self, data_iterator,
                                  criterion=None):

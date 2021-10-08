@@ -44,10 +44,6 @@ class ConfigManager:
             os.path.join(self.config["data_directory"]) #, self.config["data_type"])
         )
 
-        #print(self.config["session_name"])
-        #print(self.config["log_directory"])
-        #print(self.session_name)
-        #exit()
         self.base_dir = Path(
             os.path.join(self.config["log_directory"], self.session_name)
         )
@@ -194,15 +190,22 @@ class ConfigManager:
         model_path = self.config['model_path'] \
                         if model_path is None else model_path
 
-        saved_model = torch.load(model_path) \
+        try:
+            saved_model = torch.load(model_path) \
                 if torch.cuda.is_available() else \
                     torch.load(model_path, map_location=torch.device('cpu'))
-        check = model.load_state_dict(saved_model["model_state_dict"])
-        print('Load model state dict:: ', check) # check...
-
-        optimizer_stat_dict = saved_model["optimizer_state_dict"] \
+            check = model.load_state_dict(saved_model["model_state_dict"])
+            print('Load model state dict:: ', check) # check...
+            optimizer_stat_dict = saved_model["optimizer_state_dict"] \
                                     if load_optimizer else None
-        global_step = saved_model["global_step"] + 1
+            global_step = saved_model["global_step"] + 1
+            
+        except:
+            print('Model not found under model_state_dict,')
+            print('starting with a fresh model.')
+            optimizer_stat_dict = None
+            global_step = 0
+        
         model.to(self.device)
 
         return model, optimizer_stat_dict, global_step

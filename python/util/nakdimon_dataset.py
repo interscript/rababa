@@ -102,22 +102,33 @@ def merge_unconditional(texts, tnss, nss, dss, sss):
 class Data:
 
     def __init__(self,
-                 text=None,normalized=None,dagesh=None,sin=None,niqqud=None):
+                 text=None,normalized=None,dagesh=None,sin=None,niqqud=None,device=None):
         self.text = text
         self.normalized = normalized
         self.dagesh = dagesh
         self.sin = sin
         self.niqqud = niqqud
-        self.filenames = None
+        self.device = device
+        # self.filenames = None
 
     @staticmethod
     def concatenate(others):
-        #self = Data()
-        text = np.concatenate([x.text for x in others])
-        normalized = np.concatenate([x.normalized for x in others])
-        dagesh = np.concatenate([x.dagesh for x in others])
-        sin = np.concatenate([x.sin for x in others])
-        niqqud = np.concatenate([x.niqqud for x in others])
+
+        device = others[0].normalized.device
+ 
+        if 'cpu' in str(device):
+            text = np.concatenate([x.text for x in others])
+            normalized = np.concatenate([x.normalized for x in others])
+            dagesh = np.concatenate([x.dagesh for x in others])
+            sin = np.concatenate([x.sin for x in others])
+            niqqud = np.concatenate([x.niqqud for x in others])
+        else:
+            text = np.concatenate([x.text for x in others]) # torch.cat([x.text for x in others])
+            normalized = torch.cat([torch.tensor(x.normalized, device=device) for x in others])
+            dagesh = torch.cat([torch.tensor(x.dagesh, device=device) for x in others])
+            sin = torch.cat([torch.tensor(x.sin, device=device) for x in others])
+            niqqud = torch.cat([torch.tensor(x.niqqud, device=device) for x in others])
+
         return Data(text, normalized, dagesh, sin, niqqud)
 
     def shapes(self):
@@ -140,18 +151,22 @@ class Data:
         self.niqqud = torch.tensor(self.niqqud).to(device)
         self.dagesh = torch.tensor(self.dagesh).to(device)
         self.sin = torch.tensor(self.sin).to(device)
+        self.device = device
 
     def get_idces(self, idces):
+        
         if type(idces) == int:
             idces = [idces]
+        
         return Data(self.text[idces], \
                     self.normalized[idces], \
                     self.dagesh[idces], \
                     self.sin[idces], \
-                    self.niqqud[idces])
+                    self.niqqud[idces], \
+                    self.device)
 
-    def __getitem__(self, item):
-        return self.get_idces(item)
+    def __getitem__(self, items):
+        return self.get_idces(items)
 
     @staticmethod
     def from_text(heb_items, maxlen: int) -> 'Data':

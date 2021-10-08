@@ -81,7 +81,8 @@ class GeneralTrainer(Trainer):
 
     def load_diacritizer(self):
         if self.model_kind in ["cbhg", "baseline"]:
-            self.diacritizer = Diacritizer(self.config_path, self.model_kind)
+            load_model = True
+            self.diacritizer = Diacritizer(self.config_path, self.model_kind, load_model)
         else:
             print('model not found')
             exit()
@@ -124,7 +125,8 @@ class GeneralTrainer(Trainer):
             d_loss[k+'_loss'] = loss
         return d_loss
 
-    def get_benchmarks(self, test_data_iterator, dims = ['N','D','S']): # tqdm
+    def get_benchmarks(self, test_data_iterator,
+                       dims=['N','D','S']): # tqdm
 
         d_scores = {}
         # Run the model on some test examples
@@ -193,7 +195,6 @@ class GeneralTrainer(Trainer):
         tqdm_error_rates.set_description("DEC/CHA/WOR/VOC : ")
         tqdm = trange(self.global_step, self.config["max_steps"] + 1, leave=True)
 
-
         for batch_inputs in repeater(train_iterator):
             tqdm.set_description(f"Global Step {self.global_step}")
             if self.config["use_decay"]:
@@ -203,6 +204,7 @@ class GeneralTrainer(Trainer):
             self.optimizer.zero_grad()
 
             batch_inputs.to_device(self.device)
+            # print('device:: ', batch_inputs.device)
             step_results = self.train_batch(batch_inputs)
 
             if self.device == "cuda" and self.config["use_mixed_precision"]:
@@ -254,16 +256,18 @@ class GeneralTrainer(Trainer):
 
             if self.global_step % self.config["evaluate_frequency"] == 0:
                 #loss, acc = self.evaluate(validation_iterator, tqdm_eval)
-                d_loss, d_acc = get_benchmarks(validation_iterator)
-
-                self.summary_manager.add_scalar(
-                    "evaluate/loss", loss, global_step=self.global_step
-                )
-                self.summary_manager.add_scalar(
-                    "evaluate/acc", acc, global_step=self.global_step
+                d_loss, d_acc = None, None 
+                d_scores = self.get_benchmarks(validation_iterator)
+                # {'N_accu': 0.052763738467709584, 'N_loss': 2.918271064758301, 'D_accu': 0.3909265944645006, 'D_loss': 2.931976556777954, 'S_accu': 0.2850381066987565, 'S_loss': 2.7157998085021973}
+                
+                tqdm.display(
+                    f"Evaluate {self.global_step}: N_accu, {d_scores['N_accu']}, N_loss: {d_scores['N_loss']}", pos=8
                 )
                 tqdm.display(
-                    f"Evaluate {self.global_step}: accuracy, {acc}, loss: {loss}", pos=8
+                    f"Evaluate {self.global_step}: D_accu, {d_scores['D_accu']}, D_loss: {d_scores['D_loss']}", pos=9
+                )
+                tqdm.display(
+                    f"Evaluate {self.global_step}: S_accu, {d_scores['S_accu']}, S_loss: {d_scores['S_loss']}", pos=10
                 )
                 self.model.train()
 
@@ -271,13 +275,17 @@ class GeneralTrainer(Trainer):
                 self.global_step % self.config["evaluate_with_error_rates_frequency"]
                 == 0
             ):
-                scores, summery_texts = self.evaluate_with_error_rates(
+                scores, summary_texts = self.evaluate_with_error_rates(
                     validation_iterator, tqdm_error_rates
                 )
-                if error_rates:
+                
+                print('scores:: ', scores)
+                print('summray_texts:: ', summary_texts)
+                
+                if scores:
 
                     DEC, CHA, WOR, VOC = \
-                     scores["DEC"], scores["CHA"], scores["WOR"], scores["VOC"]
+                     scores["dec"], scores["cha"], scores["wor"], scores["voc"]
 
                     self.summary_manager.add_scalar(
                         "error_rates/DEC",
@@ -301,10 +309,10 @@ class GeneralTrainer(Trainer):
                     )
 
                     error_rates = f"DEC: {DEC}, CHA: {CHA}, WOR: {WOR}, VOC: {VOC}"
-                    tqdm.display(f"metrics {self.global_step}: {error_rates}", pos=9)
+                    tqdm.display(f"metrics {self.global_step}: {error_rates}", pos=11)
 
-                    for tag, text in summery_texts:
-                        self.summary_manager.add_text(tag, text)
+                    #for tag, text in summary_texts:
+                    #    self.summary_manager.add_text(tag, text)
 
                 self.model.train()
 
@@ -325,6 +333,7 @@ class GeneralTrainer(Trainer):
         # Forward pass
         targets = raw_data.niqqud, raw_data.dagesh, raw_data.sin
 
+        # print('\n device:: ',self.device)
         outputs = self.model(raw_data.normalized)
         losses = []
         #self.optimizer.zero_grad()
