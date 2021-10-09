@@ -4,6 +4,7 @@ import random
 
 import numpy as np
 import torch
+import wandb
 
 from trainer import (
     CBHGTrainer
