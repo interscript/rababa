@@ -22,11 +22,17 @@ https://github.com/interscript/rababa/tree/main/python[implementation for arabic
 and also strongly inspired from the work of
 https://arxiv.org/pdf/2105.05209.pdf[nakdimon paper]
 and https://github.com/elazarg/nakdimon/blob/master/hebrew.py[nakdimon library].
+
+Our work is also explained in https://www.interscript.org/blog/2021-08-03-diacritization-in-arabic-with-deep-learning[blog in Arabic]
+and https://www.interscript.org/blog/2021-10-03-diacritization-in-hebrew-with-deep-learning[blog for hebrew].
+
 We have have overtaken the NLP and decomposition of diacritics into:
 NIQQUD, SIN and DAGESH and a lot of code from the later.
 We were also lucky to benefit from that previous work and also of an access
 to the author's generously shared
- https://github.com/elazarg/hebrew_diacritized[dataset]
+ https://github.com/elazarg/hebrew_diacritized[dataset].
+ We needed to change the tacotron/CBHG model used in the architecture as detailed in the
+ python code and the blog mentionned just above.
 
 Out of the four models that https://github.com/almodhfer[almodhfer] has
 implemented, we selected just the simplest and most performant ones:
@@ -97,7 +103,7 @@ that we have cleaned as
 *** link cleaned data
 
 
-For training, data needs to be stored in the `data/CA_MSA` directory in such a
+For training, data needs to be stored in the `data/train` directory in such a
 format:
 
 [source,bash]
@@ -110,28 +116,23 @@ For instance:
 
 [source,bash]
 ----
-mkdir -p data/CA_MSA
-cd data
-curl -sSL https://github.com/interscript/rababa-tashkeela/archive/refs/tags/v1.0.zip -o tashkeela.zip
-unzip tashkeela.zip
-for d in `ls rababa-tashkeela-1.0/tashkeela_val/*`; do cat $d >> CA_MSA/eval.csv; done
-for d in `ls rababa-tashkeela-1.0/tashkeela_train/*`; do cat $d >> CA_MSA/train.csv; done
-for d in `ls rababa-tashkeela-1.0/tashkeela_test/*`; do cat $d >> CA_MSA/test.csv; done
+mkdir -p data/
+***
 ----
 
-Alternatively, the dataset can be downloaded at
-[rababa-tashkeela](https://github.com/interscript/rababa-tashkeela).
+Alternatively, the raw datasets (they will need to be preprocessed) can be downloaded at
+https://github.com/elazarg/hebrew_diacritized[hebrew_diacritized].
 
 === Load Model
 
 Alternatively, trained CBHG models are available under
-https://github.com/secryst/rababa-models[releases].
+https://github.com/secryst/rababa-models/releases/tag/hebrew.0.1[hebrew release].
 
 Models are to be copied as specified in the link just above under:
 
 [source,bash]
 ----
-> log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt
+> log_dir/Hebrew.cbhg/models/2000000-snapshot.pt
 ----
 
 
@@ -192,7 +193,7 @@ text or lines.
 
 [source,bash]
 ----
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'قطر'
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
 python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file relative_path_to_text_file
 ----
 
