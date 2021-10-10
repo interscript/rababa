@@ -104,7 +104,7 @@ class CBHGModel(nn.Module):
 
         cbhg_input = embedding_out
         if self.use_prenet:
-            print('use prenet')
+            # print('use prenet')
             cbhg_input = self.prenet(embedding_out)
             # cbhg_input = [batch_size, src_len, prenet_sizes[-1]]
 

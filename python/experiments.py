@@ -4,6 +4,10 @@ import random
 
 import numpy as np
 import torch
+
+# import ruamel.yaml
+import ruamel.yaml as yaml
+
 import wandb
 
 from trainer import (
@@ -34,35 +38,20 @@ def train_parser():
 
 parser = train_parser()
 args = parser.parse_args()
-
-
-if args.model_kind in ['baseline',"cbhg"]:
-    trainer = CBHGTrainer(args.config, args.model_kind)
-else:
-    raise ValueError("The model kind is not supported")
-
     
-"""
-        if not self.config['wandb_run'] is None:
-            wandb.login()
-            wandb.watch(self.model, self.criterion, log="all", log_freq=10)
-            wandb.log({**test(model, test_dataset),
-                       **test_metrics(model, config)})
-"""
-
 # Define Experiments using Wandb
 sweep_config = {
     # search method
     'method': 'random', #grid, random
     # metric and objective
     'metric': {
-      'name': 'DEC',
+      'name': 'dec',
       'goal': 'maximize' #'minimize'   
     },
     # define search parameters
     'parameters': {
         'max_steps': {
-            'values': [4000]
+            'values': [1000]
         },
         'batch_size': {
             'values': [32] #[128, 64, 32]
@@ -76,18 +65,9 @@ sweep_config = {
         'cbhg_projections': {
             'values': [[128, 256]] #, [256, 512]]
         },
-        
-        'dropout': {
-            'values': [0.3, 0.4, 0.5]
-        },
-        'learning_rate': {
-            'values': [1e-2, 1e-3, 1e-4, 3e-4, 3e-5, 1e-5]
-        },
-        'fc_layer_size': {
-            'values': [128,256,512]
-        },
+
         'post_cbhg_layers_units': {
-            'values': [256, 256]
+            'values': [[256, 256]]
         },
         
         'optimizer': {
@@ -95,25 +75,52 @@ sweep_config = {
         },
         'use_prenet': {
             'values': ['false']
-        }
-        prenet_sizes: {
+        },
+        'prenet_sizes': {
             'values': [[512, 256]]
-        }
-        
+        }     
     }
 }
 
-run_name = "Hyperparams Search"
 
+# train code, with the search preprocessing logic    
+def train():
+
+    with open('config/train.yml', "rb") as model_yaml:
+        config = yaml.load(model_yaml)
+    
+    # load default config
+    config_defaults = config 
+    wandb.init(config=config_defaults) # , magic=True)
+    config_wandb = wandb.config
+    
+    # overwrite initial config
+    config = { **config, 
+               **config_wandb }
+    
+    tmp_config_path = 'config/sweep_tmp.yml'
+    with open(tmp_config_path, 'w') as yaml_file:
+        yaml.dump(config, yaml_file, default_flow_style=False)
+
+    if args.model_kind in ['baseline',"cbhg"]:
+        trainer = CBHGTrainer(tmp_config_path, args.model_kind)
+    else:
+        raise ValueError("The model kind is not supported")
+
+    trainer.run(config_wandb)
+    
+
+    
+##################################
+# MAIN                           #
+##################################
+
+# Run name
+run_name = "hyperparams search"
+
+# Init wandb and search
 wandb.login()
 sweep_id = wandb.sweep(sweep_config, project=run_name)
-wandb.init(config=config_defaults)
-    
-# Config is a variable that holds and saves hyperparameters and inputs
-config = wandb.config
 
-
-trainer.run_wandb(config)
-
-
-
+# Run search
+wandb.agent(sweep_id, train)

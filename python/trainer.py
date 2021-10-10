@@ -187,21 +187,25 @@ class GeneralTrainer(Trainer):
         tqdm.reset()
         return results, None
 
-    def run(self):
+    def run(self, config_wandb=None):
 
         scaler = torch.cuda.amp.GradScaler()
         train_iterator, _, validation_iterator = \
                         load_iterators(self.config_manager)
+        n_steps_per_epoch = len(train_iterator)
+        
         print("data loaded")
         print("----------------------------------------------------------")
-
         tqdm_eval = trange(0, len(validation_iterator), leave=True)
         tqdm_error_rates = trange(0, len(validation_iterator), leave=True)
         tqdm_eval.set_description("Eval")
         tqdm_error_rates.set_description("DEC/CHA/WOR/VOC : ")
         tqdm = trange(self.global_step, self.config["max_steps"] + 1, leave=True)
-
+        print('--------------------------------------')
+        
+        
         for batch_inputs in repeater(train_iterator):
+            
             #"""
             tqdm.set_description(f"Global Step {self.global_step}")
             if self.config["use_decay"]:
@@ -213,7 +217,6 @@ class GeneralTrainer(Trainer):
             #"""
             batch_inputs.to_device(self.device)
             step_results = self.train_batch(batch_inputs)
-            #print(step_results)
 
             #"""
             if self.device == "cuda" and self.config["use_mixed_precision"]:
@@ -245,72 +248,72 @@ class GeneralTrainer(Trainer):
             dico = {'N': float(step_results['N']), 
                     'S': float(step_results['S']),
                     'D': float(step_results['D'])}
-            #{'N': tensor(2.9023, device='cuda:0', grad_fn=<NllLoss2DBackward>), 'D': tensor(1.1915, device='cuda:0', grad_fn=<NllLoss2DBackward>), 'S': tensor(1.5431, device='cuda:0', grad_fn=<NllLoss2DBackward>)}
-            #self.losses.append(step_results)
 
             self.print_losses(step_results, tqdm)
 
+            """
             self.summary_manager.add_scalar(
-                "meta/learning_rate", self.lr, global_step=self.global_step
-            )
+                "meta/learning_rate", self.lr, global_step=self.global_step)
+            """
 
             if self.global_step % self.config["model_save_frequency"] == 0:
                 torch.save(
-                    {
-                        "global_step": self.global_step,
-                        "model_state_dict": self.model.state_dict(),
-                        "optimizer_state_dict": self.optimizer.state_dict(),
-                    },
+                    {"global_step": self.global_step,
+                     "model_state_dict": self.model.state_dict(),
+                     "optimizer_state_dict": self.optimizer.state_dict()},
                     os.path.join(
-                        self.config_manager.models_dir,
-                        f"{self.global_step}-snapshot.pt",
-                    ),
-                )
+                        self.config_manager.models_dir, f"{self.global_step}-snapshot.pt"))
 
-            if self.global_step % self.config["evaluate_frequency"] == 0:
+            # if self.global_step % self.config["evaluate_frequency"] == 0:
+            if self.global_step % n_steps_per_epoch == 0:
                 
                 # loss, acc = self.evaluate(validation_iterator, tqdm_eval) 
                 self.diacritizer.set_model(self.model)
                 d_scores = self.get_benchmarks(validation_iterator)
                 
-                tqdm.display(
-                    f"Evaluate {self.global_step}: N_accu, {d_scores['N_accu']}, N_loss: {d_scores['N_loss']}", pos=8)
-                tqdm.display(
-                    f"Evaluate {self.global_step}: D_accu, {d_scores['D_accu']}, D_loss: {d_scores['D_loss']}", pos=9)
-                tqdm.display(
-                    f"Evaluate {self.global_step}: S_accu, {d_scores['S_accu']}, S_loss: {d_scores['S_loss']}", pos=10)
-                #self.model.train()
-
-            if (
-                self.global_step % self.config["evaluate_with_error_rates_frequency"]
-                == 0
-            ):
-                scores, _ = self.evaluate_with_error_rates(
-                    validation_iterator, tqdm_error_rates
-                )
                 
-                print('scores:: ', scores)
-                # print('summray_texts:: ', summary_texts)
-                
-                if scores:
+                # self.model.train()
 
+                # if (self.global_step % self.config["evaluate_with_error_rates_frequency"] == 0):
+                scores, _ = self.evaluate_with_error_rates(validation_iterator, tqdm_error_rates)
+                
+                if not config_wandb is None:
+                    
+                    wandb.log({**d_scores,
+                               **scores})
+                    print('scores:: ', scores)
+                    
+                else:
+                    
+                    tqdm.display(
+                        f"Evaluate {self.global_step}: N_accu, {d_scores['N_accu']}, N_loss: {d_scores['N_loss']}", pos=8)
+                    tqdm.display(
+                        f"Evaluate {self.global_step}: D_accu, {d_scores['D_accu']}, D_loss: {d_scores['D_loss']}", pos=9)
+                    tqdm.display(
+                        f"Evaluate {self.global_step}: S_accu, {d_scores['S_accu']}, S_loss: {d_scores['S_loss']}", pos=10)
                     DEC, CHA, WOR, VOC = \
-                     scores["dec"], scores["cha"], scores["wor"], scores["voc"]
-
-                    self.summary_manager.add_scalar(
-                        "error_rates/DEC", DEC, global_step=self.global_step)
-                    self.summary_manager.add_scalar(
-                        "error_rates/CHA", CHA, global_step=self.global_step)
-                    self.summary_manager.add_scalar(
-                        "error_rates/WOR", WOR, global_step=self.global_step)
-                    self.summary_manager.add_scalar(
-                        "error_rates/VOC", VOC, global_step=self.global_step)
-
+                            scores["dec"], scores["cha"], scores["wor"], scores["voc"]
+                
                     error_rates = f"DEC: {DEC}, CHA: {CHA}, WOR: {WOR}, VOC: {VOC}"
                     tqdm.display(f"metrics {self.global_step}: {error_rates}", pos=11)
+                    # print('summray_texts:: ', summary_texts)
 
-                    #for tag, text in summary_texts:
-                    #    self.summary_manager.add_text(tag, text)
+                    if scores:
+                    
+
+                        """
+                        self.summary_manager.add_scalar(
+                            "error_rates/DEC", DEC, global_step=self.global_step)
+                        self.summary_manager.add_scalar(
+                            "error_rates/CHA", CHA, global_step=self.global_step)
+                        self.summary_manager.add_scalar(
+                            "error_rates/WOR", WOR, global_step=self.global_step)
+                        self.summary_manager.add_scalar(
+                            "error_rates/VOC", VOC, global_step=self.global_step)
+                        """
+
+                    
+
             if self.global_step % self.config["train_plotting_frequency"] == 0:
                 self.plot_attention(step_results)
 
