@@ -10,10 +10,9 @@ from util import nakdimon_utils as utils
 
 # "rafe" denotes a letter to which it would have been valid to add a diacritic of some category
 # but instead it is decided not to. This makes the metrics less biased.
-RAFE = '\u05BF'
+#
 
-
-class Niqqud:
+class Haraqat: # Niqqud
     SHVA = '\u05B0'
     REDUCED_SEGOL = '\u05B1'
     REDUCED_PATAKH = '\u05B2'
@@ -28,31 +27,37 @@ class Niqqud:
     SHURUK = '\u05BC'
     METEG = '\u05BD'
 
+#HARAQAT = ["ْ", "ّ", "ٌ", "ٍ", "ِ", "ً", "َ", "ُ"]
+#ARAB_CHARS = '\u0649\u0639\u0638\u062D\u0631\u0633\u064A\u0634\u0636\u0642 \u062B\u0644\u0635\u0637\u0643\u0622\u0645\u0627\u0625\u0647\u0632\u0621\u0623\u0641\u0624\u063A\u062C\u0626\u062F\u0629\u062E\u0648\u0628\u0630\u062A\u0646'
+PUNCTUATIONS = list(set([".", "،", ":", "؛", "-", "؟"] +
+                        [' ', '!', '"', "'", '(', ')', ',', '-', '.', ':', ';', '?']))
+#VALID_ARABIC = HARAQAT + list(ARAB_CHARS) + [".", "،", ":", "؛", "-", "؟"]
 
-HEBREW_LETTERS = [chr(c) for c in range(0x05d0, 0x05ea + 1)]
 
-NIQQUD = [RAFE] + [chr(c) for c in range(0x05b0, 0x05bc + 1)] + ['\u05b7']
 
-HOLAM = Niqqud.HOLAM
 
-SHIN_YEMANIT = '\u05c1'
-SHIN_SMALIT = '\u05c2'
-NIQQUD_SIN = [RAFE, SHIN_YEMANIT, SHIN_SMALIT]  # RAFE is for acronyms
+#HEBREW_LETTERS = list(ARAB_CHARS) #[chr(c) for c in range(0x05d0, 0x05ea + 1)]
 
-DAGESH_LETTER = '\u05bc'
-DAGESH = [RAFE, DAGESH_LETTER]  # note that DAGESH and SHURUK are one and the same
+HARAQAT = ["ْ", "ٌ", "ٍ", "ِ", "ً", "َ", "ُ"] # without SHADDAH "ّ",
 
-ANY_NIQQUD = [RAFE] + NIQQUD[1:] + NIQQUD_SIN[1:] + DAGESH[1:]
+A_S = '\u0649\u0639\u0638\u062D\u0631\u0633\u064A\u0634\u0636\u0642 \u062B\u0644\u0635\u0637\u0643\u0622\u0645\u0627\u0625\u0647\u0632\u0621\u0623\u0641\u0624\u063A\u062C\u0626\u062F\u0629\u062E\u0648\u0628\u0630\u062A\u0646'
+ARABIC_LETTERS = [str(s) for s in list(A_S)]
 
-VALID_LETTERS = [' ', '!', '"', "'", '(', ')', ',', '-', '.', ':', ';', '?'] + HEBREW_LETTERS
+SHADDAH = str(\u0651')
+SHADDAH = [SHADDAH]  # note that DAGESH and SHURUK are one and the same
+
+ANY_HARAQAT = HARAQAT + SHADDAH #[RAFE] + NIQQUD[1:] + NIQQUD_SIN[1:] + DAGESH[1:]
+
+VALID_LETTERS = [' ', '!', '"', "'", '(', ')', ',', '-', '.', ':', ';', '?'] + \
+                ARABIC_LETTERS
 SPECIAL_TOKENS = ['H', 'O', '5']
 
-ENDINGS_TO_REGULAR = dict(zip('ךםןףץ', 'כמנפצ'))
+#ENDINGS_TO_REGULAR = dict(zip('ךםןףץ', 'כמנפצ'))
 
 
 def normalize(c):
     if c in VALID_LETTERS: return c
-    if c in ENDINGS_TO_REGULAR: return ENDINGS_TO_REGULAR[c]
+    # if c in ENDINGS_TO_REGULAR: return ENDINGS_TO_REGULAR[c]
     if c in ['\n', '\t']: return ' '
     if c in ['־', '‒', '–', '—', '―', '−']: return '-'
     if c == '[': return '('
@@ -61,30 +66,29 @@ def normalize(c):
     if c in ['“', '”', '״']: return '"'
     if c.isdigit(): return '5'
     if c == '…': return ','
-    if c in ['ײ', 'װ', 'ױ']: return 'H'
+    # if c in ['ײ', 'װ', 'ױ']: return 'H'
     return 'O'
 
 
-class HebrewChar(NamedTuple):
+class ArrabicChar(NamedTuple):
     letter: str
     normalized: str
-    dagesh: str
-    sin: str
-    niqqud: str
+    haraqat: str
+    shaddah: str
 
     def __str__(self):
-        return self.letter + self.dagesh + self.sin + self.niqqud
+        return self.letter + self.haraqat + self.shaddah # + self.niqqud
 
     def __repr__(self):
-        return repr((self.letter, bool(self.dagesh), bool(self.sin), ord(self.niqqud or chr(0))))
+        return repr((self.letter, bool(self.haraqat), bool(self.shaddah))) #, ord(self.niqqud or chr(0))))
 
     def vocalize(self):
-        return self._replace(niqqud=vocalize_niqqud(self.niqqud),
-                             sin=self.sin.replace(RAFE, ''),
-                             dagesh=vocalize_dagesh(self.letter, self.dagesh))
+        return self #self._replace(niqqud=vocalize_niqqud(self.niqqud),
+    #                         sin=self.sin.replace(RAFE, ''),
+    #                         dagesh=vocalize_dagesh(self.letter, self.dagesh))
 
 
-def items_to_text(items: List[HebrewChar]) -> str:
+def items_to_text(items: List[ArrabicChar]) -> str:
     return ''.join(str(item) for item in items).replace(RAFE, '')
 
 
@@ -134,7 +138,7 @@ def can_any(letter):
     return can_niqqud(letter) or can_dagesh(letter) or can_sin(letter)
 
 
-def iterate_dotted_text(text: str) -> Iterator[HebrewChar]:
+def iterate_dotted_text(text: str) -> Iterator[ArrabicChar]:
     n = len(text)
     text += '  '
     i = 0
@@ -168,7 +172,7 @@ def iterate_dotted_text(text: str) -> Iterator[HebrewChar]:
                 dagesh = RAFE
                 niqqud = DAGESH_LETTER
 
-        yield HebrewChar(letter, normalized, dagesh, sin, niqqud)
+        yield ArrabicChar(letter, normalized, dagesh, sin, niqqud)
 
 
 def split_by_length(characters: Iterable, maxlen: int):
@@ -197,7 +201,7 @@ def iterate_file(path):
 
 
 def is_space(c):
-    if isinstance(c, HebrewChar):
+    if isinstance(c, ArrabicChar):
         return c.letter == ' '
     elif isinstance(c, str):
         return c == ' '
@@ -205,7 +209,7 @@ def is_space(c):
 
 
 class Token:
-    def __init__(self, items: List[HebrewChar]):
+    def __init__(self, items: List[ArrabicChar]):
         self.items = items
 
     def __str__(self):
@@ -247,7 +251,7 @@ class Token:
         return len(self.items) > 2 and self.items[0].niqqud == 'הַ'[-1] and self.items[0].letter in 'כבלה'
 
 
-def tokenize_into(tokens_list: List[Token], char_iterator: Iterator[HebrewChar]) -> Iterator[HebrewChar]:
+def tokenize_into(tokens_list: List[Token], char_iterator: Iterator[ArrabicChar]) -> Iterator[ArrabicChar]:
     current = []
     for c in char_iterator:
         if c.letter.isspace() or c.letter == '-':
@@ -260,7 +264,7 @@ def tokenize_into(tokens_list: List[Token], char_iterator: Iterator[HebrewChar])
     if current:
         tokens_list.append(Token(current).strip_nonhebrew())
 
-def tokenize(iterator: Iterator[HebrewChar]) -> List[Token]:
+def tokenize(iterator: Iterator[ArrabicChar]) -> List[Token]:
     tokens = []
     _ = list(tokenize_into(tokens, iterator))
     return tokens
