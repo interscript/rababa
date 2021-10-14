@@ -31,7 +31,12 @@ class CBHGModel(nn.Module):
     def __init__(
         self,
         inp_vocab_size: int,
-        targ_vocab_size: int,
+
+        # targ_vocab_size: int,
+        targ_symbols_harakat: int,
+        targ_symbols_shaddah: int,
+        targ_symbols_fatha: int,
+
         embedding_dim: int = 512,
         use_prenet: bool = True,
         prenet_sizes: List[int] = [512, 256],
@@ -70,7 +75,11 @@ class CBHGModel(nn.Module):
                 layers.append(nn.BatchNorm1d(post_cbhg_layers_units[i] * 2))
 
         self.post_cbhg_layers = nn.ModuleList(layers)
-        self.projections = nn.Linear(post_cbhg_layers_units[-1] * 2, targ_vocab_size)
+        # self.projections = nn.Linear(post_cbhg_layers_units[-1] * 2, targ_vocab_size)
+        self.projections_haraqat = nn.Linear(post_cbhg_layers_units[-1] * 2, targ_symbols_harakat)
+        self.projections_fatha = nn.Linear(post_cbhg_layers_units[-1] * 2, targ_symbols_fatha)
+        self.projections_shaddah = nn.Linear(post_cbhg_layers_units[-1] * 2, targ_symbols_shaddah)
+
         self.post_cbhg_layers_units = post_cbhg_layers_units
         self.post_cbhg_use_batch_norm = post_cbhg_use_batch_norm
 
@@ -110,9 +119,15 @@ class CBHGModel(nn.Module):
             else:
                 outputs, (hn, cn) = layer(outputs)
 
-        predictions = self.projections(outputs)
+        # predictions = self.projections(outputs)
+        preds_haraqat, preds_shaddah, preds_fatha = \
+            self.projections_haraqat(outputs), \
+            self.projections_shaddah(outputs), \
+            self.projections_fatha(outputs)
         # predictions = [batch_size, src len, targ_vocab_size]
 
-        output = {"diacritics": predictions}
+        output = {'haraqat': preds_haraqat,
+                  'shaddah': preds_haraqat,
+                  'fatha': preds_haraqat,}
 
         return output

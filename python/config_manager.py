@@ -55,7 +55,14 @@ class ConfigManager:
         self.models_dir = Path(os.path.join(self.base_dir, "models"))
         self.text_encoder: TextEncoder = self.get_text_encoder()
         self.config["len_input_symbols"] = len(self.text_encoder.input_symbols)
-        self.config["len_target_symbols"] = len(self.text_encoder.target_symbols)
+
+        self.config["len_target_symbols_harakat"] = \
+                    len(self.text_encoder.d_target_symbols['harakat'])
+        self.config["len_target_symbols_shaddah"] = \
+                    len(self.text_encoder.d_target_symbols['shaddah'])
+        self.config["len_target_symbols_fatha"] = \
+                    len(self.text_encoder.d_target_symbols['fatha'])
+
         if self.model_kind in ["seq2seq", "tacotron_based"]:
             self.config["attention_type"] = AttentionType[self.config["attention_type"]]
         self.config["optimizer"] = OptimizerType[self.config["optimizer_type"]]
@@ -188,9 +195,9 @@ class ConfigManager:
                 return model, 1
         else:
             last_model_path = model_path
-        
+
         saved_model = torch.load(last_model_path) if torch.cuda.is_available() else torch.load(last_model_path, map_location=torch.device('cpu'))
-            
+
         out = model.load_state_dict(saved_model["model_state_dict"])
         # print(out) check...
         global_step = saved_model["global_step"] + 1
@@ -220,7 +227,12 @@ class ConfigManager:
         model = CBHGModel(
             embedding_dim=self.config["embedding_dim"],
             inp_vocab_size=self.config["len_input_symbols"],
-            targ_vocab_size=self.config["len_target_symbols"],
+
+            # targ_vocab_size=self.config["len_target_symbols"],
+            targ_symbols_harakat=self.config["len_target_symbols_harakat"],
+            targ_symbols_shaddah=self.config["len_target_symbols_shaddah"],
+            targ_symbols_fatha=self.config["len_target_symbols_fatha"],
+
             use_prenet=self.config["use_prenet"],
             prenet_sizes=self.config["prenet_sizes"],
             cbhg_gru_units=self.config["cbhg_gru_units"],

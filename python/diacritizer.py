@@ -100,15 +100,30 @@ class Diacritizer:
         originals = batch['original']
         inputs = batch["src"]
         lengths = batch["lengths"]
-        outputs = self.model(inputs.to(self.device), lengths.to("cpu"))
-        diacritics = outputs["diacritics"]
-        predictions = torch.max(diacritics, 2).indices
+        d_outputs = self.model(inputs.to(self.device), lengths.to("cpu"))
+        # diacritics = outputs["diacritics"]
+        # predictions = torch.max(diacritics, 2).indices
+        pred_haraqat = d_outputs["haraqat"]
+        preds_haraqat = torch.max(pred_haraqat, 2).indices
+        pred_fatha = d_outputs["fatha"]
+        preds_fatha = torch.max(pred_fatha, 2).indices
+        pred_shadda = d_outputs["shaddah"]
+        preds_shaddah = torch.max(pred_shaddah, 2).indices
+
+        #d_predictions = {'haraqat': list(preds_haraqat.detach().cpu().numpy()),
+        #                 'fatha': list(preds_fatha.detach().cpu().numpy()),
+        #                 'shaddah': list(preds_shaddah.detach().cpu().numpy())}
+        # for k in ['shaddah', 'shaddah', 'fatha']
+        l_d_predictions =  [{'haraqat': h, 'faddah': f, 'shaddah': s} for h,f,s in
+                zip(list(preds_haraqat.detach().cpu().numpy()),
+                    list(preds_fatha.detach().cpu().numpy()),
+                    list(preds_shaddah.detach().cpu().numpy()))]
 
         sentences = []
-        for src, prediction, original in zip(inputs, predictions, originals):
+        for src, prediction, original in zip(inputs, l_d_predictions, originals):
             sentence = self.text_encoder.combine_text_and_haraqat(
-                    list(src.detach().cpu().numpy()),
-                    list(prediction.detach().cpu().numpy()))
+                                                list(src.detach().cpu().numpy()),
+                                                prediction)
             # Diacritized strings, sentence have to be "reconciled"
             # with original strings, because the non arabic strings are removed
             # before being processed in nnet

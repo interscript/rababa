@@ -61,6 +61,8 @@ class GeneralTrainer(Trainer):
 
         self.print_config()
 
+        self.dims = ['haraqat', 'shaddah', 'fatha']
+
     def set_device(self):
         if self.config.get("device"):
             self.device = self.config["device"]
@@ -111,36 +113,50 @@ class GeneralTrainer(Trainer):
                 )
 
     def evaluate(self, iterator, tqdm, use_target=True):
-        epoch_loss = 0
-        epoch_acc = 0
+        # epoch_loss = 0
+        # epoch_acc = 0
+        #dims = ['haraqat', 'shaddah', 'fatha']
+        epoch_loss = dict(((k, 0) for k in self.dims))
+        epoch_acc = dict(((k, 0) for k in self.dims))
+
         self.model.eval()
         tqdm.set_description(f"Eval: {self.global_step}")
         with torch.no_grad():
             for batch_inputs in iterator:
                 batch_inputs["src"] = batch_inputs["src"].to(self.device)
                 batch_inputs["lengths"] = batch_inputs["lengths"].to("cpu")
-                if use_target:
-                    batch_inputs["target"] = batch_inputs["target"].to(self.device)
-                else:
-                    batch_inputs["target"] = None
 
                 outputs = self.model(
                     src=batch_inputs["src"],
-                    target=batch_inputs["target"],
+                    #target=batch_inputs["target"],
                     lengths=batch_inputs["lengths"],
                 )
 
-                predictions = outputs["diacritics"]
+                #d_predictions = outputs["diacritics"]
 
-                predictions = predictions.view(-1, predictions.shape[-1])
-                targets = batch_inputs["target"]
-                targets = targets.view(-1)
-                loss = self.criterion(predictions, targets.to(self.device))
-                acc = categorical_accuracy(
-                    predictions, targets.to(self.device), self.pad_idx, self.device
-                )
-                epoch_loss += loss.item()
-                epoch_acc += acc.item()
+                #predictions = predictions.view(-1, predictions.shape[-1])
+                #targets = batch_inputs["target"]
+                #targets = targets.view(-1)
+                d_targets = {}
+                for k in self.dims:
+                    d_targets[k] = batch_inputs["d_target"][k].view(-1).to(self.device)
+
+                d_preds = {}
+                for k in self.dims:
+                    pred = outputs[k]
+                    d_preds[k] = pred. \
+                            view(-1, pred.shape[-1])
+
+                d_loss, d_acc = {}, {}
+                for k in self.dims:
+                    d_loss[k] = self.criterion(d_preds[k], d_targets[k])
+                    d_acc[k] = categorical_accuracy(
+                       d_preds[k], d_targets[k], self.pad_idx, self.device)
+
+                for k in self.dims:
+                    d_epoch_loss[k] += d_loss[k].item()
+                    d_epoch_acc[k] += d_acc[k].item()
+
                 tqdm.update()
 
         tqdm.reset()
@@ -217,8 +233,9 @@ class GeneralTrainer(Trainer):
             if self.device == "cuda" and self.config["use_mixed_precision"]:
                 with autocast():
                     step_results = self.run_one_step(batch_inputs)
-                    scaler.scale(step_results["loss"]).backward()
-                    scaler.unscale_(self.optimizer)
+                    for k in self.dims:
+                        scaler.scale(step_results["d_loss"][k]).backward()
+                        scaler.unscale_(self.optimizer)
                     if self.config.get("CLIP"):
                         torch.nn.utils.clip_grad_norm_(
                             self.model.parameters(), self.config["CLIP"]
@@ -230,17 +247,18 @@ class GeneralTrainer(Trainer):
             else:
                 step_results = self.run_one_step(batch_inputs)
 
-                loss = step_results["loss"]
-                loss.backward()
+                d_loss = step_results["d_loss"]
+                for k in self.dims:
+                    d_loss[k].backward()
                 if self.config.get("CLIP"):
                     torch.nn.utils.clip_grad_norm_(
                         self.model.parameters(), self.config["CLIP"]
                     )
                 self.optimizer.step()
 
-            self.losses.append(step_results["loss"].item())
+            self.losses.append(step_results["loss"].item()) # jair
 
-            self.print_losses(step_results, tqdm)
+            # self.print_losses(step_results, tqdm)
 
             self.summary_manager.add_scalar(
                 "meta/learning_rate", self.lr, global_step=self.global_step
@@ -327,25 +345,33 @@ class GeneralTrainer(Trainer):
             tqdm.update()
 
     def run_one_step(self, batch_inputs: Dict[str, torch.Tensor]):
+
         batch_inputs["src"] = batch_inputs["src"].to(self.device)
         batch_inputs["lengths"] = batch_inputs["lengths"].to("cpu")
-        batch_inputs["target"] = batch_inputs["target"].to(self.device)
+
+        #batch_inputs["target"] = batch_inputs["target"].to(self.device)
 
         outputs = self.model(
             src=batch_inputs["src"],
-            target=batch_inputs["target"],
+            #target=batch_inputs["target"],
             lengths=batch_inputs["lengths"],
         )
 
-        predictions = outputs["diacritics"].contiguous()
-        targets = batch_inputs["target"].contiguous()
+        d_predictions, d_targets = {}, {}
+        for k in self.dims:
+            pred = outputs[k].contiguous()
+            d_predictions[k] = pred.view(-1, pred.shape[-1]).to(self.device)
+            d_targets[k] = batch_inputs["d_target"][k].contiguous().view(-1).to(self.device)
 
-        predictions = predictions.view(-1, predictions.shape[-1])
-        targets = targets.view(-1)
+        # predictions = predictions.view(-1, predictions.shape[-1])
+        # targets = targets.view(-1)
+        d_loss = {}
+        for k in self.dims:
+            d_loss[k] = self.criterion(d_predictions[k], d_targets[k])
 
-        loss = self.criterion(predictions.to(self.device),
-                              targets.to(self.device))
-        outputs.update({"loss": loss})
+        # loss = self.criterion(predictions.to(self.device),
+        #                       targets.to(self.device))
+        outputs.update({"d_loss": d_loss})
         return outputs
 
     def predict(self, iterator):

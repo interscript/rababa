@@ -36,5 +36,43 @@ ALL_POSSIBLE_HARAQAT = {
     "ٍّ": "Shaddah + Kasratan ",
 }
 
+def decision_fct(d_haraqats):
+    """
+        {'fatha': char,
+         'shaddah': char,
+         'haraqat': char}
+    """
+    if d_haraqats['fatha'] != '':
+        if d_haraqats['shaddah'] != '':
+            return d_haraqats['fatha'] + d_haraqats['shaddah']
+        else:
+            return d_haraqats['fatha']
+    if d_haraqats['haraqat'] == "ْ": # if sukun return sukun
+        return "ْ"
+    if d_haraqats['shaddah'] != '':
+        return d_haraqats['shaddah'] + d_haraqats['haraqat']
+    else:
+        return d_haraqats['haraqat']
+    return ''
 
-#def logic():
+"""
+['haraqat', 'shaddah', 'fatha']
+d_distr = {#'': 1.011542076671533,
+    'َ': 0.17651175400202376,
+    'ً': 0.003504662636992608,
+    'ُ': 0.04588558786185574,
+    'ٌ': 0.0032528178335757894,
+    'ِ': 0.07471201949874581,
+    'ٍ': 0.004594122977269162,
+    'ْ': 0.05232150773113324,
+    'ّ': 0.025341241600217505,
+    'َّ': 0.017926102702184244,
+    'ًّ': 0.00018712229821031827,
+    'ُّ': 0.002690966916374738,
+    'ٌّ': 0.00021909260950695207,
+    'ِّ': 0.003615545174995154,
+    'ٍّ': 0.0002617403759610149
+}
+
+l_distr = ['َ', 'ً', 'ُ', 'ٌ', 'ِ', 'ٍ', 'ْ', 'ّ', 'َّ', 'ًّ', 'ُّ', 'ٌّ', 'ِّ', 'ٍّ']
+"""

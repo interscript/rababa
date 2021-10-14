@@ -1,6 +1,6 @@
 from util import text_cleaners
 from typing import Dict, List, Optional
-from util.constants import ALL_POSSIBLE_HARAQAT
+from util.constants import ALL_POSSIBLE_HARAQAT, decision_fct
 
 
 class TextEncoder:
@@ -125,9 +125,12 @@ class TextEncoder:
         for i, input_id in enumerate(input_ids):
             if input_id == self.input_pad_id:
                 break
+
             output += self.d_input_id_to_symbol[input_id]
-            for k in self.input_symbols.keys():
-                output += self.d_target_id_to_symbol[k][d_output_ids[k][i]]
+            # if d_output_ids['shaddah'] !=
+            d_dia = dict((k, self.d_target_id_to_symbol[k][d_output_ids[k][i]])
+                          for k in self.input_symbols.keys())
+            output += decision_fct(d_dia)
         return output
 
     def __str__(self):
@@ -169,9 +172,9 @@ class ArabicEncoderWithStartSymbol(TextEncoder):
         # the only difference from the basic encoder is adding the start symbol
         #target_chars: List[str] = list(ALL_POSSIBLE_HARAQAT.keys()) + ["s"]
         target_model = {
-                'fatha': ["", "َ"],
+                'haraqat': ["", "ً", "ُ", "ٌ", "ِ", "ٍ", "ْ"],
                 'shaddah': ["", "ّ"],
-                'haraqat': ["", "ً", "ُ", "ٌ", "ِ", "ٍ", "ْ"]
+                'fatha': ["", "َ"]
                 }
 
         super().__init__(
