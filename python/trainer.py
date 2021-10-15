@@ -279,15 +279,19 @@ class GeneralTrainer(Trainer):
 
             if self.global_step % self.config["evaluate_frequency"] == 0:
                 loss, acc = self.evaluate(validation_iterator, tqdm_eval)
+
+                """
                 self.summary_manager.add_scalar(
                     "evaluate/loss", loss, global_step=self.global_step
                 )
                 self.summary_manager.add_scalar(
                     "evaluate/acc", acc, global_step=self.global_step
                 )
-                tqdm.display(
-                    f"Evaluate {self.global_step}: accuracy, {acc}, loss: {loss}", pos=8
-                )
+                """
+                for i,k in enumerate(self.dims):
+                    tqdm.display(
+                        f"Evaluate {self.global_step}: {k} accuracy, {acc[k]}, loss: {loss[k]}", pos=8+i
+                        )
                 self.model.train()
 
             if (
