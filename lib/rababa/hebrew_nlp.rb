@@ -42,7 +42,7 @@ module Rababa
     DAGESH = [RAFE, DAGESH_LETTER]  # DAGESH and SHURUK are one and same
 
 
-    ANY_NIQQUD = [RAFE] + NIQQUD[1..NIQQUD.size] + NIQQUD_SIN[1..NIQQUD.size] + DAGESH[1..NIQQUD.size]
+    ANY_NIQQUD = [RAFE] + NIQQUD[1..-1] + NIQQUD_SIN[1..-1] + DAGESH[1..-1]
 
     VALID_LETTERS = [' ', '!', '"', "'", '(', ')', ',', '-', '.', ':', ';', '?'] + \
                 HEBREW_LETTERS
