@@ -2,21 +2,16 @@
 
 # require_relative "rababa/arabic_constants"
 require_relative "rababa/hebrew_nlp"
-#require_relative "rababa/diacritizer"
-#require_relative "rababa/encoders"
-#require_relative "rababa/reconciler"
-#require_relative "rababa/version"
-require 'optparse'
-require 'onnxruntime'
-require 'yaml'
-require 'tqdm'
+# require_relative "rababa/diacritizer"
+# require_relative "rababa/encoders"
+# require_relative "rababa/reconciler"
+# require_relative "rababa/version"
+require "optparse"
+require "onnxruntime"
+require "yaml"
+require "tqdm"
 
-
-print('jair')
-model = OnnxRuntime::Model.new("../models-data/diacritization_model.onnx")
-
-
-
+print("jair")
 
 
 module Rababa
@@ -24,7 +19,7 @@ module Rababa
 
   def self.parser
     options = {}
-    required_args = [:text, :model_path]
+
     OptionParser.new do |opts|
       opts.banner = "Usage: ruby_onnx.rb [options]"
 
@@ -40,16 +35,17 @@ module Rababa
       opts.on("-cCONFIG", "--config=CONFIG", "path to config file") do |c|
         options[:config] = c
       end
-
     end.parse!
     # required args
-    [:model_path].each {|arg| raise OptionParser::MissingArgument, \
-                        arg if options[arg].nil?}
+    [:model_path].each do |arg|
+      if options[arg].nil?
+        raise OptionParser::MissingArgument, \
+              arg
+      end
+    end
     # p(options)
     options
 
-    print('jair')
-
+    print("jair")
   end
-
 end
