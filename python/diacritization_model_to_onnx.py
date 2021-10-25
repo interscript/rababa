@@ -32,12 +32,15 @@ normalized = torch.Tensor([[1 for i in range(max_len)]
 model_kind_str = 'cbhg'
 config_str = 'config/train.yml'
 load_model = True
+device = 'cpu'
 
 dia = Diacritizer(config_str, model_kind_str, load_model)
 
 # set model to inference mode
-dia.model.to(dia.device)
+dia.model.to(device)
 dia.model.eval();
+normalized = normalized.to(device) #dia.device)
+
 # run model
 niqqud, dagesh, sin = dia.model(normalized)
 torch_outs = dia.model(normalized) # niqqud, dagesh, sin
