@@ -44,14 +44,10 @@ class DiacritizationDataset(Dataset):
         inputs = torch.Tensor(
                     self.text_encoder.input_to_sequence("".join(inputs)))
 
-        print('test:: ', self.text_encoder.target_to_sequence(diacritics))
-        # exit()
         d_diacritics = self.text_encoder.target_to_sequence(diacritics)
 
         d_diacritics = dict([(k, torch.Tensor(d_diacritics[k]))
                              for k in self.text_encoder.target_model.keys()])
-        # diacritics = torch.Tensor()
-        # print()
         return inputs, d_diacritics, data_orig
 
 
@@ -62,6 +58,7 @@ def collate_fn(data):
 
     def merge(sequences):
         lengths = [len(seq) for seq in sequences]
+        print(lengths)
         padded_seqs = torch.zeros(len(sequences), max(lengths)).long()
         for i, seq in enumerate(sequences):
             end = lengths[i]
@@ -75,10 +72,16 @@ def collate_fn(data):
 
     # merge sequences (from tuple of 1D tensor to 2D tensor)
     src_seqs, src_lengths = merge(src_seqs)
-    d_tr_seqs = {}
-    for k in ['shaddah', 'shaddah', 'fatha']:
-        trg_seqs, _ = merge(trg_seqs[k])
-        d_tr_seqs[k] = trg_seqs
+    l = max(src_lengths)
+    d_trg_seqs = {}
+    for k in ['haraqat', 'shaddah', 'fatha']:
+        # print(k)
+        seqs = torch.zeros(len(trg_seqs), l).long()
+        for i, seq in enumerate([t[k] for t in trg_seqs]):
+            # print(i)
+            end = src_lengths[i]
+            seqs[i, :end] = seq[:end]
+        d_trg_seqs[k] = seqs
 
     batch = {
         "original": original,

@@ -57,7 +57,7 @@ class ConfigManager:
         self.config["len_input_symbols"] = len(self.text_encoder.input_symbols)
 
         self.config["len_target_symbols_harakat"] = \
-                    len(self.text_encoder.d_target_symbols['harakat'])
+                    len(self.text_encoder.d_target_symbols['haraqat'])
         self.config["len_target_symbols_shaddah"] = \
                     len(self.text_encoder.d_target_symbols['shaddah'])
         self.config["len_target_symbols_fatha"] = \

@@ -78,8 +78,8 @@ class TextEncoder:
             text = "".join(list(reversed(text)))
         #sequence = [self.target_symbol_to_id[s] for s in text if s not in [self.pad]]
         d_sequence = {} # []
-        for k in self.input_symbols.keys():
-            d_sequence[k] = [self.d_target_symbol_to_id[k][s]
+        for k in self.d_target_symbol_to_id.keys():
+            d_sequence[k] = [self.d_target_symbol_to_id[k].get(s, 0)
                              for s in text if s not in [self.pad]]
         return d_sequence
 
