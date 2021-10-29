@@ -256,7 +256,7 @@ class GeneralTrainer(Trainer):
                     )
                 self.optimizer.step()
 
-            self.losses.append(step_results["loss"].item()) # jair
+            self.losses.append(step_results["d_loss"].item()) # jair
 
             # self.print_losses(step_results, tqdm)
 
