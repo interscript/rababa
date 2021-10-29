@@ -58,7 +58,7 @@ def collate_fn(data):
 
     def merge(sequences):
         lengths = [len(seq) for seq in sequences]
-        print(lengths)
+        # print(lengths)
         padded_seqs = torch.zeros(len(sequences), max(lengths)).long()
         for i, seq in enumerate(sequences):
             end = lengths[i]
