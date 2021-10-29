@@ -234,7 +234,7 @@ class GeneralTrainer(Trainer):
                 with autocast():
                     step_results = self.run_one_step(batch_inputs)
                     for k in self.dims:
-                        scaler.scale(step_results["d_loss"][k]).backward()
+                        scaler.scale(step_results["d_loss"][k]).backward(retain_graph=True)
                         scaler.unscale_(self.optimizer)
                     if self.config.get("CLIP"):
                         torch.nn.utils.clip_grad_norm_(
@@ -249,7 +249,7 @@ class GeneralTrainer(Trainer):
 
                 d_loss = step_results["d_loss"]
                 for k in self.dims:
-                    d_loss[k].backward()
+                    d_loss[k].backward(retain_graph=True)
                 if self.config.get("CLIP"):
                     torch.nn.utils.clip_grad_norm_(
                         self.model.parameters(), self.config["CLIP"]
