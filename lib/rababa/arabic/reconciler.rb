@@ -1,5 +1,3 @@
-require "rababa/arabic/constants"
-
 ##################
 # ALGORITHM IDEA #
 ##################
@@ -28,19 +26,19 @@ module Rababa
         idx_dia, idx_ori = 0, 0
 
         while idx_dia < d_diacritized.length
-            c_dia = d_diacritized[idx_dia]
-            (idx_ori..d_original.length).each {|i|
-                if (c_dia == d_original[i])
-                    idx_ori = i
-                    l_map << [idx_dia, idx_ori]
-                    # making sure that double arabic letters don't get replicated
-                    if Rababa::Arabic::Constants::ARAB_CHARS.include? c_dia
-                        idx_ori += 1
-                    end
-                    break
-                end
-            }
-            idx_dia += 1
+          c_dia = d_diacritized[idx_dia]
+          (idx_ori..d_original.length).each { |i|
+            if c_dia == d_original[i]
+              idx_ori = i
+              l_map << [idx_dia, idx_ori]
+              # making sure that double arabic letters don't get replicated
+              if ARAB_CHARS.include? c_dia
+                idx_ori += 1
+              end
+              break
+            end
+          }
+          idx_dia += 1
         end
 
         l_map
@@ -62,45 +60,43 @@ module Rababa
       #     str_diacritized: diacritized string
       # return: reconciled string
       def reconcile_strings(str_original, str_diacritized)
-
         # we model the strings as dict
         d_original = Hash[*str_original.chars.select \
-                        {|n| not Rababa::Arabic::Constants::HARAQAT.include? n} \
-                            .map.with_index \
-                                {|c, i| [i, c] }.flatten]
+                        { |n| !HARAQAT.include? n } \
+          .map.with_index \
+                                { |c, i| [i, c] }.flatten]
 
         d_diacritized = Hash[*str_diacritized.chars.map.with_index \
-                                {|c, i| [i, c] }.flatten]
+                                { |c, i| [i, c] }.flatten]
 
         # matching positions
         l_pivot_map = build_pivot_map(d_original, d_diacritized)
 
-        str__ = '' # "accumulated" chars
+        str = "" # "accumulated" chars
         pt_dia, pt_ori = 0, 0 # pointers for resp diacr and orig. strings
-        for x_dia, x_ori in l_pivot_map
+        l_pivot_map.each do |x_dia, x_ori|
+          # We start to write characters from original strings
+          if pt_ori < x_ori
+            (pt_ori..x_ori - 1).each { |i| str += d_original[i] }
+          end
 
-            # We start to write characters from original strings
-            if (pt_ori < x_ori)
-                (pt_ori..x_ori-1).each {|i| str__ += d_original[i]}
-            end
+          # We then add chars from diacritized strings
+          if pt_dia < x_dia
+            (pt_dia..x_dia - 1).each { |i| str += d_diacritized[i] }
+          end
 
-            # We then add chars from diacritized strings
-            if (pt_dia < x_dia)
-                (pt_dia..x_dia-1).each {|i| str__ += d_diacritized[i]}
-            end
-
-            # append matches
-            str__ += d_original[x_ori]
-            pt_dia, pt_ori = x_dia + 1, x_ori + 1
+          # append matches
+          str += d_original[x_ori]
+          pt_dia, pt_ori = x_dia + 1, x_ori + 1
         end
 
         # Finalize by adding first last diacritized chars and then
-        (pt_dia..d_diacritized.length-1).each {|i| str__ += d_diacritized[i]}
+        (pt_dia..d_diacritized.length - 1).each { |i| str += d_diacritized[i] }
 
         # remaining chars for original string
-        (pt_ori..d_original.length-1).each {|i| str__ += d_original[i]}
+        (pt_ori..d_original.length - 1).each { |i| str += d_original[i] }
 
-        str__
+        str
       end
     end
   end
