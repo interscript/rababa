@@ -37,9 +37,9 @@ is specified in the model and has to match the `max_len` parameter in
 
 [source,sh]
 ----
-rababa -f data/example.txt -m diacritization_model_max_len_200.onnx
+rababa -l arabic -f data/example_arabic.txt -m diacritization_model_max_len_200.onnx
 # or when inside the gem directory during development
-bundle exec exe/rababa -f data/example.txt -m diacritization_model.onnx
+bundle exec exe/rababa -l arabic -f data/example_arabic.txt -m diacritization_model.onnx
 ----
 
 One would have to preprocess generic arabic texts for running Rababa in general.

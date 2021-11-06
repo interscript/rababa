@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "rababa/arabic_constants"
-require_relative "rababa/diacritizer"
-require_relative "rababa/encoders"
-require_relative "rababa/reconciler"
-require_relative "rababa/version"
+require "rababa/version"
+require "rababa/arabic"
 require 'optparse'
 require 'onnxruntime'
 require 'yaml'
@@ -30,6 +27,9 @@ module Rababa
       end
       opts.on("-cCONFIG", "--config=CONFIG", "path to config file") do |c|
         options[:config] = c
+      end
+      opts.on("-lLANGUAGE", "--language=LANGUAGE", "select a language") do |l="arabic"|
+        options[:language] = l
       end
 
     end.parse!

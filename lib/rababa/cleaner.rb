@@ -1,6 +1,5 @@
-module Rababa::Cleaner
-
-  class BasicCleaner
+module Rababa
+  class Cleaner 
     # strip + remove redundancy in whitespaces
     def clean(text)
       collapse_whitespace(text).strip
@@ -11,15 +10,4 @@ module Rababa::Cleaner
       text.gsub(/[[:space:]]+/, ' ')
     end
   end
-
-  class ValidArabicCleaner < BasicCleaner
-    # filter arabic only + basic cleaner
-    def clean(text)
-      text = text.chars.select {|c| Rababa::ArabicConstants::VALID_ARABIC.include? c}
-      text = collapse_whitespace(text.join('')).strip
-      text.strip
-    end
-  end
-
 end
-
