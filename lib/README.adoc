@@ -33,7 +33,7 @@ One can diacritize either single strings:
 ----
 rababa -larabic -t 'قطر' -m diacritization_model_max_len_200.onnx
 # or when inside the gem directory during development
-bundle exec exe/rababa -larabic -t 'قطر' -m diacritization_model.onnx
+bin/rababa -larabic -t 'قطر' -m diacritization_model.onnx
 ----
 
 Or files as `data/examples.txt` or your own Arabic file (the max string length
@@ -44,7 +44,7 @@ is specified in the model and has to match the `max_len` parameter in
 ----
 rababa -f data/example.txt -m diacritization_model_max_len_200.onnx
 # or when inside the gem directory during development
-bundle exec exe/rababa -f data/example.txt -m diacritization_model.onnx
+bin/rababa -f data/example.txt -m diacritization_model.onnx
 ----
 
 One would have to preprocess generic arabic texts for running Rababa in general.

@@ -1,8 +1,6 @@
 # This file is completely inspired from
 # https://github.com/elazarg/nakdimon/blob/master/hebrew.py
 
-require 'rababa/hebrew/constants'
-
 module Rababa
   module Hebrew
     module NLP
@@ -17,111 +15,111 @@ module Rababa
           @niqqud = niqqud
         end
 
-        def to_str()
-          self.letter + self.dagesh + self.sin + self.niqqud
+        def to_str
+          letter + dagesh + sin + niqqud
         end
 
         def vocalize_dagesh(normalized, dagesh)
-            if ! 'בכפ'.include? normalized # letter
-                return ''
-            end
-            return dagesh.gsub(HebrewCONST::RAFE, '')
+          unless "בכפ".include? normalized # letter
+            return ""
+          end
+          dagesh.gsub(HebrewCONST::RAFE, "")
         end
 
         def vocalize_niqqud(c)
           # FIX: HOLAM / KUBBUTZ cannot be handled here correctly
-          if [Hebrew::Constants::Niqqud['KAMATZ'], Hebrew::Constants::Niqqud['PATAKH'],
-              Hebrew::Constants::Niqqud['REDUCED_PATAKH']].include? c
-            return Niqqud['PATAKH']
+          if [Niqqud["KAMATZ"], Niqqud["PATAKH"],
+            Niqqud["REDUCED_PATAKH"]].include? c
+            return Niqqud["PATAKH"]
           end
-          if [Hebrew::Constants::Niqqud['HOLAM'],
-              Hebrew::Constants::Niqqud['REDUCED_KAMATZ']].include? c
-            return Hebrew::Constants::Niqqud['HOLAM']
+          if [Niqqud["HOLAM"],
+            Niqqud["REDUCED_KAMATZ"]].include? c
+            return Niqqud["HOLAM"]
           end
-          if [Hebrew::Constants::Niqqud['SHURUK'],
-              Hebrew::Constants::Niqqud['KUBUTZ']].include? c
-            return Hebrew::Constants::Niqqud['KUBUTZ']
+          if [Niqqud["SHURUK"],
+            Niqqud["KUBUTZ"]].include? c
+            return Niqqud["KUBUTZ"]
           end
-          if [Hebrew::Constants::Niqqud['TZEIRE'], Hebrew::Constants::Niqqud['SEGOL'],
-              Hebrew::Constants::Niqqud['REDUCED_SEGOL']].include? c
-            return Hebrew::Constants::Niqqud['SEGOL']
+          if [Niqqud["TZEIRE"], Niqqud["SEGOL"],
+            Niqqud["REDUCED_SEGOL"]].include? c
+            return Niqqud["SEGOL"]
           end
-          if c == Hebrew::Constants::Niqqud['SHVA']
-            return ''
+          if c == Niqqud["SHVA"]
+            return ""
           end
-          return c.gsub(Hebrew::Constants::RAFE, '')
+          c.gsub(RAFE, "")
         end
 
-        def vocalize()
+        def vocalize
           niqqud = vocalize_niqqud(@niqqud)
-          sin = @sin.gsub(Hebrew::Constants::RAFE, '')
+          sin = @sin.gsub(RAFE, "")
           dagesh = vocalize_dagesh(@normalized, @dagesh)
           HebrewChar.new(@letter, @normalized, sin, dagesh, niqqud)
         end
-
       end # HebrewChar
 
       def numeric?(s)
-        Float(s) != nil rescue false
+        !Float(s).nil?
+      rescue
+        false
       end
 
       def normalize(c)
-        if Hebrew::Constants::VALID_LETTERS.include? c
+        if VALID_LETTERS.include? c
           return c
         end
-        if Hebrew::Constants::ENDINGS_TO_REGULAR.include? c
-          return Hebrew::Constants::ENDINGS_TO_REGULAR[c]
+        if ENDINGS_TO_REGULAR.include? c
+          return ENDINGS_TO_REGULAR[c]
         end
         if ['\n', '\t'].include? c
-          return ' '
+          return " "
         end
-        if ['־', '‒', '–', '—', '―', '−'].include? c
-          return '-'
+        if ["־", "‒", "–", "—", "―", "−"].include? c
+          return "-"
         end
-        if c == '['
-          return '('
+        if c == "["
+          return "("
         end
-        if c == ']'
-          return ')'
+        if c == "]"
+          return ")"
         end
-        if ['´', '‘', '’'].include? c
+        if ["´", "‘", "’"].include? c
           return "'"
         end
-        if ['“', '”', '״'].include? c
+        if ["“", "”", "״"].include? c
           return '"'
         end
         if numeric?(c)
-          return '5'
+          return "5"
         end
-        if c == '…'
-          return ','
+        if c == "…"
+          return ","
         end
-        if ['ײ', 'װ', 'ױ'].include? c
-          return 'H'
+        if ["ײ", "װ", "ױ"].include? c
+          return "H"
         end
-        return 'O'
+        "O"
       end
 
       def is_hebrew_letter(letter)
-        return ('\u05d0' <= letter) && (letter <= '\u05ea')
+        ("\u05d0".."\u05ea").cover? letter
       end
 
       def can_dagesh(letter)
-        return ('בגדהוזטיכלמנספצקשת' + 'ךף').include? letter
+        ("בגדהוזטיכלמנספצקשת" + "ךף").include? letter
       end
 
       def can_sin(letter)
-        return letter == 'ש'
+        letter == "ש"
       end
 
       def can_niqqud(letter)
-        return ('אבגדהוזחטיכלמנסעפצקרשת' + 'ךן').include? letter
+        ("אבגדהוזחטיכלמנסעפצקרשת" + "ךן").include? letter
       end
 
       def can_any(letter)
-        return can_niqqud(letter) || can_dagesh(letter) || can_sin(letter)
+        can_niqqud(letter) || can_dagesh(letter) || can_sin(letter)
       end
-
     end
   end
 end

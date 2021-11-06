@@ -25,3 +25,7 @@ jobs:
     - name: Run rake
       run: |
         bundle exec rake
+
+    - name: Run standardrb (use bundle exec standardrb --fix)
+      run: |
+        bundle exec standardrb

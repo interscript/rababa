@@ -4,31 +4,6 @@
 #  rababa -t 'قطر' -m '../models-data/diacritization_model.onnx'
 #  rababa -f example.csv -m '../models-data/diacritization_model.onnx'
 
-require_relative "../lib/rababa"
+require "rababa/cli"
 
-parser = Rababa.parser
-
-config_path = parser[:config]
-
-case parser[:language]
-when "arabic"
-  config_path ||= "config/model_arabic.yml"
-  diacritizer_class = Rababa::Arabic::Diacritizer
-when "hebrew"
-  config_path ||= "config/model_hebrew.yml"
-  diacritizer_class = Rababa::Hebrew::Diacritizer
-end
-
-diacritizer = diacritizer_class.new(parser[:model_path], YAML.load_file(config_path))
-
-if parser.has_key?(:text)
-  # run diacritization text if has :text
-  txt = diacritizer.diacritize_text(parser[:text])
-  puts txt
-elsif parser.has_key?(:text_filename)
-  # run diacritization file
-  txts = diacritizer.diacritize_file(parser[:text_filename])
-  txts.each {|t| puts t }
-else
-  raise ValueError.new('text or text_filename required')
-end
+Rababa::CLI.call
