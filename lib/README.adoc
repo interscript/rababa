@@ -1,4 +1,4 @@
-= Arabic Diacritization in Ruby with Rababa
+= Middle-Eastern Language Diacritization in Ruby with Rababa
 
 == Try out Rababa
 
@@ -16,19 +16,24 @@ gem install rababa
 
 === Download the ONNX model
 
-Please download the `diacritization_model.onnx` model file
-from https://github.com/secryst/rababa-models/releases/tag/0.1.
+Please download the `diacritization_model.onnx` model file.
+
+For Arabic:
+- https://github.com/secryst/rababa-models/releases/tag/0.1
+
+For Hebrew:
+- https://github.com/secryst/rababa-models/releases/tag/hebrew.0.1
 
 
-=== Running examples
+=== Running examples for Arabic
 
 One can diacritize either single strings:
 
 [source,sh]
 ----
-rababa -t 'قطر' -m diacritization_model_max_len_200.onnx
+rababa -larabic -t 'قطر' -m diacritization_model_max_len_200.onnx
 # or when inside the gem directory during development
-bundle exec exe/rababa -t 'قطر' -m diacritization_model.onnx
+bundle exec exe/rababa -larabic -t 'قطر' -m diacritization_model.onnx
 ----
 
 Or files as `data/examples.txt` or your own Arabic file (the max string length
@@ -37,9 +42,9 @@ is specified in the model and has to match the `max_len` parameter in
 
 [source,sh]
 ----
-rababa -l arabic -f data/example_arabic.txt -m diacritization_model_max_len_200.onnx
+rababa -f data/example.txt -m diacritization_model_max_len_200.onnx
 # or when inside the gem directory during development
-bundle exec exe/rababa -l arabic -f data/example_arabic.txt -m diacritization_model.onnx
+bundle exec exe/rababa -f data/example.txt -m diacritization_model.onnx
 ----
 
 One would have to preprocess generic arabic texts for running Rababa in general.
@@ -50,12 +55,26 @@ https://github.com/Hamza5/Pipeline-diacritizer[Hamza5]:
 python __main__.py preprocess source destination
 ----
 
+=== Running examples for Hebrew
+
+[source,sh]
+----
+rababa -lhebrew -m models-data/diacritization_model.onnx --t 'מה שלומך'
+rababa -lhebrew -m models-data/diacritization_model.onnx --f '../python/data/test/test.txt'
+# Substitute rababa with bin/rababa during development
+----
+
+One would have to preprocess generic hebraic texts for running Rababa in general.
+The code output warning when text is cut off.
+
 == Training
 
 === ONNX Models
 
 They can either be built in the `/python` repository or downloaded from the
 https://github.com/secryst/rababa-models[releases].
+
+For Hebrew: https://github.com/secryst/rababa-models/releases/tag/hebrew.0.1[release]
 
 Or ONNX model can be generated running the Python
 https://github.com/interscript/rababa/blob/main/python/diacritization_model_to_onnx.py[code]
@@ -85,6 +104,8 @@ It requires to go through some of the steps described in the link above.
   https://github.com/Hamza5/Pipeline-diacritizer/blob/master/pipeline_diacritizer/pipeline_diacritizer.py[code].
 
 ** the smaller the faster, the slimmer the NNets code.
+
+Text encoders are only for Arabic:
 
 * text_encoder corresponding to the https://github.com/interscript/rababa/blob/main/python/util/text_encoders.py[rules]:
 ** `BasicArabicEncoder`

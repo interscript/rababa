@@ -12,8 +12,11 @@ config_path = parser[:config]
 
 case parser[:language]
 when "arabic"
-  config_path ||= "config/model.yml"
+  config_path ||= "config/model_arabic.yml"
   diacritizer_class = Rababa::Arabic::Diacritizer
+when "hebrew"
+  config_path ||= "config/model_hebrew.yml"
+  diacritizer_class = Rababa::Hebrew::Diacritizer
 end
 
 diacritizer = diacritizer_class.new(parser[:model_path], YAML.load_file(config_path))

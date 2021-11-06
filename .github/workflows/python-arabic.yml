@@ -22,7 +22,7 @@ jobs:
     - uses: actions/cache@v2
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('python/setup.py') }}-${{ hashFiles('python/requirements.txt') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('python/arabic/setup.py') }}-${{ hashFiles('python/arabic/requirements.txt') }}
 
     - name: Install requirements
       working-directory: ./python/arabic
