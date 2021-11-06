@@ -28,8 +28,8 @@ module Rababa
             ALL_POSSIBLE_HARAQAT[diac]
           }.join("|")
 
-          raise ValueError.new('The chart has the following haraqat which are
-                                    not found in all possible haraqat: ' + val)
+          raise ValueError, "The chart has the following haraqat which are" \
+                            "not found in all possible haraqat: #{val}"
         end
 
         out

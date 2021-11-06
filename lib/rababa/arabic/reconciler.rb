@@ -61,13 +61,16 @@ module Rababa
       # return: reconciled string
       def reconcile_strings(str_original, str_diacritized)
         # we model the strings as dict
-        d_original = Hash[*str_original.chars.select \
-                        { |n| !HARAQAT.include? n } \
-          .map.with_index \
-                                { |c, i| [i, c] }.flatten]
+        d_original = str_original
+          .chars
+          .reject { |n| HARAQAT.include? n }
+          .map.with_index { |c, i| [i, c] }
+          .to_h
 
-        d_diacritized = Hash[*str_diacritized.chars.map.with_index \
-                                { |c, i| [i, c] }.flatten]
+        d_diacritized = str_diacritized
+          .chars
+          .map.with_index { |c, i| [i, c] }
+          .to_h
 
         # matching positions
         l_pivot_map = build_pivot_map(d_original, d_diacritized)

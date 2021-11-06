@@ -89,17 +89,17 @@ module Rababa
           # hebrew data
           data = encode_text(text)
           # Wrap data within Data structure representing language dims
-          Dataset::Data.new(data.map.each { |d| d.letter },
-            data.map.each { |d|
+          Dataset::Data.new(data.map { |d| d.letter },
+            data.map { |d|
               @normalized_table.char_indices[d.normalized]
             },
-            data.map.each { |d|
+            data.map { |d|
               @dagesh_table.char_indices[d.dagesh]
             },
-            data.map.each { |d|
+            data.map { |d|
               @sin_table.char_indices[d.sin]
             },
-            data.map.each { |d|
+            data.map { |d|
               @niqqud_table.char_indices[d.niqqud]
             })
         end
@@ -112,12 +112,11 @@ module Rababa
         # Returns:
         #   string
         def decode_idces(text, normalized, dagesh, sin, niqqud)
-          Rababa::Hebrew::NLP::HebrewChar.new(text,
+          Hebrew::NLP::HebrewChar.new(text,
             @normalized_table.indices_char[normalized],
             @dagesh_table.indices_char[dagesh],
             @sin_table.indices_char[sin],
-            @niqqud_table.indices_char[niqqud])
-            .vocalize.to_str
+            @niqqud_table.indices_char[niqqud]).vocalize.to_str
         end
 
         # Combine original and prediction vectors and return a string
@@ -130,7 +129,7 @@ module Rababa
         def decode_data(vtext, vnormalized, vdagesh, vsin, vniqqud)
           dia_text = ""
           l_pred = vnormalized.length
-          (0..l_pred - 1).map.each { |i|
+          (0..l_pred - 1).map { |i|
             dia_text +=
               decode_idces(vtext[i], vnormalized[i], vdagesh[i], vsin[i], vniqqud[i])
           }

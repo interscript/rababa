@@ -85,8 +85,8 @@ module Rababa
         idx = 0
         while idx + @batch_size <= texts.length
           originals = texts[idx..idx + @batch_size - 1]
-          src = originals.map.each { |t| preprocess_text(t) }
-          lengths = src.map.each { |seq| seq.length }
+          src = originals.map { |t| preprocess_text(t) }
+          lengths = src.map { |seq| seq.length }
           ort_inputs = {
             "src" => src,
             "lengths" => lengths
