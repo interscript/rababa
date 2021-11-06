@@ -74,7 +74,7 @@ module Rababa
         while idx + @batch_size <= texts.length
           # preprocess text
           vdata = texts[idx..idx + @batch_size - 1]
-            .map.each { |t| preprocess_text(t) }
+            .map { |t| preprocess_text(t) }
 
           # format for onnx
           ort_inputs = {

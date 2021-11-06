@@ -18,12 +18,12 @@ module Dataset
     end
 
     def to_ids(css)
-      # css.map.each {|cs| cs.map.each {|c| @char_indices[c]}}
-      css.map.each { |c| @char_indices[c] }
+      # css.map {|cs| cs.map {|c| @char_indices[c]}}
+      css.map { |c| @char_indices[c] }
     end
 
     def to_str(ids)
-      ids.map.each { |cs| cs.map.each { |c| @indices_char[c] } }
+      ids.map { |cs| cs.map { |c| @indices_char[c] } }
     end
   end # CharacterTable
 
