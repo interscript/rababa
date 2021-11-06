@@ -3,13 +3,12 @@
 # as well a drastic simplification of
 #   https://github.com/almodhfer/Arabic_Diacritization/blob/master/config_manager.py
 
-require_relative 'encoders'
-require_relative 'dataset'
-require_relative 'hebrew_nlp'
-
+require 'rababa/hebrew/encoders'
+require 'rababa/hebrew/nlp'
+require 'rababa/dataset'
 
 module Rababa
-
+  module Hebrew
     class Diacritizer
         #include Rababa::Reconciler
 
@@ -138,4 +137,5 @@ module Rababa
         end
 
     end
+  end
 end

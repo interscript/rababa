@@ -2,8 +2,8 @@
 # ruby script.rb -m ../models-data/diacritization_model.onnx --t 'מה שלומך'
 # ruby script.rb -m ../models-data/diacritization_model.onnx --f '../python/data/test/test.txt'
 
-require_relative "rababa/hebrew_nlp"
-require_relative "rababa/diacritizer"
+require "rababa/hebrew/nlp"
+require "rababa/hebrew/diacritizer"
 
 
 require 'optparse'
@@ -43,11 +43,11 @@ end
 
 parser = parser()
 
-config_path = parser.has_key?(:config) ? parser[:config] : "../config/model.yml"
+config_path = parser.has_key?(:config) ? parser[:config] : "../config/model_hebrew.yml"
 
 config = YAML.load(File.read(config_path))
 
-diacritizer = Rababa::Diacritizer.new(parser[:model_path], config)
+diacritizer = Rababa::Hebrew::Diacritizer.new(parser[:model_path], config)
 
 
 if parser.has_key?(:text)
