@@ -17,8 +17,8 @@ gem install rababa
 === Download the ONNX model
 
 Please download the `diacritization_model.onnx` model files
-into diacritization_model_ARABIC.onnx and diacritization_model_Arabic.onnx
-respectively.
+into diacritization_model_ARABIC.onnx and diacritization_model_HEBREW.onnx
+respectively from:
 
 For Arabic:
 - https://github.com/secryst/rababa-models/releases/tag/0.1
@@ -49,14 +49,6 @@ rababa -f data/example.txt
 bin/rababa -f data/example.txt
 ----
 
-One would have to preprocess generic arabic texts for running Rababa in general.
-This can be done on sentences beginnings running for instance
-https://github.com/Hamza5/Pipeline-diacritizer[Hamza5]:
-
-----
-python __main__.py preprocess source destination
-----
-
 === Running examples for Hebrew
 
 [source,sh]
@@ -68,6 +60,11 @@ rababa -lhebrew --f '../python/data/test/test.txt'
 
 One would have to preprocess generic hebraic texts for running Rababa in general.
 The code output warning when text is cut off.
+
+=== Additional Parameters
+* --config/-c allows for explicit configuration path
+* --model_path/-m allows for an explicit path to onnx model
+
 
 == Training
 
