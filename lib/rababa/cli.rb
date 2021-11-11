@@ -27,10 +27,6 @@ module Rababa
       end.parse!
       options[:language] ||= "arabic"
 
-      # required args
-      %i[model_path].each do |arg|
-        raise OptionParser::MissingArgument, arg if options[arg].nil?
-      end
       options
     end
 
@@ -38,19 +34,24 @@ module Rababa
       parser = cli_options
 
       config_path = parser[:config]
+      model_path = parser[:model_path]
 
       case parser[:language]
       when "arabic"
         config_path ||= "config/model_arabic.yml"
+        model_path ||= "models-data/diacritization_model_ARABIC.onnx"
+        p(model_path)
         diacritizer_class = Rababa::Arabic::Diacritizer
       when "hebrew"
         config_path ||= "config/model_hebrew.yml"
+        model_path ||= "models-data/diacritization_model_HEBREW.onnx"
         diacritizer_class = Rababa::Hebrew::Diacritizer
       else
         raise ArgumentError, "#{parser[:language]} is unsupported"
       end
 
-      diacritizer = diacritizer_class.new(parser[:model_path], YAML.load_file(config_path))
+      diacritizer = diacritizer_class.new(model_path,
+                                          YAML.load_file(config_path))
 
       if parser.key?(:text)
         # run diacritization text if has :text
