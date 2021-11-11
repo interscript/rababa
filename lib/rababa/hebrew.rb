@@ -31,7 +31,7 @@ module Rababa
 
     NIQQUD = [RAFE] + # HEBREW_LETTERS + \
       ["ְ", "ֱ", "ֲ", "ֳ", "ִ", "ֵ", "ֶ", "ַ", "ָ", "ֹ", "ֺ", "ֻ", "ּ", "ַ"]
-    #        (0x05b0..0x05bc + 1).to_a {|c| c.force_encoding('utf-8')}
+    #  (0x05b0..0x05bc + 1).to_a {|c| c.force_encoding('utf-8')}
 
     HOLAM = Niqqud["HOLAM"]
 
