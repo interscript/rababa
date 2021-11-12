@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "rababa/arabic_constants"
-require_relative "rababa/diacritizer"
-require_relative "rababa/encoders"
-require_relative "rababa/reconciler"
-require_relative "rababa/version"
+require "rababa/version"
+require "rababa/arabic"
+require "rababa/hebrew"
 require 'optparse'
 require 'onnxruntime'
 require 'yaml'
@@ -17,7 +15,7 @@ module Rababa
     options = {}
     required_args = [:text, :model_path]
     OptionParser.new do |opts|
-      opts.banner = "Usage: ruby_onnx.rb [options]"
+      opts.banner = "Usage: #{$0} [options]"
 
       opts.on("-tTEXT", "--text=TEXT", "text to diacritize") do |t|
         options[:text] = t
@@ -31,13 +29,17 @@ module Rababa
       opts.on("-cCONFIG", "--config=CONFIG", "path to config file") do |c|
         options[:config] = c
       end
+      opts.on("-lLANGUAGE", "--language=LANGUAGE", "select a language (arabic, hebrew)") do |l|
+        options[:language] = l
+      end
 
     end.parse!
+    options[:language] ||= 'arabic'
+
     # required args
-    [:model_path].each {|arg| raise OptionParser::MissingArgument, arg if options[arg].nil? }
+    [:model_path].each {|arg| raise OptionParser::MissingArgument, \
+                        arg if options[arg].nil?}
     # p(options)
     options
-
   end
-
 end

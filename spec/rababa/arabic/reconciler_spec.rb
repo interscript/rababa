@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Rababa::Reconciler do
+RSpec.describe Rababa::Arabic::Reconciler do
   subject(:instance) { Class.new.extend(described_class) }
 
   [

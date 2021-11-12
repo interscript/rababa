@@ -3,13 +3,13 @@
 # as well a drastic simplification of
 #   https://github.com/almodhfer/Arabic_Diacritization/blob/master/config_manager.py
 
-require_relative 'encoders'
-require_relative 'reconciler'
+require 'rababa/arabic/encoders'
+require 'rababa/arabic/reconciler'
 
 module Rababa
-
+  module Arabic
     class Diacritizer
-        include Rababa::Reconciler
+        include Rababa::Arabic::Reconciler
 
         def initialize(onnx_model_path, config)
 
@@ -47,7 +47,7 @@ module Rababa
 
         def remove_diacritics(text)
           text_dup = text.dup
-          Rababa::ArabicConstants::UBASIC_HARAQAT.keys.each do |diacritic|
+          Rababa::Arabic::Constants::UBASIC_HARAQAT.keys.each do |diacritic|
             text_dup.gsub!(diacritic, "")
           end
 
@@ -159,9 +159,9 @@ module Rababa
         def get_text_encoder
           case @config['text_encoder']
           when 'BasicArabicEncoder'
-            Encoders::BasicArabicEncoder.new(@config['text_cleaner'])
+            Arabic::Encoders::BasicArabicEncoder.new(@config['text_cleaner'])
           when 'ArabicEncoderWithStartSymbol'
-            Encoders::ArabicEncoderWithStartSymbol.new(@config['text_cleaner'])
+            Arabic::Encoders::ArabicEncoderWithStartSymbol.new(@config['text_cleaner'])
           else
             raise Exception.new(
               'text_encoder not found: ' + @config['text_encoder'].to_s
@@ -170,4 +170,5 @@ module Rababa
         end
 
     end
+  end
 end

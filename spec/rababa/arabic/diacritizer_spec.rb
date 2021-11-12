@@ -3,7 +3,7 @@
 require 'open-uri'
 require 'tmpdir'
 
-RSpec.describe Rababa::Diacritizer do
+RSpec.describe Rababa::Arabic::Diacritizer do
 
   ONNX_FILE = 'https://github.com/secryst/rababa-models/releases/download/0.1/diacritization_model.onnx'
   ONNX_PATH = File.join(Dir.mktmpdir, "model.onnx")
@@ -16,15 +16,17 @@ RSpec.describe Rababa::Diacritizer do
   }
 
   before(:all) do
-    URI.open(ONNX_FILE) do |remote|
-      File.open(ONNX_PATH, "wb") do |file|
-        file.write(remote.read)
+    unless File.exist? ONNX_PATH
+      URI.open ONNX_FILE do |remote|
+        File.open ONNX_PATH, "wb" do |file|
+          file.write(remote.read)
+        end
       end
     end
   end
 
   let(:diacritizer) do
-    Rababa::Diacritizer.new(ONNX_PATH, DEFAULT_CONFIG)
+    Rababa::Arabic::Diacritizer.new(ONNX_PATH, DEFAULT_CONFIG)
   end
 
   PASSING_TESTS = {
