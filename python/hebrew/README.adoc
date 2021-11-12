@@ -87,8 +87,8 @@ curl -sSL https://github.com/secryst/rababa-models/releases/model_len90_dec0.976
 
 [source,bash]
 ----
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml \
+python diacritize.py --model_kind "cbhg" --config config/model_hebrew.yml --text 'מה שלומך'
+python diacritize.py --model_kind "cbhg" --config config/model_hebrew.yml \
     --text_file relative_path_to_text_file --diacritized_text_file path_to_diacrit_text_file
 ----
 
@@ -116,9 +116,9 @@ unzip data_hebrew.zip
 Alternatively, the original datasets (without preprocessing) can be downloaded at
 https://github.com/elazarg/hebrew_diacritized[hebrew_diacritized].
 
-=== Load Model
+=== Load Models
 
-Alternatively, trained CBHG models are available under
+Trained CBHG models are available under
 https://github.com/secryst/rababa-models/releases/tag/hebrew.0.1[hebrew release].
 
 Models are to be copied as specified in the link just
@@ -127,10 +127,8 @@ The model path is specified in the yaml config file model_path.
 
 [source,bash]
 ----
-curl -sSL https://github.com/secryst/rababa-models/releases/model_len90_dec0.9766_wor_0.8877.pt -o log_dir/base.cbhg/model.pt
-log_dir/Hebrew.cbhg/models/2000000-snapshot.pt
+curl -sSL https://github.com/secryst/rababa-models/releases/tag/hebrew.0.1/model_len90_dec0.9766_wor_0.8877.pt -o log_dir/base.cbhg/model.pt
 ----
-
 
 === Config Files
 
@@ -147,7 +145,7 @@ All models config are placed in the config directory.
 
 [source,bash]
 ----
-python train.py --model "cbhg" --config config/cbhg.yml
+python train.py --model "cbhg" --config config/model_hebrew.yml
 ----
 
 The model will report the WER and DER while training using the
@@ -161,7 +159,7 @@ For instance, with the CBHG model on the data in `/data/CA_MSA/test.csv`:
 
 [source,bash]
 ----
-python test.py --model 'cbhg' --config config/cbhg.yml
+python test.py --model 'cbhg' --config config/model_hebrew.yml
 ----
 
 The model will load the last saved model unless you specified it in the config:
@@ -177,8 +175,8 @@ text or lines.
 
 [source,bash]
 ----
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file relative_path_to_text_file
+python diacritize.py --model_kind "cbhg" --config config/model_hebrew.yml --text 'מה שלומך'
+python diacritize.py --model_kind "cbhg" --config config/model_hebrew.yml --text_file relative_path_to_text_file
 ----
 
 === Convert CBHG, Python model to ONNX

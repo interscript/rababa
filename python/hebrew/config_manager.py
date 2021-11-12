@@ -1,4 +1,3 @@
-
 from enum import Enum
 import os
 from pathlib import Path
@@ -36,13 +35,10 @@ class ConfigManager:
         self.config: Dict[str, Any] = self._load_config()
         self.set_device()
         self.session_name = ".".join(
-            [#self.config["data_type"],
-             self.config["session_name"],
-             f"{model_kind}"])
-
-        self.data_dir = Path(
-            os.path.join(self.config["data_directory"]) #, self.config["data_type"])
+            [self.config["session_name"], f"{model_kind}"]  # self.config["data_type"],
         )
+
+        self.data_dir = Path(os.path.join(self.config["data_directory"]))
 
         self.base_dir = Path(
             os.path.join(self.config["log_directory"], self.session_name)
@@ -173,8 +169,7 @@ class ConfigManager:
 
         return last_model_path
 
-    def load_model(self,
-                   model_path: str = None, load_optimizer: bool = False):
+    def load_model(self, model_path: str = None, load_optimizer: bool = False):
         """
         loading a model from path
         Args:
@@ -187,25 +182,28 @@ class ConfigManager:
         with open(self.base_dir / f"{self.model_kind}_network.txt", "w") as file:
             file.write(str(model))
 
-        model_path = self.config['model_path'] \
-                        if model_path is None else model_path
+        model_path = self.config["model_path"] if model_path is None else model_path
 
         try:
-            saved_model = torch.load(model_path) \
-                if torch.cuda.is_available() else \
-                    torch.load(model_path, map_location=torch.device('cpu'))
+            saved_model = (
+                torch.load(model_path)
+                if torch.cuda.is_available()
+                else torch.load(model_path, map_location=torch.device("cpu"))
+            )
             check = model.load_state_dict(saved_model["model_state_dict"])
-            print('Load model state dict:: ', check) # check...
-            optimizer_stat_dict = saved_model["optimizer_state_dict"] \
-                                    if load_optimizer else None
+            print("Load model state dict:: ", check)  # check...
+            optimizer_stat_dict = (
+                saved_model["optimizer_state_dict"] if load_optimizer else None
+            )
             global_step = saved_model["global_step"] + 1
-            
+
         except:
-            print('Model not found under model_state_dict,')
-            print('starting with a fresh model.')
+            print("model_path:: ", model_path)
+            print("Model not found under model_state_dict,")
+            print("starting with a fresh model.")
             optimizer_stat_dict = None
             global_step = 0
-        
+
         model.to(self.device)
 
         return model, optimizer_stat_dict, global_step
