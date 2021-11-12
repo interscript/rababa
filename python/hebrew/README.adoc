@@ -121,10 +121,13 @@ https://github.com/elazarg/hebrew_diacritized[hebrew_diacritized].
 Alternatively, trained CBHG models are available under
 https://github.com/secryst/rababa-models/releases/tag/hebrew.0.1[hebrew release].
 
-Models are to be copied as specified in the link just above under:
+Models are to be copied as specified in the link just
+above under log_dir/Hebrew.cbhg/moded.pt.
+The model path is specified in the yaml config file model_path.
 
 [source,bash]
 ----
+curl -sSL https://github.com/secryst/rababa-models/releases/model_len90_dec0.9766_wor_0.8877.pt -o log_dir/base.cbhg/model.pt
 log_dir/Hebrew.cbhg/models/2000000-snapshot.pt
 ----
 
