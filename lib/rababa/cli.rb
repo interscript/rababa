@@ -39,12 +39,11 @@ module Rababa
       case parser[:language]
       when "arabic"
         config_path ||= "config/model_arabic.yml"
-        model_path ||= "models-data/diacritization_model_ARABIC.onnx"
-        p(model_path)
+        model_path ||= "models-data/diacritization_model_arabic.onnx"
         diacritizer_class = Rababa::Arabic::Diacritizer
       when "hebrew"
         config_path ||= "config/model_hebrew.yml"
-        model_path ||= "models-data/diacritization_model_HEBREW.onnx"
+        model_path ||= "models-data/diacritization_model_hebrew.onnx"
         diacritizer_class = Rababa::Hebrew::Diacritizer
       else
         raise ArgumentError, "#{parser[:language]} is unsupported"

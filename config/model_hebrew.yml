@@ -1,6 +1,64 @@
+adam_beta1: 0.9
+adam_beta2: 0.999
+architecture: TACOTRON
+batch_size: 128
+cbhg_filters: 16
+cbhg_gru_units: 512
+cbhg_projections:
+- 128
+- 256
+data_directory: data
+data_separator: '|'
+data_type: Hebrew_Modern
+dataset: HEBREW
+device: cpu
+diacritics_separator: '*'
+embedding_dim: 256
+error_rates_n_batches: 10000
+evaluate_frequency: 50
+evaluate_with_error_rates_frequency: 50
+is_data_preprocessed: false
+learning_rate: 0.001
+len_dagesh_symbols: 3
+len_input_symbols: 90
+len_niqqud_symbols: 16
+len_sin_symbols: 4
+load_test_data: false
+load_training_data: true
+load_validation_data: true
+log_directory: log_dir
+max_len: 90
+max_steps: 500000
+model_save_frequency: 5000
+n_epochs: 1000
+n_predicted_text_tensorboard: 10
+n_steps_avg_losses:
+- 100
+- 500
+- 1000
+- 5000
+n_test_examples: null
+n_training_examples: null
+n_validation_examples: null
+optimizer: SGD
+optimizer_type: Adam
+post_cbhg_layers_units:
+- 256
+- 256
+post_cbhg_use_batch_norm: true
+prenet_sizes:
+- 512
+- 256
+reconcile: true
 session_name: base
-
-# max_len: sentences larger than this size will not be used
-max_len: 200 # 600
-# batch_size: was set to 1, meaning we process one text at a time
-batch_size: 32
+test_file_name: test.csv
+test_model_path: null
+text_cleaner: valid_hebraic_cleaners
+text_encoder: HebraicEncoderWithStartSymbol
+train_plotting_frequency: 50000000
+train_resume_model_path: null
+use_decay: true
+use_mixed_precision: false
+use_prenet: false
+weight_decay: 0.0
+model_path: log_dir/base.cbhg/model.pt

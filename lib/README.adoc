@@ -14,18 +14,24 @@
 gem install rababa
 ----
 
-=== Download the ONNX model
+=== Download the ONNX models & configs
 
-Please download the `diacritization_model.onnx` model files
-into diacritization_model_ARABIC.onnx and diacritization_model_HEBREW.onnx
-respectively from:
-
+from:
 For Arabic:
 - https://github.com/secryst/rababa-models/releases/tag/0.1
 
 For Hebrew:
 - https://github.com/secryst/rababa-models/releases/tag/hebrew.0.1
 
+==== Models
+
+Please download model files:
+diacritization_model_arabic.onnx and diacritization_model_hebrew.onnx
+ into ../models-data .
+
+==== configs
+
+Download model_arabic.yml and model_hebrew.yml into ../config .
 
 === Running examples for Arabic
 
