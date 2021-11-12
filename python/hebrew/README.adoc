@@ -1,4 +1,4 @@
-= Rababa Python for diacritization
+= Rababa Python for Hebrew diacritization
 
 == Purpose
 
@@ -74,17 +74,21 @@ pip install .
 
 . Setup prerequisites
 
-. Download the released model
-  ADD NEW LINK WITH CLEANED/MERGED DATASETS!!!
-  %%
-  %% and place under `python/log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt`
+. Download best model and its corresponding config_file from https://github.com/secryst/rababa-models/releases/,
+for instance:
+[source,bash]
+---
+> curl -sSL https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/bchg_len90_dec0.9766_wor_0.8877.yml -o config/model_hebrew.yml
+> mkdir log_dir/base.cbhg
+> curl -sSL https://github.com/secryst/rababa-models/releases/model_len90_dec0.9766_wor_0.8877.pt -o log_dir/base.cbhg/model.pt
+---
 
 . Single sentences and text can now be diacritized as below:
 
 [source,bash]
 ----
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml \
+> python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
+> python diacritize.py --model_kind "cbhg" --config config/cbhg.yml \
     --text_file relative_path_to_text_file --diacritized_text_file path_to_diacrit_text_file
 ----
 
@@ -99,28 +103,18 @@ introduced in the link:../lib/README.adoc[Ruby quickstart] section.
 === Datasets
 
 * We have used the hebrew diacritized  https://github.com/elazarg/hebrew_diacritized[dataset]
-that we have cleaned as
-*** link cleaned data
+that we have cleaned https://github.com/secryst/rababa-models/releases/tag/hebrew.0.1[here].
 
 
-For training, data needs to be stored in the `data/train` directory in such a
-format:
+For training, data needs to be stored in the `data/train` directory as follows:
 
 [source,bash]
 ----
-> ls data/CA_MSA/*
---> data/CA_MSA/eval.csv  data/CA_MSA/train.csv  data/CA_MSA/test.csv
+> curl -sSL https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/data_hebrew.zip -o data_hebrew.zip
+> unzip data_hebrew.zip
 ----
 
-For instance:
-
-[source,bash]
-----
-mkdir -p data/
-***
-----
-
-Alternatively, the raw datasets (they will need to be preprocessed) can be downloaded at
+Alternatively, the original datasets (without preprocessing) can be downloaded at
 https://github.com/elazarg/hebrew_diacritized[hebrew_diacritized].
 
 === Load Model
@@ -163,7 +157,7 @@ All models config are placed in the config directory.
 
 [source,bash]
 ----
-python train.py --model "cbhg" --config config/cbhg.yml
+> python train.py --model "cbhg" --config config/cbhg.yml
 ----
 
 The model will report the WER and DER while training using the
@@ -177,7 +171,7 @@ For instance, with the CBHG model on the data in `/data/CA_MSA/test.csv`:
 
 [source,bash]
 ----
-python test.py --model 'cbhg' --config config/cbhg.yml
+> python test.py --model 'cbhg' --config config/cbhg.yml
 ----
 
 The model will load the last saved model unless you specified it in the config:
@@ -193,8 +187,8 @@ text or lines.
 
 [source,bash]
 ----
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
-python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file relative_path_to_text_file
+> python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
+> python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file relative_path_to_text_file
 ----
 
 === Convert CBHG, Python model to ONNX
@@ -208,7 +202,7 @@ is saved into a hardcoded location:
 
 [source,bash]
 ----
-python diacritization_model_to_onnx.py
+> python diacritization_model_to_onnx.py
 ----
 
 ==== Important parameters
