@@ -22,8 +22,12 @@ def diacritization_parser():
     parser.add_argument("--config", dest="config", type=str, required=True)
     parser.add_argument("--text", dest="text", type=str, required=False)
     parser.add_argument("--text_file", dest="text_file", type=str, required=False)
-    parser.add_argument("--diacritized_text_file", \
-                        dest="diacritized_text_file", type=str, required=False)
+    parser.add_argument(
+        "--diacritized_text_file",
+        dest="diacritized_text_file",
+        type=str,
+        required=False,
+    )
     return parser
 
 
@@ -35,9 +39,9 @@ if args.text is None and args.text_file is None:
     raise ValueError("text or text_file/diacritized_text_file params required!")
 
 if args.model_kind == "cbhg":
-    diacritizer = Diacritizer(args.config, args.model_kind, 'log_dir')
+    diacritizer = Diacritizer(args.config, args.model_kind, "log_dir")
 elif args.model_kind == "baseline":
-    diacritizer = Diacritizer(args.config, args.model_kind, 'log_dir')
+    diacritizer = Diacritizer(args.config, args.model_kind, "log_dir")
 else:
     raise ValueError("The model kind is not supported")
 
@@ -46,4 +50,4 @@ if args.text_file is None:
     print(txt)
 else:
     diacritizer.diacritize_file(args.text_file, args.diacritized_text_file)
-    print('done!!! written in: ', args.diacritized_text_file)
+    print("done!!! written in: ", args.diacritized_text_file)
