@@ -78,31 +78,30 @@ pip install .
 for instance:
 [source,bash]
 ---
-> curl -sSL https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/bchg_len90_dec0.9766_wor_0.8877.yml -o config/model_hebrew.yml
-> mkdir log_dir/base.cbhg
-> curl -sSL https://github.com/secryst/rababa-models/releases/model_len90_dec0.9766_wor_0.8877.pt -o log_dir/base.cbhg/model.pt
+curl -sSL https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/bchg_len90_dec0.9766_wor_0.8877.yml -o config/model_hebrew.yml
+mkdir log_dir/base.cbhg
+curl -sSL https://github.com/secryst/rababa-models/releases/model_len90_dec0.9766_wor_0.8877.pt -o log_dir/base.cbhg/model.pt
 ---
 
 . Single sentences and text can now be diacritized as below:
 
 [source,bash]
 ----
-> python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
-> python diacritize.py --model_kind "cbhg" --config config/cbhg.yml \
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml \
     --text_file relative_path_to_text_file --diacritized_text_file path_to_diacrit_text_file
 ----
 
 The maximal string length is set at `600` chars and is a parameter in config.
 
-Longer lines than above would  need to be broken down, for instance using the library
-introduced in the link:../lib/README.adoc[Ruby quickstart] section.
+Longer lines than above would  need to be broken down in a separated step.
 
 
 == Training
 
 === Datasets
 
-* We have used the hebrew diacritized  https://github.com/elazarg/hebrew_diacritized[dataset]
+We have used the hebrew diacritized  https://github.com/elazarg/hebrew_diacritized[dataset]
 that we have cleaned https://github.com/secryst/rababa-models/releases/tag/hebrew.0.1[here].
 
 
@@ -110,8 +109,8 @@ For training, data needs to be stored in the `data/train` directory as follows:
 
 [source,bash]
 ----
-> curl -sSL https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/data_hebrew.zip -o data_hebrew.zip
-> unzip data_hebrew.zip
+curl -sSL https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/data_hebrew.zip -o data_hebrew.zip
+unzip data_hebrew.zip
 ----
 
 Alternatively, the original datasets (without preprocessing) can be downloaded at
@@ -126,7 +125,7 @@ Models are to be copied as specified in the link just above under:
 
 [source,bash]
 ----
-> log_dir/Hebrew.cbhg/models/2000000-snapshot.pt
+log_dir/Hebrew.cbhg/models/2000000-snapshot.pt
 ----
 
 
@@ -139,25 +138,13 @@ and various other options.
 
 The configuration files are called explicitly in the below applications.
 
-=== Data Preprocessing
-
-The original work cited above allow for both raw and preprocessed.
-
-We go for the simplest raw version here:
-- As mentioned above, corpus must have `test.csv`,
-  `train.csv`, and `valid.csv`.
-
-
-HERE CODE WAS SIMPLIFIED
-
-
 === Training
 
 All models config are placed in the config directory.
 
 [source,bash]
 ----
-> python train.py --model "cbhg" --config config/cbhg.yml
+python train.py --model "cbhg" --config config/cbhg.yml
 ----
 
 The model will report the WER and DER while training using the
@@ -171,7 +158,7 @@ For instance, with the CBHG model on the data in `/data/CA_MSA/test.csv`:
 
 [source,bash]
 ----
-> python test.py --model 'cbhg' --config config/cbhg.yml
+python test.py --model 'cbhg' --config config/cbhg.yml
 ----
 
 The model will load the last saved model unless you specified it in the config:
@@ -187,8 +174,8 @@ text or lines.
 
 [source,bash]
 ----
-> python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
-> python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file relative_path_to_text_file
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'מה שלומך'
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file relative_path_to_text_file
 ----
 
 === Convert CBHG, Python model to ONNX
@@ -202,7 +189,7 @@ is saved into a hardcoded location:
 
 [source,bash]
 ----
-> python diacritization_model_to_onnx.py
+python diacritization_model_to_onnx.py
 ----
 
 ==== Important parameters
