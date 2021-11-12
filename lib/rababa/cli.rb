@@ -50,8 +50,10 @@ module Rababa
         raise ArgumentError, "#{parser[:language]} is unsupported"
       end
 
-      diacritizer = diacritizer_class.new(model_path,
-                                          YAML.load_file(config_path))
+      diacritizer = diacritizer_class.new(
+        model_path,
+        YAML.load_file(config_path)
+      )
 
       if parser.key?(:text)
         # run diacritization text if has :text
