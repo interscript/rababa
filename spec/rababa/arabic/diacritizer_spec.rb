@@ -3,7 +3,7 @@
 require "open-uri"
 
 RSpec.describe Rababa::Arabic::Diacritizer do
-  onnx_file = "https://github.com/secryst/rababa-models/releases/download/0.1/diacritization_model.onnx"
+  onnx_file = "https://github.com/secryst/rababa-models/releases/download/0.1/diacritization_model_arabic.onnx"
   onnx_path = "models-data/arabic-model.onnx"
   default_config = {
     "session_name" => "base",

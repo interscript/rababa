@@ -3,7 +3,7 @@
 require "open-uri"
 
 RSpec.describe Rababa::Hebrew::Diacritizer do
-  onnx_file = "https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/diacritization_model.onnx"
+  onnx_file = "https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/diacritization_model_hebrew.onnx"
   onnx_path = "models-data/hebrew-model.onnx"
   default_config = {
     "session_name" => "base",
@@ -32,7 +32,7 @@ RSpec.describe Rababa::Hebrew::Diacritizer do
     # This is not a test for correctness - this is a test for
     # the software working.
     "מה שלומך" =>
-    "מֳׂהֳׂ ֳׂשֳׂלֳׂוֳׂמֳׂךֳׂ"
+    "מָה שְׁלוֹמְךָ"
   }
 
   failing_tests = {

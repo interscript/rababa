@@ -24,7 +24,7 @@ Please see the following README's, under the "`Try out Rababa`" section:
 
 This library was built for the
 https://www.interscript.org[Interscript project]
-(https://github.com/interscript/)[at GitHub].
+(https://github.com/interscript/)[at GitHub]).
 
 Diacritization strategy is following several steps with at heart a deep learning
 model:
@@ -78,5 +78,5 @@ and meanings to arabic scripts.
 
 We are working on the following improvements:
 
-* Preprocessing for breaking down large sentences
-* PoS tagging and search to improve the diacritization
+* Enhancing architecture and encoding
+* Enhance datasets to improve models
