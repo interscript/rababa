@@ -5,26 +5,12 @@
 
 require "rababa/hebrew/encoders"
 require "rababa/hebrew/nlp"
-require "rababa/dataset"
+require "rababa/hebrew/dataset"
+require "rababa/diacritizer"
 
 module Rababa
   module Hebrew
-    class Diacritizer
-      # include Rababa::Reconciler
-
-      def initialize(onnx_model_path, config)
-        # load inference model from model_path
-        @onnx_session = OnnxRuntime::InferenceSession.new(onnx_model_path)
-
-        # load config
-        @config = config
-        @max_length = @config["max_len"]
-        @batch_size = @config["batch_size"]
-
-        # instantiate encoder's class
-        @encoder = get_text_encoder
-      end
-
+    class Diacritizer < Rababa::Diacritizer
       # preprocess text into indices
       def preprocess_text(text)
         # Cut text & warn user if text exceeds max_length
@@ -39,65 +25,35 @@ module Rababa
         @encoder.encode_data(text)
       end
 
-      # Diacritize single arabic strings:
+      # Diacritize single arabic strings or a batch:
       # string -> string
+      # array -> array
       def diacritize_text(text)
-        # encode, indexing text data into Data class
-        data = preprocess_text(text)
+        if text.is_a?(String)
+          text = [text.strip] * @batch_size
+          seq = [preprocess_text(text.first)] * @batch_size
+          return_single = true
+        else
+          seq = text.map { |i| preprocess_text(i) }
+        end
 
         ort_inputs = {
-          "normalized" => [data.normalized +
-            [0] * (@max_length - data.normalized.length)] * @batch_size
+          "normalized" => seq.map { |d|
+            d.normalized + [0] * (@max_length - d.normalized.length)
+          }
         }
 
         # onnx predictions
         vniqqud, vdagesh, vsin = predict_batch(ort_inputs)
 
-        # decode text and prediction
-        @encoder.decode_data(
-          data.text, data.normalized,
-          vdagesh[0], vsin[0], vniqqud[0]
-        )
-      end
+        size = return_single ? 1 : @batch_size
 
-      # download data from relative path and diacritize line by line
-      # TODO: Rewrite this method based on diacritize_text
-      def diacritize_file(path)
-        # load data
-        texts = File.open(path).map do |line|
-          line.chomp.strip
+        out = size.times.map do |i|
+          @encoder.decode_data(seq[i].text, seq[i].normalized,
+            vdagesh[i], vsin[i], vniqqud[i])
         end
 
-        # process batches
-        out_texts = []
-        idx = 0
-        while idx + @batch_size <= texts.length
-          # preprocess text
-          vdata = texts[idx..idx + @batch_size - 1]
-            .map { |t| preprocess_text(t) }
-
-          # format for onnx
-          ort_inputs = {
-            "normalized" => vdata.map { |d|
-                              d.normalized + [0] * (@max_length - d.normalized.length)
-                            }
-          }
-          # perform onnx comput.
-          vniqqud, vdagesh, vsin = predict_batch(ort_inputs)
-          # decode data into string
-          out_texts += (0..@batch_size - 1).map do |i|
-            @encoder.decode_data(vdata[i].text, vdata[i].normalized,
-              vdagesh[i], vsin[i], vniqqud[i])
-          end
-          idx += @batch_size
-        end
-
-        # process rest of data
-        while idx < texts.length
-          out_texts += [diacritize_text(texts[idx])]
-          idx += 1
-        end
-        out_texts
+        return_single ? out.first : out
       end
 
       # Call ONNX model with data transformed in batches

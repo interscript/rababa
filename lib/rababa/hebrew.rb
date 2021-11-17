@@ -3,27 +3,22 @@ require "rababa/hebrew/diacritizer"
 
 module Rababa
   module Hebrew
-    RAFE = '\u05BF'
-    NIQQUD_HASH = {
-      "SHVA" => '\u05B0',
-      "REDUCED_SEGOL" => '\u05B1',
-      "REDUCED_PATAKH" => '\u05B2',
-      "REDUCED_KAMATZ" => '\u05B3',
-      "HIRIK" => '\u05B4',
-      "TZEIRE" => '\u05B5',
-      "SEGOL" => '\u05B6',
-      "PATAKH" => '\u05B7',
-      "KAMATZ" => '\u05B8',
-      "HOLAM" => '\u05B9',
-      "KUBUTZ" => '\u05BB',
-      "SHURUK" => '\u05BC',
-      "METEG" => '\u05BD'
-    }
+    RAFE = "\u05BF"
 
     module Niqqud
-      def self.[](name)
-        NIQQUD_HASH[name]
-      end
+      SHVA = "\u05B0"
+      REDUCED_SEGOL = "\u05B1"
+      REDUCED_PATAKH = "\u05B2"
+      REDUCED_KAMATZ = "\u05B3"
+      HIRIK = "\u05B4"
+      TZEIRE = "\u05B5"
+      SEGOL = "\u05B6"
+      PATAKH = "\u05B7"
+      KAMATZ = "\u05B8"
+      HOLAM = "\u05B9"
+      KUBUTZ = "\u05BB"
+      SHURUK = "\u05BC"
+      METEG = "\u05BD"
     end
 
     HEBREW_LETTERS = ["א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט", "י", "ך", "כ", "ל", "ם", "מ", "ן", "נ", "ס", "ע", "ף", "פ", "ץ", "צ", "ק", "ר", "ש", "ת"]
@@ -33,7 +28,7 @@ module Rababa
       ["ְ", "ֱ", "ֲ", "ֳ", "ִ", "ֵ", "ֶ", "ַ", "ָ", "ֹ", "ֺ", "ֻ", "ּ", "ַ"]
     #  (0x05b0..0x05bc + 1).to_a {|c| c.force_encoding('utf-8')}
 
-    HOLAM = Niqqud["HOLAM"]
+    HOLAM = Niqqud::HOLAM
 
     SHIN_YEMANIT = "ׁ"
     # '\u05c1'

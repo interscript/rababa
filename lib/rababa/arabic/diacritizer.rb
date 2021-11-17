@@ -5,27 +5,12 @@
 
 require "rababa/arabic/encoders"
 require "rababa/arabic/reconciler"
+require "rababa/diacritizer"
 
 module Rababa
   module Arabic
-    class Diacritizer
+    class Diacritizer < Rababa::Diacritizer
       include Arabic::Reconciler
-
-      def initialize(onnx_model_path, config)
-        # load inference model from model_path
-        @onnx_session = OnnxRuntime::InferenceSession.new(onnx_model_path)
-
-        # load config
-        @config = config
-        @max_length = @config["max_len"]
-        @batch_size = @config["batch_size"]
-
-        # instantiate encoder's class
-        @encoder = get_text_encoder
-
-        # TODO: What is start_symbol_id for? It's not used.
-        @start_symbol_id = @encoder.start_symbol_id
-      end
 
       # preprocess text into indices
       def preprocess_text(text)
@@ -52,63 +37,36 @@ module Rababa
         text_dup
       end
 
-      # Diacritize single arabic strings
+      # Diacritize single arabic strings or a batch
       def diacritize_text(text)
-        text = text.strip
-        seq = preprocess_text(text)
+        if text.is_a?(String)
+          text = [text.strip] * @batch_size
+          seq = [preprocess_text(text.first)] * @batch_size
+          return_single = true
+        else
+          seq = text.map { |i| preprocess_text(i) }
+        end
 
         # initialize onnx computation
         # redundancy caused by batch processing of nnets
         ort_inputs = {
-          "src" => [seq] * @batch_size,
-          "lengths" => [seq.length] * @batch_size
+          "src" => seq,
+          "lengths" => seq.map(&:length)
         }
 
         # onnx predictions
-        preds = predict_batch(ort_inputs)[0]
+        preds = predict_batch(ort_inputs)
 
-        reconcile_strings(
-          text,
-          combine_text_and_haraqat(seq, preds)
-        )
-      end
+        size = return_single ? 1 : @batch_size
 
-      # download data from relative path and diacritize line by line
-      # TODO: Rewrite this method based on diacritize_text
-      def diacritize_file(path)
-        texts = File.open(path).map do |line|
-          line.chomp.strip
+        out = size.times.map do |i|
+          reconcile_strings(
+            text[i],
+            combine_text_and_haraqat(seq[i], preds[i])
+          )
         end
 
-        # process batches
-        out_texts = []
-        idx = 0
-        while idx + @batch_size <= texts.length
-          originals = texts[idx..idx + @batch_size - 1]
-          src = originals.map { |t| preprocess_text(t) }
-          lengths = src.map { |seq| seq.length }
-          ort_inputs = {
-            "src" => src,
-            "lengths" => lengths
-          }
-          preds = predict_batch(ort_inputs)
-
-          out_texts += (0..@batch_size - 1).map do |i|
-            reconcile_strings(
-              originals[i],
-              combine_text_and_haraqat(src[i], preds[i])
-            )
-          end
-          idx += @batch_size
-        end
-
-        # process rest of data
-        while idx < texts.length
-          out_texts += [diacritize_text(texts[idx])]
-          idx += 1
-        end
-
-        out_texts
+        return_single ? out.first : out
       end
 
       # Call ONNX model with data transformed in batches

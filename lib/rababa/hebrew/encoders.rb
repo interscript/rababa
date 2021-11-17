@@ -4,7 +4,7 @@
 # https://github.com/interscript/rababa/blob/main/python/util/text_cleaners.py
 
 require "rababa/hebrew/nlp"
-require "rababa/dataset"
+require "rababa/hebrew/dataset"
 
 module Rababa
   module Hebrew
@@ -39,15 +39,15 @@ module Rababa
         def encode_text(text)
           n = text.length
           text += "  "
-          iterated__ = [] # "aggregator"
+          iterated = [] # "aggregator"
 
           i = 0
           while i < n
             letter = text[i]
 
-            dagesh = can_dagesh(letter) ? RAFE : ""
-            sin = can_sin(letter) ? RAFE : ""
-            niqqud = can_niqqud(letter) ? RAFE : ""
+            dagesh = can_dagesh?(letter) ? RAFE : ""
+            sin = can_sin?(letter) ? RAFE : ""
+            niqqud = can_niqqud?(letter) ? RAFE : ""
             normalized = normalize(letter)
 
             i += 1
@@ -55,7 +55,7 @@ module Rababa
             # assert letter not in ANY_NIQQUD,
             # f'{i}, {nbrd}, {[name_of(c) for word in nbrd for c in word]}'
 
-            if is_hebrew_letter(normalized)
+            if is_hebrew_letter?(normalized)
               if letter == DAGESH_LETTER
                 dagesh = letter
                 i += 1
@@ -75,13 +75,13 @@ module Rababa
             end
 
             if normalized != "O"
-              iterated__.append(
+              iterated.append(
                 HebrewChar.new(letter, normalized, dagesh, sin, niqqud)
               )
             end
           end
 
-          iterated__
+          iterated
         end
 
         # encode string into a Dataset::Data object
