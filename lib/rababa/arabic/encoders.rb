@@ -30,7 +30,7 @@ module Rababa
           # encoding of haraqats
           @target_symbol_to_id = @target_symbols.map.with_index { |s, i| [s, i] }.to_h
           @target_id_to_symbol = @target_symbols.map.with_index { |s, i| [i, s] }.to_h
-          @utarget_id_to_symbol = UALL_POSSIBLE_HARAQAT.keys.map.with_index { |s, i| [i, s] }.to_h
+          @utarget_id_to_symbol = ALL_POSSIBLE_HARAQAT.keys.map.with_index { |s, i| [i, s] }.to_h
 
           @reverse_input = reverse_input
           @input_pad_id = @input_symbol_to_id[@pad]

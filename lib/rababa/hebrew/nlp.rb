@@ -23,31 +23,25 @@ module Rababa
           unless "בכפ".include? normalized # letter
             return ""
           end
-          dagesh.gsub(HebrewCONST::RAFE, "")
+          dagesh.gsub(RAFE, "")
         end
 
         def vocalize_niqqud(c)
           # FIX: HOLAM / KUBBUTZ cannot be handled here correctly
-          if [Niqqud["KAMATZ"], Niqqud["PATAKH"],
-            Niqqud["REDUCED_PATAKH"]].include? c
-            return Niqqud["PATAKH"]
+          case c
+          when Niqqud::KAMATZ, Niqqud::PATAKH, Niqqud::REDUCED_PATAKH
+            Niqqud::PATAKH
+          when Niqqud::HOLAM, Niqqud::REDUCED_KAMATZ
+            Niqqud::HOLAM
+          when Niqqud::SHURUK, Niqqud::KUBUTZ
+            Niqqud::KUBUTZ
+          when Niqqud::TZEIRE, Niqqud::SEGOL, Niqqud::REDUCED_SEGOL
+            Niqqud::SEGOL
+          when Niqqud::SHVA
+            ""
+          else
+            c.gsub(RAFE, "")
           end
-          if [Niqqud["HOLAM"],
-            Niqqud["REDUCED_KAMATZ"]].include? c
-            return Niqqud["HOLAM"]
-          end
-          if [Niqqud["SHURUK"],
-            Niqqud["KUBUTZ"]].include? c
-            return Niqqud["KUBUTZ"]
-          end
-          if [Niqqud["TZEIRE"], Niqqud["SEGOL"],
-            Niqqud["REDUCED_SEGOL"]].include? c
-            return Niqqud["SEGOL"]
-          end
-          if c == Niqqud["SHVA"]
-            return ""
-          end
-          c.gsub(RAFE, "")
         end
 
         def vocalize
@@ -58,67 +52,53 @@ module Rababa
         end
       end # HebrewChar
 
-      def numeric?(s)
-        !Float(s).nil?
-      rescue
-        false
-      end
-
       def normalize(c)
-        if VALID_LETTERS.include? c
-          return c
+        case c
+        when *VALID_LETTERS
+          c
+        when *ENDINGS_TO_REGULAR.keys
+          ENDINGS_TO_REGULAR[c]
+        when "\n", "\t"
+          " "
+        when "־", "‒", "–", "—", "―", "−"
+          "-"
+        when "["
+          "("
+        when "]"
+          ")"
+        when "´", "‘", "’"
+          "'"
+        when "“", "”", "״"
+          '"'
+        when ("0".."9")
+          "5"
+        when "…"
+          ","
+        when "ײ", "װ", "ױ"
+          "H"
+        else
+          "O"
         end
-        if ENDINGS_TO_REGULAR.include? c
-          return ENDINGS_TO_REGULAR[c]
-        end
-        if ['\n', '\t'].include? c
-          return " "
-        end
-        if ["־", "‒", "–", "—", "―", "−"].include? c
-          return "-"
-        end
-        if c == "["
-          return "("
-        end
-        if c == "]"
-          return ")"
-        end
-        if ["´", "‘", "’"].include? c
-          return "'"
-        end
-        if ["“", "”", "״"].include? c
-          return '"'
-        end
-        if numeric?(c)
-          return "5"
-        end
-        if c == "…"
-          return ","
-        end
-        if ["ײ", "װ", "ױ"].include? c
-          return "H"
-        end
-        "O"
       end
 
-      def is_hebrew_letter(letter)
+      def is_hebrew_letter?(letter)
         ("\u05d0".."\u05ea").cover? letter
       end
 
-      def can_dagesh(letter)
+      def can_dagesh?(letter)
         ("בגדהוזטיכלמנספצקשת" + "ךף").include? letter
       end
 
-      def can_sin(letter)
+      def can_sin?(letter)
         letter == "ש"
       end
 
-      def can_niqqud(letter)
+      def can_niqqud?(letter)
         ("אבגדהוזחטיכלמנסעפצקרשת" + "ךן").include? letter
       end
 
-      def can_any(letter)
-        can_niqqud(letter) || can_dagesh(letter) || can_sin(letter)
+      def can_any?(letter)
+        can_niqqud?(letter) || can_dagesh?(letter) || can_sin?(letter)
       end
     end
   end

@@ -21,17 +21,6 @@ module Rababa
     VALID_ARABIC = HARAQAT + ARAB_CHARS.chars
 
     BASIC_HARAQAT = {
-      "َ" => "Fatha              ",
-      "ً" => "Fathatah           ",
-      "ُ" => "Damma              ",
-      "ٌ" => "Dammatan           ",
-      "ِ" => "Kasra              ",
-      "ٍ" => "Kasratan           ",
-      "ْ" => "Sukun              ",
-      "ّ" => "Shaddah            "
-    }
-
-    UBASIC_HARAQAT = {
       "\u064e" => "Fatha              ",
       "\u064b" => "Fathatah           ",
       "\u064f" => "Damma              ",
@@ -43,24 +32,6 @@ module Rababa
     }
 
     ALL_POSSIBLE_HARAQAT = {
-      "" => "No Diacritic       ",
-      "َ" => "Fatha              ",
-      "ً" => "Fathatah           ",
-      "ُ" => "Damma              ",
-      "ٌ" => "Dammatan           ",
-      "ِ" => "Kasra              ",
-      "ٍ" => "Kasratan           ",
-      "ْ" => "Sukun              ",
-      "ّ" => "Shaddah            ",
-      "َّ" => "Shaddah + Fatha    ",
-      "ًّ" => "Shaddah + Fathatah ",
-      "ُّ" => "Shaddah + Damma    ",
-      "ٌّ" => "Shaddah + Dammatan ",
-      "ِّ" => "Shaddah + Kasra    ",
-      "ٍّ" => "Shaddah + Kasratan "
-    }
-
-    UALL_POSSIBLE_HARAQAT = {
       "" => "No Diacritic       ",
       "\u064e" => "Fatha              ",
       "\u064b" => "Fathatah           ",

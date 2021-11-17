@@ -32,7 +32,7 @@ RSpec.describe Rababa::Hebrew::Diacritizer do
     # This is not a test for correctness - this is a test for
     # the software working.
     "מה שלומך" =>
-    "מָה שְׁלוֹמְךָ"
+    "מַה שׁלוֹמךַ"
   }
 
   failing_tests = {
