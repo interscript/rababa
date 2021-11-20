@@ -16,12 +16,12 @@ from diacritizer import Diacritizer
 """
 
 d_params = yaml.load(open("config/convert_torch_onnx.yml"))
-max_len = d_params['max_len']  # 600 for the original length
-batch_size = d_params['batch_size']
-config_str = d_params['config_str']
-model_kind_str = d_params['model_kind_str']
-onnx_model_filename = d_params['onnx_model_filename']
-device = d_params['device']
+max_len = d_params["max_len"]  # 600 for the original length
+batch_size = d_params["batch_size"]
+config_str = d_params["config_str"]
+model_kind_str = d_params["model_kind_str"]
+onnx_model_filename = d_params["onnx_model_filename"]
+device = d_params["device"]
 
 
 """
