@@ -14,7 +14,6 @@ from diacritizer import Diacritizer
             has to do with the model training and usage
 """
 
-
 d_params = yaml.load(open("config/convert_torch_onnx.yml"))
 
 max_len = d_params["max_len"]  # 600 for the original length
@@ -28,6 +27,7 @@ onnx_model_filename = d_params["onnx_model_filename"]
     example and mock data:
     we found that populating all the data, removing the zeros gives better results.
 """
+
 src = torch.Tensor([[1 for i in range(max_len)] for i in range(batch_size)]).long()
 lengths = torch.Tensor([max_len for i in range(batch_size)]).long()
 
@@ -35,7 +35,6 @@ lengths = torch.Tensor([max_len for i in range(batch_size)]).long()
 """
     Instantiate Diacritization model
 """
-
 
 dia = Diacritizer(config_str, model_kind_str, True)
 
