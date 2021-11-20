@@ -2,11 +2,13 @@
 
 == Purpose
 
-Rababa Python is used for both:
+Rababa Python is used for:
 
 * Training of the Rababa diacriticization models
 * Conversion of non-diacriticized Arabic into diacriticized Arabic
   (i.e. running of the Rababa diacriticization models)
+* Conversion of torch models into ONNX.
+
 
 == Introduction
 
@@ -61,7 +63,12 @@ pip install .
 
 . Download the released model
   https://github.com/secryst/rababa-models/releases/download/0.1/2000000-snapshot.pt[here]
-  and place under `python/log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt`
+  and place under `./log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt`
+[source,bash]
+----
+mkdir -p log_dir/log_dir/CA_MSA.base.cbhg/models
+curl -sSL https://github.com/secryst/rababa-models/releases/download/0.1/2000000-snapshot.pt -o log_dir/CA_MSA.base.cbhg/models/.
+----
 
 . Single sentences and text can now be diacritized as below:
 
@@ -71,10 +78,9 @@ python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'قطر
 python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file relative_path_to_text_file
 ----
 
-The maximal string length is set in configs at `600`.
-
-Longer lines need to be broken down, for instance using the library
-introduced in the link:../lib/README.adoc[Ruby quickstart] section.
+The maximal string length is set in config file at `600`.
+The model can be retrained with a longer string length, but
+longer lines will need to be broken down.
 
 
 == Training

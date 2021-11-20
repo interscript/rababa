@@ -2,11 +2,12 @@
 
 == Purpose
 
-Rababa Python is used for both:
+Rababa Python is used for:
 
 * Training of the Rababa diacriticization models
 * Conversion of non-diacriticized Hebraic into diacriticized Hebraic
   (i.e. running of the Rababa diacriticization models)
+* Conversion of torch models into ONNX.
 
 == Introduction
 
@@ -74,13 +75,14 @@ pip install .
 
 . Setup prerequisites
 
-. Download best model and its corresponding config_file from https://github.com/secryst/rababa-models/releases/,
+. Download model and its corresponding config_file from https://github.com/secryst/rababa-models/releases/,
 for instance:
 [source,bash]
 ---
-curl -sSL https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/bchg_len90_dec0.9766_wor_0.8877.yml -o config/model_hebrew.yml
+# e.g. for model bchg_len90_dec0.9766_wor_0.8877
 mkdir log_dir/base.cbhg
-curl -sSL https://github.com/secryst/rababa-models/releases/model_len90_dec0.9766_wor_0.8877.pt -o log_dir/base.cbhg/model.pt
+curl -sSL https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/bchg_len90_dec0.9766_wor_0.8877.yml -o config/model_hebrew.yml
+curl -sSL https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/model_len90_dec0.9766_wor_0.8877.pt -o log_dir/base.cbhg/model.pt
 ---
 
 . Single sentences and text can now be diacritized as below:
