@@ -1,0 +1,5 @@
+batch_size: 32
+max_len: 200
+model_kind_str: cbhg
+onnx_model_filename: diacritization_model.onnx
+config_str: config/cbhg.yml
