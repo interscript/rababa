@@ -67,7 +67,7 @@ pip install .
 [source,bash]
 ----
 mkdir -p log_dir/log_dir/CA_MSA.base.cbhg/models
-curl -sSL https://github.com/secryst/rababa-models/releases/download/0.1/2000000-snapshot.pt -o log_dir/CA_MSA.base.cbhg/models/.
+curl -sSL https://github.com/secryst/rababa-models/releases/download/0.1/2000000-snapshot.pt -o log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt
 ----
 
 . Single sentences and text can now be diacritized as below:
