@@ -2,6 +2,10 @@ import torch
 import pickle
 import random
 
+import torch
+import onnx
+import onnxruntime
+
 import numpy as np
 
 from diacritizer import Diacritizer
@@ -54,11 +58,6 @@ torch_outs = dia.model(normalized)  # niqqud, dagesh, sin
     Load ONNX libs and export models into onnx
 """
 
-import torch
-import onnx
-import onnxruntime
-
-
 onnx_model_filename = "../models-data/diacritization_model.onnx"
 
 # export model
@@ -87,7 +86,7 @@ onnx.checker.check_model(onnx_model)
 # inference session
 ort_session = onnxruntime.InferenceSession(onnx_model_filename)
 
-# onnx inputs and outputs names
+# get onnx inputs and outputs names
 # ort_session.get_inputs(), ort_session.get_outputs()
 
 

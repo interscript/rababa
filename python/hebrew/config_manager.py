@@ -199,7 +199,7 @@ class ConfigManager:
 
         except:
             print("model_path:: ", model_path)
-            print("Model not found under model_state_dict,")
+            print("WARNING:: Model not found under model_state_dict,")
             print("starting with a fresh model.")
             optimizer_stat_dict = None
             global_step = 0
@@ -264,11 +264,3 @@ class ConfigManager:
         except:
             raise Exception(f"The loss type is not correct {self.config['loss_type']}")
         return loss_type
-
-
-"""
-    if __name__ == "__main__":
-    config_path = "config/tacotron-base-config.yml"
-    model_kind = "tacotron"
-    config = ConfigManager(config_path=config_path, model_kind=model_kind)
-"""

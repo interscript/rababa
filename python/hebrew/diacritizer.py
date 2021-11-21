@@ -14,8 +14,6 @@ from util import nakdimon_hebrew_model as hebrew
 from util import nakdimon_metrics
 from util import nakdimon_utils as utils
 
-# import util.reconcile_original_plus_diacritized as reconcile
-
 
 class Diacritizer:
     def __init__(
@@ -133,9 +131,7 @@ class Diacritizer:
 
     def predict_batch(self, data_batch: nakdimon_dataset.Data, criterion=None):
         def process_dim(dim):
-            return niqqud.permute(0, 2, 1)  # if self.device=='cpu' else \
-
-        #        np.transpose(l_dia_data[i], (0, 2, 1))
+            return niqqud.permute(0, 2, 1)
 
         # Forward pass
         niqqud, dagesh, sin = self.model(data_batch.normalized)

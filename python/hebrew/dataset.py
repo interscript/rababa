@@ -30,17 +30,15 @@ class DiacritizationDataset(Dataset):
         self.device = config_manager.device
         self.data_file_path = data_file_path
 
-        with utils.smart_open(self.data_file_path, 'r', encoding='utf-8') as f:
-            text = f.read() # hebrew.remove_niqqud(f.read())
+        with utils.smart_open(self.data_file_path, "r", encoding="utf-8") as f:
+            text = f.read()
 
-        self.data = nakdimon_dataset.Data.from_text(hebrew.iterate_dotted_text(text), \
-                                                    self.config['max_len'])
+        self.data = nakdimon_dataset.Data.from_text(
+            hebrew.iterate_dotted_text(text), self.config["max_len"]
+        )
 
-        # self.data, _ = nakdimon_dataset.get_data([self.data_file_path],
-        #                                          self.config['max_len'])
-        print('self.device:: ', self.device)
+        print("self.device:: ", self.device)
         self.data.to_device(self.device)
-
 
     def __len__(self):
         "Denotes the total number of samples"
@@ -65,8 +63,9 @@ def load_training_data(config_manager: ConfigManager, loader_parameters):
     if not config_manager.config["load_training_data"]:
         return []
 
-    path = os.path.join(config_manager.data_dir, 'train', \
-                        config_manager.config['train_file_name'])
+    path = os.path.join(
+        config_manager.data_dir, "train", config_manager.config["train_file_name"]
+    )
 
     training_set = DiacritizationDataset(config_manager, path)
 
@@ -85,13 +84,15 @@ def load_test_data(config_manager: ConfigManager, loader_parameters):
     if not config_manager.config["load_test_data"]:
         return []
     # test_file_name = config_manager.config.get("test_file_name", "test.csv")
-    path = os.path.join(config_manager.data_dir, 'test',
-                        config_manager.config['test_file_name'])
+    path = os.path.join(
+        config_manager.data_dir, "test", config_manager.config["test_file_name"]
+    )
 
     test_dataset = DiacritizationDataset(config_manager, path)
 
-    test_iterator = DataLoader(test_dataset.data, collate_fn=collate_fn,
-                               **loader_parameters)
+    test_iterator = DataLoader(
+        test_dataset.data, collate_fn=collate_fn, **loader_parameters
+    )
 
     print(f"Length of test iterator = {len(test_iterator)}")
     return test_iterator
@@ -104,9 +105,10 @@ def load_validation_data(config_manager: ConfigManager, loader_parameters):
 
     if not config_manager.config["load_validation_data"]:
         return []
-    # valid_file_name = config_manager.config.get("valid_file_name", "eval.txt")
-    path = os.path.join(config_manager.data_dir, 'eval', \
-                        config_manager.config['eval_file_name'])
+
+    path = os.path.join(
+        config_manager.data_dir, "eval", config_manager.config["eval_file_name"]
+    )
 
     valid_dataset = DiacritizationDataset(config_manager, path)
 

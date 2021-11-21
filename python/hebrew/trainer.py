@@ -1,4 +1,3 @@
-
 import os
 from typing import Dict
 
@@ -39,7 +38,6 @@ class Trainer:
 
 
 class GeneralTrainer(Trainer):
-
     def __init__(self, config_path: str, model_kind: str) -> None:
 
         self.config_path = config_path
@@ -56,24 +54,23 @@ class GeneralTrainer(Trainer):
         self.text_encoder = self.config_manager.text_encoder
         self.summary_manager = SummaryWriter(log_dir=self.config_manager.log_dir)
 
-
-        self.load_model() 
+        self.load_model()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = self.model.to(self.device)        
+        self.model = self.model.to(self.device)
 
         self.optimizer = optim.Adam(
-                self.model.parameters(),
-                lr=self.config["learning_rate"],
-                betas=(self.config["adam_beta1"], self.config["adam_beta2"]),
-                weight_decay=self.config["weight_decay"])
+            self.model.parameters(),
+            lr=self.config["learning_rate"],
+            betas=(self.config["adam_beta1"], self.config["adam_beta2"]),
+            weight_decay=self.config["weight_decay"],
+        )
 
-        self.criterion = nn.CrossEntropyLoss() #ignore_index=self.pad_idx)
-        
+        self.criterion = nn.CrossEntropyLoss()  # ignore_index=self.pad_idx)
+
         self.load_diacritizer()
         self.diacritizer.set_model(self.model)
         # self.initialize_model()
         self.print_config()
-        
 
     def print_config(self):
         self.config_manager.dump_config()
@@ -87,37 +84,22 @@ class GeneralTrainer(Trainer):
 
     def load_diacritizer(self):
         if self.model_kind in ["cbhg", "baseline"]:
-            load_model = False # True
-            self.diacritizer = Diacritizer(self.config_path, self.model_kind) #, load_model)
+            load_model = False  # True
+            self.diacritizer = Diacritizer(
+                self.config_path, self.model_kind
+            )  # , load_model)
         else:
-            print('model not found')
+            print("model not found")
             exit()
 
-    """
-    def initialize_model(self):
-        if self.global_step > 1:
-            return
-        if self.model_kind == "transformer":
-            print("Initializing using xavier_uniform_")
-            self.model.apply(initialize_weights)
-    """
-
     def print_losses(self, step_results, tqdm):
-        #self.summary_manager.add_scalar(
-        #    "loss/loss", step_results, global_step=self.global_step
-        #)
 
-        #tqdm.display(f"loss: {step_results['loss']}", pos=3)
         for pos, n_steps in enumerate(self.config["n_steps_avg_losses"]):
             if len(self.losses) > n_steps:
                 d_losses = process_losses(step_results[-n_steps:])
                 for k in d_losses.keys():
-                    #self.summary_manager.add_scalar(
-                    #   f"loss/loss-{n_steps}",
-                    #    d_losses[k],
-                    #    global_step=self.global_step,
-                    #)
-                    for i,k in enumerate(d_losses.keys()):
+
+                    for i, k in enumerate(d_losses.keys()):
                         tqdm.display(
                             f"{n_steps}-steps average {k}_loss: {d_losses[k]}",
                             pos=pos + 3 + i,
@@ -126,47 +108,46 @@ class GeneralTrainer(Trainer):
     def process_losses(self, losses):
         n_losses = len(losses)
         d_loss = {}
-        for k in ['N','D','S']:
-            loss = sum([l[k] for l in losses])/n_losses
-            d_loss[k+'_loss'] = loss
+        for k in ["N", "D", "S"]:
+            loss = sum([l[k] for l in losses]) / n_losses
+            d_loss[k + "_loss"] = loss
         return d_loss
 
-    def get_benchmarks(self, test_data_iterator,
-                       dims=['N','D','S']): # tqdm
+    def get_benchmarks(self, test_data_iterator, dims=["N", "D", "S"]):  # tqdm
 
         d_scores = {}
         # Run the model on some test examples
         with torch.no_grad():
 
-            raw_data, dia_data, losses = \
-                self.diacritizer.diacritize_data_iterator(test_data_iterator,
-                                                          self.criterion)
+            raw_data, dia_data, losses = self.diacritizer.diacritize_data_iterator(
+                test_data_iterator, self.criterion
+            )
 
             l_raw_data = [raw_data.niqqud, raw_data.dagesh, raw_data.sin]
             l_dia_data = [dia_data.niqqud, dia_data.dagesh, dia_data.sin]
 
-            for i,k in enumerate(dims):
+            for i, k in enumerate(dims):
                 labels = l_raw_data[i].flatten()
                 preds = l_dia_data[i].flatten()
-                d_scores[k+'_accu'] = \
-                        (labels == preds).sum().item() / preds.shape[0]
-                d_scores[k+'_loss'] = float(sum(losses[i]) / len(losses[i]))
+                d_scores[k + "_accu"] = (labels == preds).sum().item() / preds.shape[0]
+                d_scores[k + "_loss"] = float(sum(losses[i]) / len(losses[i]))
 
         return d_scores
 
     def evaluate_with_error_rates(self, iterator, tqdm):
 
-        # self.diacritizer.set_model(self.model)
-
         tqdm.set_description(f"Calculating DEC/CHA/WOR/VOC {self.global_step}: ")
 
-        test_path = os.path.join(self.config_manager.data_dir, 'test',
-                                 self.config_manager.config['test_file_name'])
+        test_path = os.path.join(
+            self.config_manager.data_dir,
+            "test",
+            self.config_manager.config["test_file_name"],
+        )
 
-        orig_path = os.path.join(self.config_manager.prediction_dir,
-                                 f"original.txt")
-        predicts_path = os.path.join(self.config_manager.prediction_dir,
-                                      f"predicted.txt")
+        orig_path = os.path.join(self.config_manager.prediction_dir, f"original.txt")
+        predicts_path = os.path.join(
+            self.config_manager.prediction_dir, f"predicted.txt"
+        )
 
         f = open(test_path, "r")
         all_orig = f.readlines()
@@ -181,8 +162,7 @@ class GeneralTrainer(Trainer):
         self.diacritizer.diacritize_file(orig_path, predicts_path)
 
         # evaluate metrics
-        results = nakdimon_metrics. \
-                    all_metrics_for_files(orig_path, predicts_path)
+        results = nakdimon_metrics.all_metrics_for_files(orig_path, predicts_path)
 
         tqdm.reset()
         return results, None
@@ -190,10 +170,9 @@ class GeneralTrainer(Trainer):
     def run(self, config_wandb=None):
 
         scaler = torch.cuda.amp.GradScaler()
-        train_iterator, _, validation_iterator = \
-                        load_iterators(self.config_manager)
+        train_iterator, _, validation_iterator = load_iterators(self.config_manager)
         n_steps_per_epoch = len(train_iterator)
-        
+
         print("data loaded")
         print("----------------------------------------------------------")
         tqdm_eval = trange(0, len(validation_iterator), leave=True)
@@ -201,24 +180,20 @@ class GeneralTrainer(Trainer):
         tqdm_eval.set_description("Eval")
         tqdm_error_rates.set_description("DEC/CHA/WOR/VOC : ")
         tqdm = trange(self.global_step, self.config["max_steps"] + 1, leave=True)
-        print('--------------------------------------')
-        
-        
+        print("--------------------------------------")
+
         for batch_inputs in repeater(train_iterator):
-            
-            #"""
+
             tqdm.set_description(f"Global Step {self.global_step}")
             if self.config["use_decay"]:
                 self.lr = self.adjust_learning_rate(
                     self.optimizer, global_step=self.global_step
                 )
-            
+
             self.optimizer.zero_grad()
-            #"""
             batch_inputs.to_device(self.device)
             step_results = self.train_batch(batch_inputs)
 
-            #"""
             if self.device == "cuda" and self.config["use_mixed_precision"]:
                 with autocast():
 
@@ -243,63 +218,68 @@ class GeneralTrainer(Trainer):
                         self.model.parameters(), self.config["CLIP"]
                     )
                 self.optimizer.step()
-            #"""
-            
-            dico = {'N': float(step_results['N']), 
-                    'S': float(step_results['S']),
-                    'D': float(step_results['D'])}
+
+            dico = {
+                "N": float(step_results["N"]),
+                "S": float(step_results["S"]),
+                "D": float(step_results["D"]),
+            }
 
             self.print_losses(step_results, tqdm)
 
-            """
-            self.summary_manager.add_scalar(
-                "meta/learning_rate", self.lr, global_step=self.global_step)
-            """
-
             if self.global_step % self.config["model_save_frequency"] == 0:
                 torch.save(
-                    {"global_step": self.global_step,
-                     "model_state_dict": self.model.state_dict(),
-                     "optimizer_state_dict": self.optimizer.state_dict()},
+                    {
+                        "global_step": self.global_step,
+                        "model_state_dict": self.model.state_dict(),
+                        "optimizer_state_dict": self.optimizer.state_dict(),
+                    },
                     os.path.join(
-                        self.config_manager.models_dir, f"{self.global_step}-snapshot.pt"))
+                        self.config_manager.models_dir,
+                        f"{self.global_step}-snapshot.pt",
+                    ),
+                )
 
-            # if self.global_step % self.config["evaluate_frequency"] == 0:
             if self.global_step % n_steps_per_epoch == 0:
-                
-                # loss, acc = self.evaluate(validation_iterator, tqdm_eval) 
+
                 self.diacritizer.set_model(self.model)
                 d_scores = self.get_benchmarks(validation_iterator)
-                
-                
-                # self.model.train()
 
-                # if (self.global_step % self.config["evaluate_with_error_rates_frequency"] == 0):
-                scores, _ = self.evaluate_with_error_rates(validation_iterator, tqdm_error_rates)
-                
+                scores, _ = self.evaluate_with_error_rates(
+                    validation_iterator, tqdm_error_rates
+                )
+
                 if not config_wandb is None:
-                    
-                    wandb.log({**d_scores,
-                               **scores})
-                    print('scores:: ', scores)
-                    
+
+                    wandb.log({**d_scores, **scores})
+                    print("scores:: ", scores)
+
                 else:
-                    
+
                     tqdm.display(
-                        f"Evaluate {self.global_step}: N_accu, {d_scores['N_accu']}, N_loss: {d_scores['N_loss']}", pos=8)
+                        f"Evaluate {self.global_step}: N_accu, {d_scores['N_accu']}, N_loss: {d_scores['N_loss']}",
+                        pos=8,
+                    )
                     tqdm.display(
-                        f"Evaluate {self.global_step}: D_accu, {d_scores['D_accu']}, D_loss: {d_scores['D_loss']}", pos=9)
+                        f"Evaluate {self.global_step}: D_accu, {d_scores['D_accu']}, D_loss: {d_scores['D_loss']}",
+                        pos=9,
+                    )
                     tqdm.display(
-                        f"Evaluate {self.global_step}: S_accu, {d_scores['S_accu']}, S_loss: {d_scores['S_loss']}", pos=10)
-                    DEC, CHA, WOR, VOC = \
-                            scores["dec"], scores["cha"], scores["wor"], scores["voc"]
-                
+                        f"Evaluate {self.global_step}: S_accu, {d_scores['S_accu']}, S_loss: {d_scores['S_loss']}",
+                        pos=10,
+                    )
+                    DEC, CHA, WOR, VOC = (
+                        scores["dec"],
+                        scores["cha"],
+                        scores["wor"],
+                        scores["voc"],
+                    )
+
                     error_rates = f"DEC: {DEC}, CHA: {CHA}, WOR: {WOR}, VOC: {VOC}"
                     tqdm.display(f"metrics {self.global_step}: {error_rates}", pos=11)
                     # print('summray_texts:: ', summary_texts)
 
                     if scores:
-                    
 
                         """
                         self.summary_manager.add_scalar(
@@ -311,8 +291,6 @@ class GeneralTrainer(Trainer):
                         self.summary_manager.add_scalar(
                             "error_rates/VOC", VOC, global_step=self.global_step)
                         """
-
-                    
 
             if self.global_step % self.config["train_plotting_frequency"] == 0:
                 self.plot_attention(step_results)
@@ -326,40 +304,32 @@ class GeneralTrainer(Trainer):
 
             tqdm.update()
 
+    def train_batch(self, raw_data: nakdimon_dataset.Data, labels=["N", "D", "S"]):
 
-    def train_batch(self, raw_data: nakdimon_dataset.Data,
-                    labels = ['N', 'D', 'S']):
-        
         # Forward pass
         targets = raw_data.niqqud, raw_data.dagesh, raw_data.sin
 
         outputs = self.model(raw_data.normalized)
         losses = []
-        
-        #self.optimizer.zero_grad() 
-        for i,k in enumerate(labels):
+
+        for i, k in enumerate(labels):
             # Evaluate loss
-            loss = self.criterion(outputs[i].permute(0, 2, 1), \
-                                  targets[i].long())
-            # Backward pass
-            #loss.backward(retain_graph=True)
+            loss = self.criterion(outputs[i].permute(0, 2, 1), targets[i].long())
             # Step with optimizer
             losses.append((labels[i], loss))
-        
-        # optimization step
-        #self.optimizer.step()
 
         return dict(losses)
 
     def predict(self, iterator):
         pass
 
-    def load_model(self,
-                   model_path: str = None,
-                   load_optimizer: bool = True):
+    def load_model(self, model_path: str = None, load_optimizer: bool = True):
 
-        saved_model, optimizer_states_dict, global_step = \
-            self.config_manager.load_model(model_path, load_optimizer)
+        (
+            saved_model,
+            optimizer_states_dict,
+            global_step,
+        ) = self.config_manager.load_model(model_path, load_optimizer)
 
         self.model = saved_model
         if not optimizer_states_dict is None:
@@ -369,7 +339,6 @@ class GeneralTrainer(Trainer):
 
     def get_optimizer(self):
         if self.config["optimizer"] == OptimizerType.Adam:
-            # optimizer = torch.optim.Adam(self.model.parameters(), lr=self.config['learning_rate'])
             optimizer = optim.Adam(
                 self.model.parameters(),
                 lr=self.config["learning_rate"],
