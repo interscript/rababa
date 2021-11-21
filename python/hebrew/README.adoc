@@ -192,20 +192,16 @@ is saved into a hardcoded location:
 
 [source,bash]
 ----
-python diacritization_model_to_onnx.py
+python convert_torch_model_to_onnx.py
 ----
 
-==== Important parameters
+==== Parameters
 
-They are hardcoded in the beginning of the script:
+They are entered in `config/convert_torch_onnx.yml`:
 
 * `max_len`:
 ** matches max string length, initial model value is given in config.
 ** this param allows tuning the model speed and size!
-** the Ruby ../lib/README.md points to resources for preprocessing
 
-* batch_size:
-** the value is given by the original model and its training.
-** this constrain how the ONNX model can be put in production:
-... if > 1, processing single lines involve redundant computations.
-... if > 1, files are processed in batches.
+* `batch_size`:
+** the value has to be corresponding to the original model training params.
