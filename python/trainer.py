@@ -61,7 +61,7 @@ class GeneralTrainer(Trainer):
 
         self.print_config()
 
-        self.dims = ['haraqat', 'shaddah', 'fatha']
+        self.dims = ["haraqat", "shaddah", "fatha"]
 
     def set_device(self):
         if self.config.get("device"):
@@ -83,7 +83,7 @@ class GeneralTrainer(Trainer):
         if self.model_kind in ["cbhg", "baseline"]:
             self.diacritizer = Diacritizer(self.config_path, self.model_kind)
         else:
-            print('model not found')
+            print("model not found")
             exit()
 
     def initialize_model(self):
@@ -115,9 +115,9 @@ class GeneralTrainer(Trainer):
     def evaluate(self, iterator, tqdm, use_target=True):
         # epoch_loss = 0
         # epoch_acc = 0
-        #dims = ['haraqat', 'shaddah', 'fatha']
-        epoch_loss = dict(((k, 0) for k in self.dims))
-        epoch_acc = dict(((k, 0) for k in self.dims))
+        # dims = ['haraqat', 'shaddah', 'fatha']
+        d_epoch_loss = dict(((k, 0) for k in self.dims))
+        d_epoch_acc = dict(((k, 0) for k in self.dims))
 
         self.model.eval()
         tqdm.set_description(f"Eval: {self.global_step}")
@@ -128,15 +128,15 @@ class GeneralTrainer(Trainer):
 
                 outputs = self.model(
                     src=batch_inputs["src"],
-                    #target=batch_inputs["target"],
+                    # target=batch_inputs["target"],
                     lengths=batch_inputs["lengths"],
                 )
 
-                #d_predictions = outputs["diacritics"]
+                # d_predictions = outputs["diacritics"]
 
-                #predictions = predictions.view(-1, predictions.shape[-1])
-                #targets = batch_inputs["target"]
-                #targets = targets.view(-1)
+                # predictions = predictions.view(-1, predictions.shape[-1])
+                # targets = batch_inputs["target"]
+                # targets = targets.view(-1)
                 d_targets = {}
                 for k in self.dims:
                     d_targets[k] = batch_inputs["d_target"][k].view(-1).to(self.device)
@@ -144,14 +144,14 @@ class GeneralTrainer(Trainer):
                 d_preds = {}
                 for k in self.dims:
                     pred = outputs[k]
-                    d_preds[k] = pred. \
-                            view(-1, pred.shape[-1])
+                    d_preds[k] = pred.view(-1, pred.shape[-1])
 
                 d_loss, d_acc = {}, {}
                 for k in self.dims:
                     d_loss[k] = self.criterion(d_preds[k], d_targets[k])
                     d_acc[k] = categorical_accuracy(
-                       d_preds[k], d_targets[k], self.pad_idx, self.device)
+                        d_preds[k], d_targets[k], self.pad_idx, self.device
+                    )
 
                 for k in self.dims:
                     d_epoch_loss[k] += d_loss[k].item()
@@ -160,7 +160,20 @@ class GeneralTrainer(Trainer):
                 tqdm.update()
 
         tqdm.reset()
-        return epoch_loss / len(iterator), epoch_acc / len(iterator)
+
+        print("\n")
+        for k in self.dims:
+            print(
+                "dim: ",
+                k,
+                "loss: ",
+                d_epoch_loss[k] / len(iterator),
+                "acc: ",
+                d_epoch_acc[k] / len(iterator),
+            )
+
+        k = "haraqat"  # self.dims[0]
+        return d_epoch_loss[k] / len(iterator), d_epoch_acc[k] / len(iterator)
 
     def evaluate_with_error_rates(self, iterator, tqdm):
         all_orig = []
@@ -196,9 +209,9 @@ class GeneralTrainer(Trainer):
             if i > len(all_predicted):
                 break
 
-            summary_texts.append(
-                (f"eval-text/{i}", f"{ all_orig[i]} |->  {all_predicted[i]}")
-            )
+            # summary_texts.append(
+            #    (f"eval-text/{i}", f"{ all_orig[i]} |->  {all_predicted[i]}")
+            # )
 
         results["DER"] = der.calculate_der_from_path(orig_path, predicted_path)
         results["DER*"] = der.calculate_der_from_path(
@@ -230,6 +243,10 @@ class GeneralTrainer(Trainer):
                     self.optimizer, global_step=self.global_step
                 )
             self.optimizer.zero_grad()
+
+            step_results = self.run_one_step(batch_inputs)
+
+            """
             if self.device == "cuda" and self.config["use_mixed_precision"]:
                 with autocast():
                     step_results = self.run_one_step(batch_inputs)
@@ -255,8 +272,8 @@ class GeneralTrainer(Trainer):
                         self.model.parameters(), self.config["CLIP"]
                     )
                 self.optimizer.step()
-
-            self.losses.append(step_results["d_loss"]) # jair
+            """
+            self.losses.append(step_results["d_loss"])  # jair
 
             # self.print_losses(step_results, tqdm)
 
@@ -288,12 +305,17 @@ class GeneralTrainer(Trainer):
                     "evaluate/acc", acc, global_step=self.global_step
                 )
                 """
-                for i,k in enumerate(self.dims):
-                    tqdm.display(
-                        f"Evaluate {self.global_step}: {k} accuracy, {acc[k]}, loss: {loss[k]}", pos=8+i
-                        )
+                # for i,k in enumerate(self.dims):
+                #    tqdm.display(
+                #        f"Evaluate {self.global_step}: {k} accuracy, {acc[k]}, loss: {loss[k]}", pos=8+i
+                #        )
                 self.model.train()
 
+                error_rates, summery_texts = self.evaluate_with_error_rates(
+                    validation_iterator, tqdm_error_rates
+                )
+
+            """
             if (
                 self.global_step % self.config["evaluate_with_error_rates_frequency"]
                 == 0
@@ -334,7 +356,8 @@ class GeneralTrainer(Trainer):
                     for tag, text in summery_texts:
                         self.summary_manager.add_text(tag, text)
 
-                self.model.train()
+                    self.model.train()
+                """
 
             if self.global_step % self.config["train_plotting_frequency"] == 0:
                 self.plot_attention(step_results)
@@ -353,11 +376,11 @@ class GeneralTrainer(Trainer):
         batch_inputs["src"] = batch_inputs["src"].to(self.device)
         batch_inputs["lengths"] = batch_inputs["lengths"].to("cpu")
 
-        #batch_inputs["target"] = batch_inputs["target"].to(self.device)
+        # batch_inputs["target"] = batch_inputs["target"].to(self.device)
 
         outputs = self.model(
             src=batch_inputs["src"],
-            #target=batch_inputs["target"],
+            # target=batch_inputs["target"],
             lengths=batch_inputs["lengths"],
         )
 
@@ -365,18 +388,37 @@ class GeneralTrainer(Trainer):
         for k in self.dims:
             pred = outputs[k].contiguous()
             d_predictions[k] = pred.view(-1, pred.shape[-1]).to(self.device)
-            d_targets[k] = batch_inputs["d_target"][k].contiguous().view(-1).to(self.device)
+            d_targets[k] = (
+                batch_inputs["d_target"][k].contiguous().view(-1).to(self.device)
+            )
 
         # predictions = predictions.view(-1, predictions.shape[-1])
         # targets = targets.view(-1)
+        self.optimizer.zero_grad()  # jair
         d_loss = {}
         for k in self.dims:
             d_loss[k] = self.criterion(d_predictions[k], d_targets[k])
-
+            d_loss[k].backward(retain_graph=True)
+        self.optimizer.step()
         # loss = self.criterion(predictions.to(self.device),
         #                       targets.to(self.device))
-        outputs.update({"d_loss": d_loss})
+        outputs.update({"d_loss": 10})  # d_loss})
         return outputs
+
+        """
+        #self.optimizer.zero_grad()
+        for i,k in enumerate(labels):
+            # Evaluate loss
+            loss = self.criterion(outputs[i].permute(0, 2, 1), \
+                                  targets[i].long())
+            # Backward pass
+            #loss.backward(retain_graph=True)
+            # Step with optimizer
+            losses.append((labels[i], loss))
+
+        # optimization step
+        #self.optimizer.step()
+        """
 
     def predict(self, iterator):
         pass
@@ -396,8 +438,11 @@ class GeneralTrainer(Trainer):
             last_model_path = model_path
 
         print(f"loading from {last_model_path}")
-        saved_model = torch.load(last_model_path) if torch.cuda.is_available() \
-            else torch.load(last_model_path, map_location=torch.device('cpu'))
+        saved_model = (
+            torch.load(last_model_path)
+            if torch.cuda.is_available()
+            else torch.load(last_model_path, map_location=torch.device("cpu"))
+        )
         self.model.load_state_dict(saved_model["model_state_dict"])
         if load_optimizer:
             self.optimizer.load_state_dict(saved_model["optimizer_state_dict"])
