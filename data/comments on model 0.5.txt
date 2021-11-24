@@ -4,4 +4,6 @@
 
 3. For collisions, if the PoS tagging doesn't help, please use the transliteration with the higher frequency. For example, the word اعلام is a collision, but both pronunciations are for nouns. So, the PoS tagging can't help us. In this case, we should go with /'e'lAm/ which is the one with a higher frequency.
 
-4. When breaking down verbs to their roots, we get two outputs. ONLY ONE of them exists in the verb we have broken down. So, we only use that one. Then, we look to see which affixes were omitted from the verb when we broke it down, and we search for them in the Affixes table and add their transliteration to the root of the verb in proper positions, ie. prefixes get added to the beginning of the word and suffixes, to its end.
+4. When breaking down verbs to their roots using lemmatizer function, we get two outputs. ONLY ONE of them exists in the verb we have broken down. So, we only use that one. Then, we look to see which affixes were omitted from the verb when we broke it down, and we search for them in the Affixes table and add their transliteration to the root of the verb in proper positions, ie. prefixes get added to the beginning of the word and suffixes, to its end.
+
+5. For nouns that aren't found in the dataset, we need to use the stemmer function to get roots of the nouns. Then, much like with verbs, we should look and see which affixes were omitted from the word, find them in the Affixes table, and put them in proper positions.
