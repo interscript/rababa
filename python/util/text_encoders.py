@@ -146,14 +146,17 @@ class TextEncoder:
         representation
         """
         output = ""
+
+        d_output_ids = dict(d_output_ids)
+        output = ""
         for i, input_id in enumerate(input_ids):
             if input_id == self.input_pad_id:
                 break
 
-            output += self.d_input_id_to_symbol[input_id]
+            output += self.input_id_to_symbol[input_id]
             d_dia = dict(
                 (k, self.d_target_id_to_symbol[k][d_output_ids[k][i]])
-                for k in self.input_symbols.keys()
+                for k in d_output_ids.keys()
             )
             output += decision_fct(d_dia)
         return output

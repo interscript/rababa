@@ -314,6 +314,7 @@ class GeneralTrainer(Trainer):
                 error_rates, summery_texts = self.evaluate_with_error_rates(
                     validation_iterator, tqdm_error_rates
                 )
+                print(error_rates)
 
             """
             if (
