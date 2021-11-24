@@ -3,3 +3,5 @@
 2. One thing I found is that the word دو is truly recognized as a number, but the wrong transliteration is chosen from the dataset. The correct form is /do/
 
 3. For collisions, if the PoS tagging doesn't help, please use the transliteration with the higher frequency. For example, the word اعلام is a collision, but both pronunciations are for nouns. So, the PoS tagging can't help us. In this case, we should go with /'e'lAm/ which is the one with a higher frequency.
+
+4. When breaking down verbs to their roots, we get two outputs. ONLY ONE of them exists in the verb we have broken down. So, we only use that one. Then, we look to see which affixes were omitted from the verb when we broke it down, and we search for them in the Affixes table and add their transliteration to the root of the verb in proper positions, ie. prefixes get added to the beginning of the word and suffixes, to its end.
