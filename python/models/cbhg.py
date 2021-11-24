@@ -31,12 +31,10 @@ class CBHGModel(nn.Module):
     def __init__(
         self,
         inp_vocab_size: int,
-
         # targ_vocab_size: int,
         targ_symbols_harakat: int,
         targ_symbols_shaddah: int,
         targ_symbols_fatha: int,
-
         embedding_dim: int = 512,
         use_prenet: bool = True,
         prenet_sizes: List[int] = [512, 256],
@@ -44,7 +42,7 @@ class CBHGModel(nn.Module):
         cbhg_filters: int = 16,
         cbhg_projections: List[int] = [128, 256],
         post_cbhg_layers_units: List[int] = [256, 256],
-        post_cbhg_use_batch_norm: bool = True
+        post_cbhg_use_batch_norm: bool = True,
     ):
         super(CBHGModel, self).__init__()
         self.use_prenet = use_prenet
@@ -76,19 +74,24 @@ class CBHGModel(nn.Module):
 
         self.post_cbhg_layers = nn.ModuleList(layers)
         # self.projections = nn.Linear(post_cbhg_layers_units[-1] * 2, targ_vocab_size)
-        self.projections_haraqat = nn.Linear(post_cbhg_layers_units[-1] * 2, targ_symbols_harakat)
-        self.projections_fatha = nn.Linear(post_cbhg_layers_units[-1] * 2, targ_symbols_fatha)
-        self.projections_shaddah = nn.Linear(post_cbhg_layers_units[-1] * 2, targ_symbols_shaddah)
+        self.projections_haraqat = nn.Linear(
+            post_cbhg_layers_units[-1] * 2, targ_symbols_harakat
+        )
+        self.projections_fatha = nn.Linear(
+            post_cbhg_layers_units[-1] * 2, targ_symbols_fatha
+        )
+        self.projections_shaddah = nn.Linear(
+            post_cbhg_layers_units[-1] * 2, targ_symbols_shaddah
+        )
 
         self.post_cbhg_layers_units = post_cbhg_layers_units
         self.post_cbhg_use_batch_norm = post_cbhg_use_batch_norm
-
 
     def forward(
         self,
         src: torch.Tensor,
         lengths: Optional[torch.Tensor] = None,
-        target: Optional[torch.Tensor] = None  # not required in this model
+        target: Optional[torch.Tensor] = None,  # not required in this model
     ):
         """Compute forward propagation"""
 
@@ -120,14 +123,17 @@ class CBHGModel(nn.Module):
                 outputs, (hn, cn) = layer(outputs)
 
         # predictions = self.projections(outputs)
-        preds_haraqat, preds_shaddah, preds_fatha = \
-            self.projections_haraqat(outputs), \
-            self.projections_shaddah(outputs), \
-            self.projections_fatha(outputs)
+        preds_haraqat, preds_shaddah, preds_fatha = (
+            self.projections_haraqat(outputs),
+            self.projections_shaddah(outputs),
+            self.projections_fatha(outputs),
+        )
         # predictions = [batch_size, src len, targ_vocab_size]
 
-        output = {'haraqat': preds_haraqat,
-                  'shaddah': preds_haraqat,
-                  'fatha': preds_haraqat,}
+        output = {
+            "haraqat": preds_haraqat,
+            "shaddah": preds_shaddah,
+            "fatha": preds_fatha,
+        }
 
         return output
