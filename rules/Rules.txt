@@ -1,4 +1,4 @@
-1. If a word can be found in the database, there's no need to break it down (stem for nouns and lemmatize for verbs)
+1. If a word can be found in the database, there's no need to break it down (stem for nouns and lemmatize for verbs) UNLESS it's recognized as a verb while the word in entries is not marked as a verb.
 
 2. For nouns that aren't found in the database, we need to use the stemmer function to get roots of the nouns. Then, much like with verbs, we should look and see which affixes were omitted from the word, find them in the Affixes table, and put them in proper positions.
 
