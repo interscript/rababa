@@ -1,4 +1,4 @@
-1. If a word can be found in the database, there's no need to break it down (stem for nouns and lemmatize for verbs) UNLESS it's recognized as a verb while the word in entries is not marked as a verb.
+1. If a word can be found in the database, there's no need to break it down (stem for nouns and lemmatize for verbs) UNLESS it's recognized as a verb while the word in entries is not marked as a verb. Note that this is to improve the accuracy of the system. So, if a verb exists in entries but we skip that transliteration because it's marked as a noun, and we end up not recognizing parts of the word (e.g. not all affixes are recognized), we can go back to the skipped transliteration and use it as a last resort.
 
 2. For nouns that aren't found in the database, we need to use the stemmer function to get roots of the nouns. Then, much like with verbs, we should look and see which affixes were omitted from the word, find them in the Affixes table, and put them in proper positions.
 
