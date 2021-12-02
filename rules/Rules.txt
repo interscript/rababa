@@ -22,7 +22,7 @@
 
 12. The affix م, always a suffix, is a collision. According to the PoS tagging in affixes, the different transliteration should be used with numbers, and if the word before it isn't a number, the main transliteration should be used, UNLESS the word before it is چند. For this word, the different transliteration should be used.
 
-13. The affix مان is a collision. When it's a suffix, attached to a noun of any type, (I've already sent a PoS mapping between our database and the library) choose the first transliteration.
+13. The affix مان, always a suffix, is a collision. If the word or segment right before it ends in /a,e,o,A,i,u/ choose the second transliteration, else, use the first one.
 
 14. The affix می is a collision. If it's a prefix, we know it's part of a verb and we use the second transliteration. If it's a suffix, we use the first transliteration even if the word before it isn't a number.
 
