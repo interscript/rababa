@@ -1,0 +1,11 @@
+1. I converted all instances of ي and ك to ی and ک.
+
+2. I added PoS tags to the last two instances of ی since they're for verbs
+
+3. I added a row to the affixes: نمی. I believe this will help. Will reconsider if it turns out to cause bugs somehow.
+
+4. I added PoS tags for ید.
+
+5. I added PoS tags for یم.
+
+6. I added a row for ن which is pronounced /an/ because it didn't exist in the affixes while it's necessary for transliterating words like خوردن and خوابیدن that are called مصدر in Farsi.
