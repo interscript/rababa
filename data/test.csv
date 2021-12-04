@@ -1,35 +1,35 @@
 ,Unnamed: 0,label,orig,trans,testId
-0,0,noun,Ù…Ø²Ø§ÙŠØ§ÛŒÛŒ,mazAyAyi,
-1,1,noun,Ø¨ÛŒâ€ŒØ¹Ù‚Ù„,bi'aql,
-2,2,noun,Ø¨ÛŒ Ø¹Ù‚Ù„,bi 'aql,
-3,3,noun,Ø¨ÛŒâ€ŒØ´Ø±Ù,biSaraf,
-4,4,noun,Ø¨ÛŒ Ø´Ø±Ù,bi Saraf,
-5,5,noun,Ø¨ÛŒØ´Ø±Ù,biSaraf,
-6,6,noun,Ú©ØªØ§Ø¨â€ŒÙ‡Ø§,ketAbhA,
-7,7,noun,Ø¨ÛŒâ€ŒØ´Ø±Ù…,biSarm,
-8,8,noun,Ø¨ÛŒ Ø´Ø±Ù…,bi Sarm,
-9,9,noun,Ø¨ÛŒØ´Ø±Ù…,biSarm,
-10,10,noun,Ø¨ÛŒâ€ŒØ´Ø±Ù…,biSarm,
-11,11,verb,Ø¨Ø®ÙˆØ§Ù‡Ù†Ø¯ Ø¨Ø±ÙˆÙ†Ø¯,bexAhand beravand,
-12,12,verb,Ù…ÛŒâ€ŒØªÙˆØ§Ù†Ø¯ Ø¨Ø®ÙˆØ§Ø¨Ø¯,mitavAnad bexAbad,
-13,13,verb,Ù†Ø´Ø¯ Ø¨Ù¾Ø±ÛŒÙ…,naSod beparim,
-14,14,others,Ø¨Ù‡ Ø³Ù…Ø¹ Ùˆ Ù†Ø¸Ø±ØªØ§Ù† Ù…ÛŒâ€ŒØ±Ø³Ø§Ù†ÛŒÙ…,be sam' va nazaretAn miresAnim,
-15,15,others,Ú¯Ø²Ø§Ø±Ø´ÛŒ Ø¨Ù‡ Ø¯Ø³ØªÙ… Ø±Ø³ÛŒØ¯Ù‡,gozAreSi be dastam reside,
-16,16,others,Ø§Ø² ØºÙ… Ø¹Ø´Ù‚Øª Ù…Ø±Ø¯Ù…!,az qam 'eSqat mordam!,1
-17,17,noun,Ù¾ÛŒØ§Ù…Ø¨Ø±Øª,payAmbarat,2
-18,18,verb,Ù…ÛŒ ØªØ±Ø³Ø¯,mitarsad,3
-19,19,verb,Ù…ÛŒ Ø±ÙˆÛŒØ¯,miravid,4
-20,20,others,Ø¨Ø± Ø§Ø³Ø§Ø³ Ø³Ù‡ Ù¾ÙŠÙ…Ø§Ù† Ú¯Ø°Ø´ØªÙ‡ Ø®ÙˆØ¯ Ø¹Ù…Ù„ Ø®ÙˆØ§Ù‡Ù†Ø¯ ÙƒØ±Ø¯,bar 'asAs se peymAn gozaSte xod 'amal xAhand kard,"5, 4"
-21,21,others,ÙƒØ§Ø® Ø²ÙŠØ¨Ø§ Ø¯Ø± ÙƒØ±Ø¬,kAx zibA dar karaj,"6, 4"
-22,22,others,Ø±ÙØªÛŒ Ú†ÛŒØ²ÛŒ Ø¨Ø®Ø±ÛŒ Ø¨Ø§Ù†ÙˆÛŒ Ø²ÛŒØ¨Ø§ÛŒ Ù‡Ù…Ù‡â€ŒÛŒ Ø®Ø§Ù†Ø¯Ø§Ù†ØŸ,rafti Cizi bexari bAnuye zibAye hameye xAndAn?,"7, 4"
-23,23,others,Ø¨Ú†Ù‡Ù” Ù‡Ù…Û€ Ù…Ø±Ø¯Ù…!,baCCeye hameye mardom!,8
-24,24,others,Ø§ÛŒÙ† Ù…Ø²Ø®Ø±ÙØ§Øª Ø¨Ù‡ Ø¯Ø±Ø¯ Ø¹Ù…Ù‡â€ŒØ§Øª Ù…ÛŒâ€ŒØ®ÙˆØ±Ø¯!,in mozaxrafAt be dard 'amme'at mixorad!,9
-25,25,others,Ø¨Ø§Ù†ÛŒØ§Ù† Ø§ÛŒÙ† Ù…Ø§Ø¬Ø±Ø§ Ù…Ù‚ØµØ±Ø§Ù† Ø§ØµÙ„ÛŒ Ù‡Ø³ØªÙ†Ø¯,bAniyAn 'in mAjarA moqasserAn 'asli hastand,10
-26,26,others,Ø¹Ù„ÛŒ Ú©Ø¬Ø§Ø³ØªØŸ -Ø¨Ø±Ø¯Ù†Ø¯Ø´ Ø³Ù…Øª Ø§Ù†Ø¨Ø§Ø± ØªØ§ ÙˆØ³Ø§ÛŒÙ„Ø´ Ø±Ø§ Ø¨Ø±Ø¯Ø§Ø±Ø¯.,ali kojAst? bordandeS samt 'anbAr tA vasAyelaS rA bardArad.,11
-27,27,others,Ø±ÙØªÙ… Ø¨Ø±Ø§ÛŒ Ø¨Ø§Ø± Ú†Ù†Ø¯Ù… Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ú©Ù†Ù… Ú©Ù„Ø§Ø³ Ú†Ù‡Ø§Ø±Ù… Ø±Ø§ Ø§Ø² Ø­Ø¶ÙˆØ±Ù… Ù…Ø­Ø±ÙˆÙ… Ú©Ù†Ù†Ø¯,raftam barAye bAr Candom darxAst konam kelAs CAhArom rA 'az hozuram mahrum konand,12
-28,28,others,Ø¨Ø±Ø§ÛŒâ€ŒÙ…Ø§Ù† Ù‡Ù…Ù‡â€ŒÛŒ Ø¯Ø§Ø³ØªØ§Ù† Ù‚Ù‡Ø± Ú©Ø±Ø¯Ù†â€ŒÙ…Ø§Ù† Ùˆ Ø¨Ø§Ù‚ÛŒ Ø®Ø§Ø·Ø±Ø§Øªâ€ŒÙ…Ø§Ù† Ù…Ø³Ø®Ø±Ù‡ Ø¨ÙˆØ¯,barAyemAn hameye dAstAn qahr kardanemAn va bAqi xAterAtemAn masxare bud,"13, 7"
-29,29,others,Ú©Ù„Ø§Ø³ Ú†Ù†Ø¯Ù…ÛŒØŸ Ù…ÛŒâ€ŒØ®ÙˆØ§Ù‡ÛŒ Ø¨Ø±ÙˆÛŒÙ… Ù¾ÛŒØ´ Ù†ÙØ± ÙŠÙƒÙ…ÙŠ Ú©Ù‡ Ù…ÛŒâ€ŒØ¢Ù…Ø¯ Ø³Ù…Øªâ€ŒÙ…Ø§Ù†ØŸ,kelAs Candomi? mixAhi beravim piS nafar yekomi ke mi'Amad samtemAn?,"14, 6, 13"
-30,30,others,,,15
+0,0,noun,ãÒÇíÇ??,mazAyAyi,
+1,1,noun,È?ÚŞá,bi'aql,
+2,2,noun,È? ÚŞá,bi 'aql,
+3,3,noun,È?ÔÑİ,biSaraf,
+4,4,noun,È? ÔÑİ,bi Saraf,
+5,5,noun,È?ÔÑİ,biSaraf,
+6,6,noun,˜ÊÇÈåÇ,ketAbhA,
+7,7,noun,È?ÔÑã,biSarm,
+8,8,noun,È? ÔÑã,bi Sarm,
+9,9,noun,È?ÔÑã,biSarm,
+10,10,noun,È?ÔÑã,biSarm,
+11,11,verb,ÈÎæÇåäÏ ÈÑæäÏ,bexAhand beravand,
+12,12,verb,ã?ÊæÇäÏ ÈÎæÇÈÏ,mitavAnad bexAbad,
+13,13,verb,äÔÏ ÈÑ?ã,naSod beparim,
+14,14,others,Èå ÓãÚ æ äÙÑÊÇä ã?ÑÓÇä?ã,be sam' va nazaretAn miresAnim,
+15,15,others,ÒÇÑÔ? Èå ÏÓÊã ÑÓ?Ïå,gozAreSi be dastam reside,
+16,16,others,ÇÒ Ûã ÚÔŞÊ ãÑÏã!,az qam 'eSqat mordam!,1
+17,17,noun,?ÇãÈÑÊ,payAmbarat,2
+18,18,verb,ã? ÊÑÓÏ,mitarsad,3
+19,19,verb,ã? Ñæ?Ï,miravid,4
+20,20,others,ÈÑ ÇÓÇÓ Óå íãÇä ĞÔÊå ÎæÏ Úãá ÎæÇåäÏ ßÑÏ,bar 'asAs se peymAn gozaSte xod 'amal xAhand kard,"5, 4"
+21,21,others,ßÇÎ ÒíÈÇ ÏÑ ßÑÌ,kAx zibA dar karaj,"6, 4"
+22,22,others,ÑİÊ? ?Ò? ÈÎÑ? ÈÇäæ? Ò?ÈÇ? åãå? ÎÇäÏÇä¿,rafti Cizi bexari bAnuye zibAye hameye xAndAn?,"7, 4"
+23,23,others,Èå? åã? ãÑÏã!,baCCeye hameye mardom!,8
+24,24,others,Ç?ä ãÒÎÑİÇÊ Èå ÏÑÏ ÚãåÇÊ ã?ÎæÑÏ!,in mozaxrafAt be dard 'amme'at mixorad!,9
+25,25,others,ÈÇä?Çä Ç?ä ãÇÌÑÇ ãŞÕÑÇä ÇÕá? åÓÊäÏ,bAniyAn 'in mAjarA moqasserAn 'asli hastand,10
+26,26,others,Úá? ˜ÌÇÓÊ¿ -ÈÑÏäÏÔ ÓãÊ ÇäÈÇÑ ÊÇ æÓÇ?áÔ ÑÇ ÈÑÏÇÑÏ.,ali kojAst? bordandeS samt 'anbAr tA vasAyelaS rA bardArad.,11
+27,27,others,ÑİÊã ÈÑÇ? ÈÇÑ äÏã ÏÑÎæÇÓÊ ˜äã ˜áÇÓ åÇÑã ÑÇ ÇÒ ÍÖæÑã ãÍÑæã ˜ääÏ,raftam barAye bAr Candom darxAst konam kelAs CAhArom rA 'az hozuram mahrum konand,12
+28,28,others,ÈÑÇ?ãÇä åãå? ÏÇÓÊÇä ŞåÑ ˜ÑÏäãÇä æ ÈÇŞ? ÎÇØÑÇÊãÇä ãÓÎÑå ÈæÏ,barAyemAn hameye dAstAn qahr kardanemAn va bAqi xAterAtemAn masxare bud,"13, 7"
+29,29,others,˜áÇÓ äÏã?¿ ã?ÎæÇå? ÈÑæ?ã ?Ô äİÑ íßãí ˜å ã?ÂãÏ ÓãÊãÇä¿,kelAs Candomi? mixAhi beravim piS nafar yekomi ke mi'Amad samtemAn?,"14, 6, 13"
+30,30,others,È?Ç ÏÑ ÂÛæÔã È?ÇÑÇã æ Ï?ÑÇä ÑÇ ä?ÇÒÇÑ,biyA dar 'AquSam biyArAm va digarAn rA nayAzAr,15
 31,31,others,,,16
 32,32,others,,,17
 33,33,others,,,18
