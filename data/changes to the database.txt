@@ -9,3 +9,5 @@
 5. I added PoS tags for یم.
 
 6. I added a row for ن which is pronounced /an/ because it didn't exist in the affixes while it's necessary for transliterating words like خوردن and خوابیدن that are called مصدر in Farsi.
+
+7. I added a row for the verb root «آ» in Entries.
