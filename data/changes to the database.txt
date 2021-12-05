@@ -13,3 +13,5 @@
 7. I added a row for the verb root «آ» in entries.
 
 8. I changed the frequency for نما as a verb from 5000 to 5001 in its /namA/ form.
+
+9. I added a row for /yam/ transliteration of یم in verbs.
