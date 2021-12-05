@@ -17,3 +17,5 @@
 9. I added a row for /yam/ transliteration of یم in verbs.
 
 10. I changed the frequency of kon for the word کن to 5001 since I think the present tense of کردن is used way more than کندن!
+
+11. I added an instance for each letter with T as their PoS in entries, basically, for when we have to go for a letter by itself. So, it's just a letter to letter mapping.
