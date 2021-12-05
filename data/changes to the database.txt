@@ -15,3 +15,5 @@
 8. I changed the frequency for نما as a verb from 5000 to 5001 in its /namA/ form.
 
 9. I added a row for /yam/ transliteration of یم in verbs.
+
+10. I changed the frequency of kon for the word کن to 5001 since I think the present tense of کردن is used way more than کندن!
