@@ -30,7 +30,7 @@
 
 16. The affix ون, always a suffix, is a collision. To choose between the two, if the word before it, ends in /i/, choose the second transliteration, else, choose the first transliteration.
 
-17. The affix ید, always a suffix, is a collision. If it's not attached to a verb, (so it doesn't need to be a noun. It can be an adjective, etc.) there's only one transliteration (the first one) But if it's attached to a verb, if the root of the verb before it has been the first output of the lemmatize function, always use the first transliteration, /id/, but if it has been the second output of the lemmatize function, {if it ends in ا or و with u sound, or ه, the second transliteration should be used, /yad/, else, the first transliteration, /id/, should be used} I added PoS tags to this affix in the proper column.
+17. The affix ید, always a suffix, is a collision. If it's not attached to a verb, (so it doesn't need to be a noun. It can be an adjective, etc.) there's only one transliteration (the first one) But if it's attached to a verb, if the root of the verb before it has been the first output of the lemmatize function, always use the first transliteration, /id/, but if it has been the second output of the lemmatize function, {if it ends in /e, A, u/, the second transliteration should be used, /yad/, else, the first transliteration, /id/, should be used} I added PoS tags to this affix in the proper column.
 
 18. The affix یم, always a suffix, is a collision. PoS tagging really helps with this. I added PoS tags to the proper column for different instances of it. Basically, if it's used as part of a verb, the second transliteration should be used. Else, even if the PoS is not noun, the first transliteration should be used.
 
