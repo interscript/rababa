@@ -10,4 +10,6 @@
 
 6. I added a row for ن which is pronounced /an/ because it didn't exist in the affixes while it's necessary for transliterating words like خوردن and خوابیدن that are called مصدر in Farsi.
 
-7. I added a row for the verb root «آ» in Entries.
+7. I added a row for the verb root «آ» in entries.
+
+8. I changed the frequency for نما as a verb from 5000 to 5001 in its /namA/ form.
