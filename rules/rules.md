@@ -34,11 +34,11 @@
 
 15. If we lemmatize a verb, but none of the two results are part of the verb we have lemmatized, it's possible the root of the verb has an آ letter that's been mentioned in our verb in ا form. Make sure to check that if such a case happens.
 
-16. The affix ون, always a suffix, is a collision. To choose between the two, if the word before it, ends in ی, choose the second transliteration, else, choose the first transliteration.
+16. The affix ون, always a suffix, is a collision. To choose between the two, if the word before it, ends in /i/, choose the second transliteration, else, choose the first transliteration.
 
-17. The affix ید, always a suffix, is a collision. If it's not attached to a verb, (so it doesn't need to be a noun. It can be an adjective, etc.) there's only one transliteration (the first one) But if it's attached to a verb, if the root of the verb before it has been the first output of the lemmatize function, always use the first transliteration, /id/, but if it has been the second output of the lemmatize function, {if it ends in ا or و with u sound, or ه, the second transliteration should be used, /yad/, else, the first transliteration, /id/, should be used} I added PoS tags to this affix in the proper column.
+17. The affix ید, always a suffix, is a collision. If it's not attached to a verb, (so it doesn't need to be a noun. It can be an adjective, etc.) there's only one transliteration (the first one) But if it's attached to a verb, if the root of the verb before it has been the first output of the lemmatize function, always use the first transliteration, /id/, but if it has been the second output of the lemmatize function, {if it ends in /e, A, u/, the second transliteration should be used, /yad/, else, the first transliteration, /id/, should be used} I added PoS tags to this affix in the proper column.
 
-18. The affix یم, always a suffix, is a collision. PoS tagging really helps with this. I added PoS tags to the proper column for different instances of it. Basically, if it's used as part of a verb, the second transliteration should be used. Else, even if the PoS is not noun, the first transliteration should be used.
+18. The affix یم, always a suffix, is a collision. If it's not attached to a verb, (so it doesn't need to be a noun. It can be an adjective, etc.) there's only one transliteration (the first one) But if it's attached to a verb, if the root of the verb before it has been the first output of the lemmatize function, always use the first transliteration, /im/, but if it has been the second output of the lemmatize function, {if it ends in /e, A, u/, the second transliteration should be used, /yam/, else, the first transliteration, /im/, should be used} I added PoS tags to this affix in the proper column, and added a row for /yam/ for verbs.
 
 19. Semispace (ZWNJ): Wherever we see the character u200c, we should break the sides of it and work on them separately. The point, though, is that most of the time, it breaks affixes  from roots, but not always. So, when we encounter one, we would wanna check for the parts separately. Most of the time when we see this character, there's going to be می or نمی before it, or ها after it. One point to consider here, is that می and نمی, which are verb prefixes, are exactly these values, but ها which is a noun suffix, is the beginning of a string, so it may not be exactly ها. but it starts with ها. If these aren't found next to the u200c charcater, we should look for both sides of it in entries.
 
@@ -46,37 +46,29 @@
 
 21. The affix ن is a collision. It's always part of a verb. When it's a prefix, use the first transliteration and when it's a suffix, use the last transliteration, the one I added.
 
-22. With all the other rules, there are still many words that won't be recognized due to a PoS tagging error or the word being new. Let's take a look at an example: The whole کرده اند is a verb, but PoS tagger has recognized کرده as an adjective and اند as a verb. Fortunately, کرده exists in the entries, so the code has successfully recognized it, but اند has remained untransliterated since it's an affix for verbs, not a verb root, thus it's in affixes, not entries! So, if a word isn't recognized after everything we've done according to all the rules, we might wanna consider checking the affixes as it will solve issues like the one in this example. Now if the word is not even there, we can break it down according to rule 21, i.e. we must look for the word's substrings, but this time in entries then affixes. Now this can cause a lot of bugs, so we only do it if we've had no luck recognizing a word with all the other rules. So, instead of just writing an output in Farsi, we want to try and come up with an estimated transliteration! Let's look into the word فیسبوک as an example. This is the Farsi written form of the word "Facebook". We don't find this word in entries. So, normally, the code would output the word as is, i.e. in Farsi. However, with the described method, first the substring فیس will be found in entries, then بو, then ک. So, the output would be /fisbuke/ (Note that there are multiple instances of ک, but I didn't use the one with Al [alphabet] as PoS) This output isn't accurate, but it's not worse than the default charcater to character mapping (fisbvk) Another option may be to look up the word in https://trends.google.com/trends/?geo=IR For words like Facebook and WhatsApp that are basically English words written in Farsi, Google trends usually suggests what this refers to. To make this rule more clear, let's see another example. The library fails to stem دستمان correctly. It simply won't recognize the word دست which is Farsi for hand. It stems it into دس which doesn't exist in entries. So, we take the whole word, دستمان, and try to find the longest substring of it we can find in entries. We find دست! Bingo! Then we can find مان in affixes and we have the whole /dastemAn/
+22. When affixes بی and نی, both verb prefixes, are used, we need to omit the ' symbol that comes after them.
 
+23. If the root of the verb is رو, transliterated /rav/, and it doesn't have any suffixes, we should change its transliteration from /rav/ to /ro/.
 
+24. With all the other rules, there are still many words that won't be recognized due to a PoS tagging error or the word being new. Let's take a look at an example: The whole کرده اند is a verb, but PoS tagger has recognized کرده as an adjective and اند as a verb. Fortunately, کرده exists in the entries, so the code has successfully recognized it, but اند has remained untransliterated since it's an affix for verbs, not a verb root, thus it's in affixes, not entries! So, if a word isn't recognized after everything we've done according to all the rules, we might wanna consider checking the affixes as it will solve issues like the one in this example. Now if the word is not even there, we can break it down according to rule 21, i.e. we must look for the word's substrings, but this time in entries then affixes. Now this can cause a lot of bugs, so we only do it if we've had no luck recognizing a word with all the other rules. So, instead of just writing an output in Farsi, we want to try and come up with an estimated transliteration! Let's look into the word فیسبوک as an example. This is the Farsi written form of the word "Facebook". We don't find this word in entries. So, normally, the code would output the word as is, i.e. in Farsi. However, with the described method, first the substring فیس will be found in entries, then بو, then ک. So, the output would be /fisbuke/ (Note that there are multiple instances of ک, but I didn't use the one with Al [alphabet] as PoS) This output isn't accurate, but it's not worse than the default charcater to character mapping (fisbvk) To make this rule more clear, let's see another example. The library fails to stem دستمان correctly. It simply won't recognize the word دست which is Farsi for hand. It stems it into دس which doesn't exist in entries. recursive: {So, we take the whole word, دستمان, and try to find the longest substring of it we can find in entries. We find دست! Bingo! Then we can find مان in affixes and we have the whole /dastemAn/ Note that after we found دست in entries, we need to look up the remaining part in affixes and see if we have the whole remaining part in there. If not, we can go back to entries and look up the remaining string there}
+At the point where we have only single letters left to transliterate, whether the last remaining string is only a letter or no bigger string can be found, we should use the single letters with T as their PoS. I added them to stand for transliteration.
 
+### Implementation
 
+1.    ok
+  * unless verb not implemented
+2.    ok
+3.    ok
+  *  using length to decide which part to search in verbs -> to correct
 
-###  Implementation
+4.    ok
+5.    ok
+6.    ok
 
-1. ok
-2. ok
-3. ok
-  * using length to decide which part to search in verbs -> to correct
-4. ok
-5. ok
-6. ok
-7.
   * to be corrected... fct def handle_u200c_exception(wrd) in code
-8.
-9.
-10.
-11.
-12.
-13.
-14. half ok add number
-15.
-16.
-17.
-18.
-19. ok
-  * not integrated with other rules though
-20.
-  * recursive code existing
-21.
-22.
+
+7.    half ok add number
+8.    ok
+
+  *  not integrated with other rules though
+    recursive code existing
