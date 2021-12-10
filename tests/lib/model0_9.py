@@ -74,7 +74,6 @@ def get_affixes(w_original, w_transformed):
 def affix_search(affix, pos_pos=None, pos_neg=None):
     
     l_search = assets.df_Affixes[assets.df_Affixes['Affix']==affix].to_dict('records')
-    
     l_search = filter_search(l_search, pos_pos, pos_neg)
     
     if len(l_search) == 0: # if not found, returns affix
@@ -102,7 +101,6 @@ def process_verb(verb):
     
     pos = 'Verb'
     l_verbs = verb.split('_')
-    #assets.tagger.tag(assets.word_tokenize(verb))[0][0].split('_')
     l_wrd = []
     for wrd in l_verbs:
         wrd_2 = general_search(wrd, pos_pos=pos)

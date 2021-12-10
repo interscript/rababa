@@ -4,13 +4,15 @@
 from __future__ import unicode_literals
 from hazm import *
 
-import pandas as pd 
+import pandas as pd
 import numpy as np
 import openpyxl
 
-
-PATH_HAZM = '../../hazm/resources/postagger.model'
+# Ressources expected: Flexicon/Affixes.xlsx  Flexicon/Entries.xlsx
 PATH_FLEXICON = '../../Flexicon/'
+# Tagger model
+PATH_HAZM = '../../hazm/resources/postagger.model'
+# PoS mappings
 PATH_MAPPINGS = '../data/PoS_mappings.csv'
 
 
@@ -20,10 +22,10 @@ normalizer = Normalizer()
 tagger = POSTagger(model=PATH_HAZM)
 
 
-idces_Entries = ['PhonologicalForm', 
-                 'WrittenForm', 
-                 'SynCatCode', 
-                 'Freq', 
+idces_Entries = ['PhonologicalForm',
+                 'WrittenForm',
+                 'SynCatCode',
+                 'Freq',
                  'الگوی تکیه']
 
 path = PATH_FLEXICON+'Entries.xlsx'
@@ -83,9 +85,6 @@ for k in d_FLEXI.keys():
         for d in dims.split(','):
             if d.strip() != '':
                 d_map_FLEXI[d.strip()] = k
-
-d_map_FLEXI['Ab'] = 'Adjective'
-d_map_FLEXI['Al'] = 'Adjective';
 
 
 d_HAZM = {}
