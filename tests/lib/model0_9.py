@@ -126,7 +126,7 @@ def process_verb(verb):
     return ' '.join(l_wrd)
 
 
-def process_wrd(wrd, pos):
+def process_wrd(wrd, pos=None):
     if pos=='Noun': 
         wrd = process_noun(wrd)
     elif pos=='Verb':
