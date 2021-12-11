@@ -2,7 +2,7 @@
 
 2. For nouns that aren't found in the database, we need to use the stemmer function to get roots of the nouns. Then, much like with verbs, we should look and see which affixes were omitted from the word, find them in the Affixes table, and put them in proper positions.
 
-3. When breaking down verbs to their roots using lemmatizer function, we get two outputs. If only one of them exists in the verb we have broken down, we use that one. But if both of them exist in the verb we have broken down, if we have ب, بی, ن, نی as a prefix, we use the second output of the lemmatizer. Else, we use the first output of the lemmatizer. Then we look to see which affixes were omitted from the verb when we broke it down, and search for them in the Affixes table and add their transliteration to the root of the verb in proper positions, i.e. prefixes get added to the beginning of the word and suffixes, to its end.
+3. When breaking down verbs to their roots using lemmatizer function, we get two outputs. If only one of them exists in the verb we have broken down, we use that one. But if both of them exist in the verb we have broken down, if we have ب, بی as a prefix, we use the second output of the lemmatizer. Else, we use the first output of the lemmatizer. Then we look to see which affixes were omitted from the verb when we broke it down, and search for them in the Affixes table and add their transliteration to the root of the verb in proper positions, i.e. prefixes get added to the beginning of the word and suffixes, to its end.
 
 4. For collisions, if the PoS tagging doesn't help, please use the transliteration with the higher frequency.
 
