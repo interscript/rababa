@@ -46,4 +46,6 @@ ids = evaluation(df_test["trans"], df_test["trans0_9"], df_test["orig"])
 df_bugs = df_test.iloc[ids]
 
 
+print('error summary:')
 print(df_bugs)
+df_bugs.to_csv('tests/test_debug.csv')
