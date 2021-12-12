@@ -59,7 +59,7 @@ def rule_10(wrd, pos=None):
     else:
         if len(wrd) == 2:
             return "An"
-        elif wrd[3] == "ی":
+        elif wrd[-3] == "ی":
             return lib0_9.general_search(wrd[:-2], pos_pos=pos) + "yAn"
         else:
             return lib0_9.general_search(wrd[:-2], pos_pos=pos) + "An"
@@ -94,6 +94,8 @@ def rule_14(wrd, pos=None):
             return "mi" + process_wrd(wrd[3:], pos)
         elif "می" == wrd[-2:]:
             return lib0_9.general_search(wrd[:-2]) + "omi"
+        else:
+            return wrd
 
 
 def rule_16(wrd, pos=None):
@@ -185,7 +187,7 @@ def process_wrd(wrd, pos=None, pos_last=None):
     # Run over rules
     wrd = rule_19(wrd, pos=pos)  # \u200c
 
-    #wrd = rule_7(wrd, pos=pos, pos_last=pos_last)
+    # wrd = rule_7(wrd, pos=pos, pos_last=pos_last)
     wrd = rule_8(wrd, pos=pos)
     wrd = rule_9(wrd, pos=pos)
     wrd = rule_10(wrd, pos=pos)
@@ -222,11 +224,11 @@ def run_transcription_0(text):
     for d in l_data:
         pos = d[1]
         wrd = d[0]
-        #if pos == "Noun":
+        # if pos == "Noun":
         #    wrd = lib0_9.process_noun(wrd)
-        #elif pos == "Verb":
+        # elif pos == "Verb":
         #    wrd = lib0_9.process_verb(wrd)
-        #else:  # general case
+        # else:  # general case
 
         l_transcribed.append(process_wrd(wrd, pos))
     return " ".join(l_transcribed)

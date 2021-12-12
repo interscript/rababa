@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+LIB_LOCAL_PATH = '/home/jair/WORK/Farsi/rababa'
+
+
 import sys
-sys.path.append('/home/jair/WORK/Farsi/rababa')
+sys.path.append(LIB_LOCAL_PATH )
 
 
 import lib.get_assets as assets
