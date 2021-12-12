@@ -48,7 +48,7 @@ def general_search(wrd, choice_model=votation_entries, pos_pos=None, pos_neg=Non
     l_search = filter_search(l_search, pos_pos, pos_neg)
         
     if len(l_search) == 0: # if not found, returns wrd
-        return wrd # recurrence_wrd(wrd)
+        return wrd
     if len(l_search) == 1: # if one unique found, return the form
         return l_search[0]['PhonologicalForm']
     else:
@@ -126,32 +126,22 @@ def process_verb(verb):
     return ' '.join(l_wrd)
 
 
-def process_wrd(wrd, pos=None):
-    if pos=='Noun': 
-        wrd = process_noun(wrd)
-    elif pos=='Verb':
-        wrd = process_verb(wrd)
-    else: # general case
-        wrd = general_search(wrd, pos_pos=pos)
+def recu_entries(wrd):
+    
+    for i in range(len(wrd), 0, -1):
+        if assets.df_Entries[assets.df_Entries['WrittenForm']==wrd[:i]].shape[0] > 0:
+            l_search = assets.df_Entries[assets.df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
+            return votation_entries(l_search) + recu_entries(wrd[i:])
+            break
+
     return wrd
 
 
-def run_transcription_0(text):
+def recu_affixes(wrd):
+    for i in range(len(wrd), 0, -1):
+        if assets.df_Affixes[assets.df_Affixes['Affix']==wrd[:i]].shape[0] > 0:
+            l_search = assets.df_Affixes[assets.df_Affixes['Affix']==wrd[:i]].to_dict('records')
+            return votation_entries(l_search, entries=False) + recu_affixes(wrd[i:])
+            break
 
-    l_transcribed = []
-    text = normalise(text)
-    l_data = [(d[0], assets.d_map_HAZM.get(d[1], False)) 
-              for d in assets.tagger.tag(assets.word_tokenize(text))]
-    
-    for d in l_data:
-        pos = d[1]
-        wrd = d[0]
-        if pos=='Noun': 
-            wrd = process_noun(wrd)
-        elif pos=='Verb':
-            wrd = process_verb(wrd)
-        else: # general case
-            wrd = general_search(wrd, pos_pos=pos)
-        
-        l_transcribed.append(process_wrd(wrd, pos))
-    return ' '.join(l_transcribed)
+    return wrd

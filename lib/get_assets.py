@@ -6,11 +6,11 @@ import numpy as np
 import openpyxl
 
 # Ressources expected: Flexicon/Affixes.xlsx  Flexicon/Entries.xlsx
-PATH_FLEXICON = "../../Flexicon/"
+PATH_FLEXICON = "../Flexicon/"
 # Tagger model
-PATH_HAZM = "../../hazm/resources/postagger.model"
+PATH_HAZM = "../hazm/resources/postagger.model"
 # PoS mappings
-PATH_MAPPINGS = "../data/PoS_mappings.csv"
+PATH_MAPPINGS = "data/PoS_mappings.csv"
 
 
 stemmer = Stemmer()
