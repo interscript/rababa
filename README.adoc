@@ -1,0 +1,38 @@
+= Rababa: Farsi transliteration
+
+
+Rababa Farsi is rules based.
+Rules were identidfied to build a model.
+We use a mix of unit testing and scoring on multiple examples approach to build the final model.
+
+
+== Download Resources
+
+Farsi resources can be found on (https://github.com/secryst/rababa-models/releases)[secryst] and manually downloaded there. Assets are to be put under resources/. Alternatively, run the following commands:
+[source,bash]
+----
+curl -sSL https://github.com/secryst/rababa-models/releases/download/untagged-d9108f5298deeb17ecac/farsi_assets.pickle -o resources/farsi_assets.pickle
+curl -sSL https://github.com/secryst/rababa-models/releases/download/untagged-d9108f5298deeb17ecac/postagger.model -o resources/postagger.model
+----
+
+
+== Run
+
+[source,bash]
+----
+python transliterate.py 'مزايایی''
+----
+
+
+== Run Tests
+
+- run rules:
+[source,bash]
+----
+python tests/test_model_0_95.py
+----
+- run and score examples:
+[source,bash]
+----
+python test_examples.py
+----
