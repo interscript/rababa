@@ -1,3 +1,4 @@
+
 import lib.get_assets as assets
 import lib.model0_9 as lib0_9
 
@@ -187,7 +188,7 @@ def process_wrd(wrd, pos=None, pos_last=None):
     # Run over rules
     wrd = rule_19(wrd, pos=pos)  # \u200c
 
-    # wrd = rule_7(wrd, pos=pos, pos_last=pos_last)
+    #wrd = rule_7(wrd, pos=pos, pos_last=pos_last)
     wrd = rule_8(wrd, pos=pos)
     wrd = rule_9(wrd, pos=pos)
     wrd = rule_10(wrd, pos=pos)
