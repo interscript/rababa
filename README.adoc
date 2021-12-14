@@ -20,7 +20,7 @@ curl -sSL https://github.com/secryst/rababa-models/releases/download/untagged-d9
 
 [source,bash]
 ----
-python transliterate.py 'مزايایی'
+python3 transliterate.py 'مزايایی'
 ----
 
 
@@ -29,10 +29,10 @@ python transliterate.py 'مزايایی'
 - run rules:
 [source,bash]
 ----
-python tests/test_model_0_95.py
+python3 tests/test_model_0_95.py
 ----
 - run and score examples:
 [source,bash]
 ----
-python test_examples.py
+python3 tests/test_examples.py
 ----
