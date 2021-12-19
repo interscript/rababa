@@ -21,3 +21,7 @@
 11. I added an instance for each letter with T as their PoS in entries, basically, for when we have to go for a letter by itself. So, it's just a letter to letter mapping.
 
 12. I added a row for the affix ست when it's pronounced /st/.
+
+13. Changed the transliteration for اسماً from 'esmAn to 'esman
+
+14. Changed the transliteration for استدلالاً from 'estedlAllan to 'estedlAlan
