@@ -25,3 +25,5 @@
 13. Changed the transliteration for اسماً from 'esmAn to 'esman
 
 14. Changed the transliteration for استدلالاً from 'estedlAllan to 'estedlAlan
+
+15. Omitted all instances of  ً (tanvin /an/) from entries. 224 words were normalized.
