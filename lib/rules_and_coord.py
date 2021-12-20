@@ -9,7 +9,7 @@ import lib.model0_9 as lib0_9
 
 
 def semispace_9(wrd, pos=None):
-    if len(wrd > 2):
+    if len(wrd) > 2:
         if wrd[:-3] == '\u200cات':
             return process_wrd(wrd[:-3], pos) + "'at"
     return wrd
@@ -20,14 +20,10 @@ def semispace_19(wrd, pos=None):
         return wrd
     else:
         l_wrd = wrd.split("\u200c")
-        M = max([len(w) for w in l_wrd])
         _str = []
         for i in range(len(l_wrd)):
-            w = l_wrd[i]
-            if len(w) == M:
-                _str.append(process_wrd(w, pos))
-            else:
-                _str.append(process_wrd(w, pos))
+            _str.append(process_wrd(l_wrd[i], pos))
+
     return "".join(_str)
 
 
@@ -71,7 +67,7 @@ def suffix_8(wrd, pos=None):
     if not wrd[-1] in ["ٔ", "ۀ"]:
         return wrd
     else:
-        wrd = process(wrd[:-1], pos, suffix=True)
+        wrd = process_wrd(wrd[:-1], pos, suffix=True)
         if wrd[-1] == "e":
             wrd += "ye"
         else:
@@ -275,7 +271,7 @@ def process_wrd(wrd, pos, prefix=False, suffix=False):
     if prefix==False and suffix==False:
 
         w = suffix_13(wrd, pos) # مان
-        if not has_farsi(w):
+        if not lib0_9.has_farsi(w):
             return w
         w = suffix_9(wrd, pos) # ات
         w = suffix_10(wrd, pos) # ان
@@ -283,14 +279,14 @@ def process_wrd(wrd, pos, prefix=False, suffix=False):
         w = suffix_14(wrd, pos) # می
         w = suffix_17(wrd, pos) # ید
         w = suffix_18(wrd, pos) # یم
-        if not has_farsi(w):
+        if not lib0_9.has_farsi(w):
             return w
         w = suffix_7(wrd, pos) # ی
         w = suffix_8(wrd, pos) # ۀ
         w = suffix_11(wrd, pos) # ش
         w = suffix_12(wrd, pos) # م
         w = suffix_21(wrd, pos) # ن
-        if not has_farsi(w):
+        if not lib0_9.has_farsi(w):
             return w
 
     if prefix==True and suffix==False:
@@ -298,7 +294,7 @@ def process_wrd(wrd, pos, prefix=False, suffix=False):
         w = prefix_22(wrd, pos) # بی and نی
         w = prefix_14(wrd, pos) # می
         w = prefix_21(wrd, pos) # ن
-        if not has_farsi(w):
+        if not lib0_9.has_farsi(w):
             return w
     #
     if pos == "Noun":
@@ -307,14 +303,14 @@ def process_wrd(wrd, pos, prefix=False, suffix=False):
         w = lib0_9.process_verb(wrd)
     else:  # general case
         #w = lib0_9.general_search(wrd, pos_pos=pos)
-        w = search_stem(wrd, pos_pos=pos)
+        w = lib0_9.search_stem(wrd, pos_pos=pos)
 
-    if not has_farsi(w):
+    if not lib0_9.has_farsi(w):
         return w
     else:
         # fall back if above procedure failed
         # and returned farsi characters
-        return search_stem(wrd, pos_pos=pos)
+        return lib0_9.search_stem(wrd, pos_pos=pos)
 
 
 def post_process(txt):
@@ -339,7 +335,7 @@ def run_transcription_0(text):
         wrd = d[0]
 
         l_transcribed.append(
-            process_with_prefix(wrd, pos))
+            process_wrd(wrd, pos))
 
     return post_process(
             " ".join(l_transcribed))

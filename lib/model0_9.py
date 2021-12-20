@@ -74,6 +74,9 @@ def get_affixes(w_original, w_transformed):
         output:
             dic:    {'prefix': '...', 'suffix': '...'}
     """
+    if w_transformed == '':
+        return {'prefix': w_original, 'suffix': ''}
+
     pre_idx = 0
     suf_idx = len(w_original)
     for i in range(len(w_original)-len(w_transformed)+1):
@@ -190,7 +193,6 @@ def process_verb(verb):
                 d_affixes = get_affixes(wrd, stem)
 
             stem = general_search(stem, pos_pos=pos)
-
             prefix = recu_affixes(d_affixes['prefix'], pos_pos=pos)
             suffix = recu_affixes(d_affixes['suffix'], pos_pos=pos)
             wrd = prefix + stem + suffix
