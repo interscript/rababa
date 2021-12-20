@@ -18,7 +18,7 @@ import lib.rules_and_coord as m0_9
 
 df_test = pd.read_csv("data/test.csv")
 
-df_test["trans0_9"] = [m0_9.run_transcription_0(d) for d in df_test["orig"]]
+df_test["trans0_9"] = [m0_9.run_transcription(d) for d in df_test["orig"]]
 
 
 def evaluation(trans_orig, trans_model, orig):

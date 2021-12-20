@@ -19,4 +19,4 @@ if len(sys.argv) != 2:
     exit()
 
 text = sys.argv[1]
-print(m0_9.run_transcription_0(text))
+print(m0_9.run_transcription(text))

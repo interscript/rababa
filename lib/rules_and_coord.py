@@ -67,12 +67,12 @@ def suffix_8(wrd, pos=None):
     if not wrd[-1] in ["ٔ", "ۀ"]:
         return wrd
     else:
-        wrd = process_wrd(wrd[:-1], pos, state=2)
-        if wrd[-1] == "e":
-            wrd += "ye"
+        w = process_wrd(wrd[:-1], pos, state=2)
+        if w[-1] == "e":
+            w += "ye"
         else:
-            wrd += "eye"
-        return wrd
+            w += "eye"
+        return w
 
 
 def suffix_9(wrd, pos=None):
@@ -208,14 +208,9 @@ def prefix_14(wrd, pos=None):
 
 
 def prefix_21(wrd, pos=None):
-    #print(wrd)
-    #if wrd == '':
-    #    print('bugfix')
-
     if not wrd[0] == "ن":
         return wrd
     else:
-        print('prefix_21:: ', wrd)
         return 'na' + process_wrd(wrd[1:], pos=pos, state=3)
 
 
@@ -282,32 +277,55 @@ def process_wrd(wrd, pos, state=0):
     if state == 1:
 
         w = suffix_13(wrd, pos) # مان
-        if not lib0_9.has_farsi(w):
+        if w != wrd:
             return w
         w = suffix_9(wrd, pos) # ات
+        if w != wrd:
+            return w
         w = suffix_10(wrd, pos) # ان
+        if w != wrd:
+            return w
         w = suffix_16(wrd, pos) # ون
+        if w != wrd:
+            return w
         w = suffix_14(wrd, pos) # می
+        if w != wrd:
+            return w
         w = suffix_17(wrd, pos) # ید
+        if w != wrd:
+            return w
         w = suffix_18(wrd, pos) # یم
-        if not lib0_9.has_farsi(w):
+        if w != wrd:
             return w
         w = suffix_7(wrd, pos) # ی
+        if w != wrd:
+            return w
         w = suffix_8(wrd, pos) # ۀ
+        if w != wrd:
+            return w
         w = suffix_11(wrd, pos) # ش
+        if w != wrd:
+            return w
         w = suffix_12(wrd, pos) # م
+        if w != wrd:
+            return w
         w = suffix_21(wrd, pos) # ن
-        if not lib0_9.has_farsi(w):
+        if w != wrd:
             return w
         state = 2
 
     if state == 2:
 
         w = prefix_22(wrd, pos) # بی and نی
-        w = prefix_14(wrd, pos) # می
-        w = prefix_21(wrd, pos) # ن
-        if not lib0_9.has_farsi(w):
+        if w != wrd:
             return w
+        w = prefix_14(wrd, pos) # می
+        if w != wrd:
+            return w
+        w = prefix_21(wrd, pos) # ن
+        if w != wrd:
+            return w
+
         state = 3
     #
     if state == 3:
@@ -335,7 +353,7 @@ def post_process(txt):
     return ''.join(txt_out[1:])
 
 
-def run_transcription_0(text):
+def run_transcription(text):
 
     l_transcribed = []
     text = lib0_9.normalise(text)
