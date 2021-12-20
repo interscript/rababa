@@ -7,6 +7,13 @@ import numpy as np
 import _pickle as cPickle
 
 
+LIB_LOCAL_PATH = '/home/jair/WORK/Farsi/rababa'
+
+import sys
+
+sys.path.append(LIB_LOCAL_PATH)
+
+
 PATH_HAZM = "resources/postagger.model"
 
 stemmer = Stemmer()

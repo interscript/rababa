@@ -4,6 +4,8 @@ from hazm import *
 import pandas as pd
 import numpy as np
 import openpyxl
+import _pickle as cPickle
+
 
 # Ressources expected: Flexicon/Affixes.xlsx  Flexicon/Entries.xlsx
 PATH_FLEXICON = "../Flexicon/"
@@ -71,7 +73,6 @@ for k in d_FLEXI.keys():
         d_df_FLEXI[k] = pd.concat(
             [df_Entries[df_Entries["SynCatCode"] == d] for d in dims.split(",")]
         )
-# d_df_FLEXI;
 
 d_map_FLEXI = {}
 for k in d_FLEXI.keys():
@@ -81,13 +82,12 @@ for k in d_FLEXI.keys():
         for d in dims.split(","):
             if d.strip() != "":
                 d_map_FLEXI[d.strip()] = k
-
-
+                
 d_HAZM = {}
 for i in range(df.shape[0]):
     d = df[["PoS", "Hazm"]].iloc[i].to_dict()
     d_HAZM[d["PoS"]] = d["Hazm"]
-# d_HAZM
+
 
 d_map_HAZM = {}
 for k in d_HAZM.keys():
@@ -97,4 +97,18 @@ for k in d_HAZM.keys():
         for d in dims.split(","):
             if d.strip() != "":
                 d_map_HAZM[d.strip()] = k
-# d_map_HAZM
+
+
+dic_assets = {
+    'affixes': df_Affixes,
+    'entries': df_Entries,
+    'd_FLEXI': d_FLEXI,
+    'd_map_FLEXI': d_map_FLEXI,
+    'd_HAZM': d_HAZM,
+    'd_map_HAZM': d_map_HAZM
+}
+
+import pickle
+
+with open('resources/farsi_assets.pickle', 'wb') as handle:
+    pickle.dump(dic_assets, handle, protocol=pickle.HIGHEST_PROTOCOL)

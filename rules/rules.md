@@ -4,11 +4,13 @@
 
 ### Rules
 
+0. When we face the affix ست, always a suffix, if there's any of the sounds /A, i, u/ right before it, it must be transliterated /st/, else, /ast/. I added a row for /st/.
+
 1. If a word can be found in the database, there's no need to break it down (stem for nouns and lemmatize for verbs) UNLESS it's recognized as a verb while the word in entries is not marked as a verb. Note that this is to improve the accuracy of the system. So, if a verb exists in entries but we skip that transliteration because it's marked as a noun, and we end up not recognizing parts of the word (e.g. not all affixes are recognized), we can go back to the skipped transliteration and use it as a last resort.
 
 2. For nouns that aren't found in the database, we need to use the stemmer function to get roots of the nouns. Then, much like with verbs, we should look and see which affixes were omitted from the word, find them in the Affixes table, and put them in proper positions.
 
-3. When breaking down verbs to their roots using lemmatizer function, we get two outputs. ONLY ONE of them exists in the verb we have broken down. So, we only use that one. Then, we look to see which affixes were omitted from the verb when we broke it down, and we search for them in the Affixes table and add their transliteration to the root of the verb in proper positions, i.e. prefixes get added to the beginning of the word and suffixes, to its end.
+3. When breaking down verbs to their roots using lemmatizer function, we get two outputs. If only one of them exists in the verb we have broken down, we use that one. But if both of them exist in the verb we have broken down, if we have ب, بی as a prefix, we use the second output of the lemmatizer. Else, we use the first output of the lemmatizer. Then we look to see which affixes were omitted from the verb when we broke it down, and search for them in the Affixes table and add their transliteration to the root of the verb in proper positions, i.e. prefixes get added to the beginning of the word and suffixes, to its end.
 
 4. For collisions, if the PoS tagging doesn't help, please use the transliteration with the higher frequency.
 
@@ -50,25 +52,5 @@
 
 23. If the root of the verb is رو, transliterated /rav/, and it doesn't have any suffixes, we should change its transliteration from /rav/ to /ro/.
 
-24. With all the other rules, there are still many words that won't be recognized due to a PoS tagging error or the word being new. Let's take a look at an example: The whole کرده اند is a verb, but PoS tagger has recognized کرده as an adjective and اند as a verb. Fortunately, کرده exists in the entries, so the code has successfully recognized it, but اند has remained untransliterated since it's an affix for verbs, not a verb root, thus it's in affixes, not entries! So, if a word isn't recognized after everything we've done according to all the rules, we might wanna consider checking the affixes as it will solve issues like the one in this example. Now if the word is not even there, we can break it down according to rule 21, i.e. we must look for the word's substrings, but this time in entries then affixes. Now this can cause a lot of bugs, so we only do it if we've had no luck recognizing a word with all the other rules. So, instead of just writing an output in Farsi, we want to try and come up with an estimated transliteration! Let's look into the word فیسبوک as an example. This is the Farsi written form of the word "Facebook". We don't find this word in entries. So, normally, the code would output the word as is, i.e. in Farsi. However, with the described method, first the substring فیس will be found in entries, then بو, then ک. So, the output would be /fisbuke/ (Note that there are multiple instances of ک, but I didn't use the one with Al [alphabet] as PoS) This output isn't accurate, but it's not worse than the default charcater to character mapping (fisbvk) To make this rule more clear, let's see another example. The library fails to stem دستمان correctly. It simply won't recognize the word دست which is Farsi for hand. It stems it into دس which doesn't exist in entries. recursive: {So, we take the whole word, دستمان, and try to find the longest substring of it we can find in entries. We find دست! Bingo! Then we can find مان in affixes and we have the whole /dastemAn/ Note that after we found دست in entries, we need to look up the remaining part in affixes and see if we have the whole remaining part in there. If not, we can go back to entries and look up the remaining string there}
+24. With all the other rules, there are still many words that won't be recognized due to a PoS tagging error or the word being new. Let's take a look at an example: The whole کرده اند is a verb, but PoS tagger has recognized کرده as an adjective and اند as a verb. Fortunately, کرده exists in the entries, so the code has successfully recognized it, but اند has remained untransliterated since it's an affix for verbs, not a verb root, thus it's in affixes, not entries! So, if a word isn't recognized after everything we've done according to all the rules, we might wanna consider checking the affixes as it will solve issues like the one in this example. Now if the word is not even there, we can break it down according to rule 21, i.e. we must look for the word's substrings, but this time in entries then affixes. Now this can cause a lot of bugs, so we only do it if we've had no luck recognizing a word with all the other rules. So, instead of just writing an output in Farsi, we want to try and come up with an estimated transliteration! Let's look into the word فیسبوک as an example. This is the Farsi written form of the word "Facebook". We don't find this word in entries. So, normally, the code would output the word as is, i.e. in Farsi. However, with the described method, first the substring فیس will be found in entries, then بو, then ک. So, the output would be /fisbuk/ (Note that there are multiple instances of ک, but I didn't use the one with Al [alphabet] as PoS) This output isn't accurate, but it's not worse than the default charcater to character mapping (fisbvk) To make this rule more clear, let's see another example. The library fails to stem دستمان correctly. It simply won't recognize the word دست which is Farsi for hand. It stems it into دس which doesn't exist in entries. recursive: {So, we take the whole word, دستمان, and try to find the longest substring of it we can find in entries. We find دست! Bingo! Then we can find مان in affixes and we have the whole /dastemAn/ Note that after we found دست in entries, we need to look up the remaining part in affixes and see if we have the whole remaining part in there. If not, we can go back to entries and look up the remaining string there}
 At the point where we have only single letters left to transliterate, whether the last remaining string is only a letter or no bigger string can be found, we should use the single letters with T as their PoS. I added them to stand for transliteration.
-
-### Implementation
-
-1.    ok
-  * unless verb not implemented
-2.    ok
-3.    ok
-  *  using length to decide which part to search in verbs -> to correct
-
-4.    ok
-5.    ok
-6.    ok
-
-  * to be corrected... fct def handle_u200c_exception(wrd) in code
-
-7.    half ok add number
-8.    ok
-
-  *  not integrated with other rules though
-    recursive code existing
