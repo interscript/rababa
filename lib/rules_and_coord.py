@@ -10,8 +10,18 @@ import lib.model0_9 as lib0_9
 
 def semispace_9(wrd, pos=None):
     if len(wrd) > 2:
-        if wrd[:-3] == '\u200cات':
+        if wrd[-3:] == '\u200cات':
             return process_wrd(wrd[:-3], pos, state=0) + "'at"
+    return wrd
+
+
+def semispace_13(wrd, pos=None):
+    if len(wrd) > 3:
+        if wrd[-4:] == '\u200cمان':
+            w = process_wrd(wrd[:-3], pos, state=0)
+            w += "mAn" \
+                if w[-1] in ["a", "e", "o", "A", "i", "u"] else "emAn"
+            return w
     return wrd
 
 
@@ -22,9 +32,13 @@ def semispace_19(wrd, pos=None):
         l_wrd = wrd.split("\u200c")
         _str = []
         for i in range(len(l_wrd)):
-            _str.append(process_wrd(l_wrd[i], pos, state=1))
-
+            w = l_wrd[i]
+            if not w in ['ست']:
+                _str.append(process_wrd(l_wrd[i], pos, state=1))
+            else:
+                _str.append(lib0_9.recu_affixes(w, pos_pos=pos))
     return "".join(_str)
+
 
 
 """
@@ -32,14 +46,16 @@ def semispace_19(wrd, pos=None):
 """
 
 
-def suffix_13(wrd, pos=None):
-    if len(wrd) > 3:
-        if wrd[-3:] == 'مان':
-            w = process_wrd(wrd[:-3], pos, state=2) # 'Verb'
-            w += "mAn" \
-                if w[-1] in ["a", "e", "o", "A", "i", "u"] else "emAn"
+def suffix_0(wrd, pos):
+    if not wrd[-2:] == 'ست':
+        return wrd
+    else:
+        if wrd == 'ست':
+            return 'ast'
+        else:
+            w = process_wrd(wrd[:-2], pos, state=2)
+            w += 'st' if w[-1] in ['A', 'i', 'u'] else 'ast'
             return w
-    return wrd
 
 
 def suffix_7(wrd, pos=None):
@@ -137,6 +153,16 @@ def suffix_12(wrd, pos=None):
                 return process_wrd(wrd[:-1], pos, state=2) + 'am'
 
 
+def suffix_13(wrd, pos=None):
+    if len(wrd) > 3:
+        if wrd[-3:] == 'مان':
+            w = process_wrd(wrd[:-3], pos, state=2) # 'Verb'
+            w += "mAn" \
+                if w[-1] in ["a", "e", "o", "A", "i", "u"] else "emAn"
+            return w
+    return wrd
+
+
 def suffix_14(wrd, pos=None):
     if not "می" == wrd[-2:]:
         return wrd
@@ -232,6 +258,10 @@ def prefix_22(wrd, pos=None):
                 w = w[:3] + w[4:]
         return w
 
+def prefix_25(wrd, pos):
+    return 'nemi' if wrd  == 'نمی' else wrd
+
+
 """
     Root Rules
 """
@@ -248,9 +278,13 @@ def root_23(wrd, pos=None):
         suffix = lib0_9.recu_affixes(d_affixes['suffix'], pos_pos=pos)
         return prefix + stem + suffix
 
+def clean_up(wrd):
+    return ''.join([w for w in list(wrd) if not w in ['-']])
+
 
 def process_wrd(wrd, pos, state=0):
 
+    wrd = clean_up(wrd)
     if wrd == '':
         return ''
 
@@ -258,9 +292,17 @@ def process_wrd(wrd, pos, state=0):
     if w != wrd:
         return w
 
+    w = prefix_25(wrd, pos) # نمی special case...
+    if w != wrd:
+        return w
+
+
     if state == 0:
         # Process semispaces
         w = semispace_9(wrd, pos=None) # '\u200cات'
+        if w != wrd:
+            return w
+        w = semispace_13(wrd, pos=None) # '\u200cمان'
         if w != wrd:
             return w
         w = semispace_19(wrd, pos) # recursion "\u200c"
@@ -273,9 +315,12 @@ def process_wrd(wrd, pos, state=0):
 
         state = 1
 
-    # Process prefixes
+    # Process Suffixes
     if state == 1:
 
+        w = suffix_0(wrd, pos) # ست
+        if w != wrd:
+            return w
         w = suffix_13(wrd, pos) # مان
         if w != wrd:
             return w
@@ -314,6 +359,7 @@ def process_wrd(wrd, pos, state=0):
             return w
         state = 2
 
+    # Process Prefixes
     if state == 2:
 
         w = prefix_22(wrd, pos) # بی and نی
