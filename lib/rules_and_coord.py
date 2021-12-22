@@ -295,7 +295,11 @@ def process_wrd(wrd, pos, state=0):
         return ""
 
     # if not wrd in ["ن"]:
+<<<<<<< HEAD
     if not (wrd in ["ن", "ست"] or "رو" == wrd[-2:]):
+=======
+    if not (wrd in ["ن"] or "رو" == wrd[-2:]):
+>>>>>>> e5eab0938a492f0a917af7453cd7490e5573e936
         # "ن", "بی", "نی", "می"]:
         w = lib0_9.general_search(wrd, pos_pos=pos)
         if w != wrd:
