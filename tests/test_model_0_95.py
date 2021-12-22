@@ -45,8 +45,8 @@ tests = [
 ]
 
 for t in tests:
-    # print(m0_9.run_transcription_0(t['farsi']))
-    assert m0_9.run_transcription_0(t["farsi"]) == t["trans"]
+    # print(m0_9.run_transcription(t['farsi']))
+    assert m0_9.run_transcription(t["farsi"]) == t["trans"]
 
 
 # In[ ]:
@@ -66,7 +66,7 @@ tests = [
 ]
 
 for t in tests:
-    assert m0_9.run_transcription_0(t["farsi"]) == t["trans"]
+    assert m0_9.run_transcription(t["farsi"]) == t["trans"]
 
 
 # In[ ]:
@@ -107,7 +107,7 @@ tests = [
 ]
 
 for t in tests:
-    assert m0_9.run_transcription_0(t["farsi"]) == t["trans"]
+    assert m0_9.run_transcription(t["farsi"]) == t["trans"]
 
 
 # In[ ]:

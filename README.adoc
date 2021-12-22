@@ -18,20 +18,22 @@ curl -sSL https://github.com/secryst/rababa-models/releases/download/untagged-d9
 
 == Run
 
+Code can be ran on sentences and files:
 [source,bash]
 ----
-python3 transliterate.py 'مزايایی'
+python3 transliterate.py --text 'مزايایی'
+python3 transliterate.py --text_file text.txt
 ----
 
 
 == Run Tests
 
-- run rules:
+- run all rules (deactivated):
 [source,bash]
 ----
 python3 tests/test_model_0_95.py
 ----
-- run and score examples:
+- run and score examples, displayed accuracy is accuracy on words:
 [source,bash]
 ----
 python3 tests/test_examples.py

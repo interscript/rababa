@@ -107,24 +107,38 @@ def affix_search(affix, pos_pos=None, pos_neg=None):
         return votation_entries(l_search, entries=False)
 
 
-def search_stem(wrd, pos_pos=None, pos_neg=None):
+def search_stem(wrd, pos_pos=None, pos_neg=None, direc=True):
     """
         Simple procedure extracting a stem from the string start,
         just searching for the longest substring the entries_DB
     """
     l_search = None
-    for i in range(len(wrd), 0, -1):
-        if assets.df_Entries[assets.df_Entries['WrittenForm']==wrd[:i]].shape[0] > 0:
-            l_search = assets.df_Entries[assets.df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
-            l_search = filter_search(l_search, pos_pos, pos_neg)
-            break
+    if direc:
+        for i in range(len(wrd), 0, -1):
+            if assets.df_Entries[assets.df_Entries['WrittenForm']==wrd[:i]].shape[0] > 0:
+                l_search = assets.df_Entries[assets.df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
+                l_search = filter_search(l_search, pos_pos, pos_neg)
+                break
 
-    if not l_search is None:
-        stem = votation_entries(l_search)
-        suffix = recu_affixes(wrd[i:], pos_pos=pos_pos, pos_neg=pos_neg)
-        return stem + suffix
+        if not l_search is None:
+            stem = votation_entries(l_search)
+            suffix = recu_affixes(wrd[i:], pos_pos=pos_pos, pos_neg=pos_neg)
+            return stem + suffix
+
     else:
-        return wrd
+        for i in range(len(wrd), 0, -1):
+            if assets.df_Entries[assets.df_Entries['WrittenForm']==wrd[-i:]].shape[0] > 0:
+                l_search = assets.df_Entries[assets.df_Entries['WrittenForm']==wrd[-i:]].to_dict('records')
+                l_search = filter_search(l_search, pos_pos, pos_neg)
+                break
+
+        if not l_search is None:
+            stem = votation_entries(l_search)
+            l = len(l_search[0]['WrittenForm'])
+            prefix = recu_affixes(wrd[:len(wrd)-l], pos_pos=pos_pos, pos_neg=pos_neg)
+            return prefix + stem
+       
+    return wrd
 
 
 def process_noun(wrd):
@@ -138,8 +152,10 @@ def process_noun(wrd):
 
     stem = assets.stemmer.stem(wrd)
     d_affixes = get_affixes(wrd, stem)
-    prefix = affix_search(d_affixes['prefix'])
-    suffix = affix_search(d_affixes['suffix'])
+    prefix = recu_affixes(d_affixes['prefix'], pos_pos=pos)
+    suffix = recu_affixes(d_affixes['suffix'], pos_pos=pos)
+    # prefix = affix_search(d_affixes['prefix'])
+    # suffix = affix_search(d_affixes['suffix'])
     stem = general_search(stem, pos_pos=pos)
 
     w = prefix + stem + suffix
