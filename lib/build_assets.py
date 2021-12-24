@@ -8,9 +8,9 @@ import _pickle as cPickle
 
 
 # Ressources expected: Flexicon/Affixes.xlsx  Flexicon/Entries.xlsx
-PATH_FLEXICON = "../Flexicon/"
+PATH_FLEXICON = "resources/"
 # Tagger model
-PATH_HAZM = "../hazm/resources/postagger.model"
+PATH_HAZM = "resources/postagger.model"
 # PoS mappings
 PATH_MAPPINGS = "data/PoS_mappings.csv"
 
