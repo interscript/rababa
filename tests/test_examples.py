@@ -5,6 +5,7 @@
 LIB_LOCAL_PATH = "/home/jair/WORK/Farsi/rababa"
 
 import sys
+import re
 import pandas as pd
 
 
@@ -25,8 +26,8 @@ def evaluation(trans_orig, trans_model, orig):
     l_bugs = []
     tp, fp = 0, 0
     for i, d in enumerate(zip(trans_orig, trans_model)):
-        l_orig = d[0].split()
-        l_model = d[1].split()
+        l_orig = [s for s in re.split('[ ?.,!:;]', d[0].strip()) if s != '']
+        l_model = [s for s  in re.split('[ ?.,!:;]', d[1].strip()) if s != '']
 
         correct = True
         for o in zip(l_orig, l_model):
