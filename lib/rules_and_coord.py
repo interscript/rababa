@@ -429,4 +429,3 @@ def run_transcription(text):
     # return post_process(
     #         " ".join(l_transcribed))
     return " ".join(l_transcribed)
-    return " ".join(l_transcribed)

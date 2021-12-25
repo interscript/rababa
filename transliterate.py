@@ -18,14 +18,7 @@ def transli_parser():
     parser.add_argument("--text_file", dest="text_file", type=str, required=False)
     return parser
 
-"""
-if len(sys.argv) != 2:
-    print("API ran as follows:")
-    print("python transliterate.py 'مزايایی'")
-    print("or alternatively to process a file:")
-    print("python transliterate.py file_name.txt")
-    exit()
-"""
+
 parser = transli_parser()
 args = parser.parse_args()
 
@@ -36,7 +29,10 @@ elif not args.text_file is None:
     text_file = args.text_file
     f = open(text_file, "r")
     for d in tqdm.tqdm(list(f.readlines())):
-        print(m0_9.run_transcription(d))
+        try:
+            print(m0_9.run_transcription(d))
+        except:
+            pass
 else:
     print()
     raise TypeError("Arguments not supported")

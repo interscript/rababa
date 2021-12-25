@@ -1,0 +1,7 @@
+pandas==1.1.5
+pandas-access==0.0.1
+tqdm==4.56.0
+pickleshare @ file:///tmp/build/80754af9/pickleshare_1606932040724/work
+numpy==1.19.5
+hazm==0.7.1
+openpyxl==3.0.9
