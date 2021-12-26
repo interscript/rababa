@@ -18,7 +18,7 @@
 
 10. I changed the frequency of kon for the word کن to 5001 since I think the present tense of کردن is used way more than کندن!
 
-11. I added an instance for each letter with T as their PoS in entries, basically, for when we have to go for a letter by itself. So, it's just a letter to letter mapping.
+11. I added an instance for each letter with T as their PoS in entries, basically, for when we have to go for a letter by itself. So, it's basically a letter to letter mapping.
 
 12. I added a row for the affix ست when it's pronounced /st/.
 
@@ -26,4 +26,6 @@
 
 14. Changed the transliteration for استدلالاً from 'estedlAllan to 'estedlAlan
 
-15. Omitted all instances of  ً (tanvin /an/) from entries. 224 words were normalized.
+15. Omitted all instances of ً  (tanvin /an/) from entries. 224 words were normalized.
+
+16. I changed the frequency for گ with T as its PoS (item 11 in this list) from 1 to 3 since Ab (abbreviation) had a frequency of 2 and would have priority otherwise.
