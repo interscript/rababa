@@ -1,31 +1,33 @@
-1. I converted all instances of ي and ك to ی and ک.
+1. Converted all instances of ي and ك to ی and ک.
 
-2. I added PoS tags to the last two instances of ی since they're for verbs
+2. Added PoS tags to the last two instances of ی since they're for verbs
 
-3. I added a row to the affixes: نمی. I believe this will help. Will reconsider if it turns out to cause bugs somehow.
+3. Added a row to the affixes: نمی. I believe this will help. Will reconsider if it turns out to cause bugs somehow.
 
-4. I added PoS tags for ید.
+4. Added PoS tags for ید.
 
-5. I added PoS tags for یم.
+5. Added PoS tags for یم.
 
-6. I added a row for ن which is pronounced /an/ because it didn't exist in the affixes while it's necessary for transliterating words like خوردن and خوابیدن that are called مصدر in Farsi.
+6. Added a row for ن which is pronounced /an/ because it didn't exist in the affixes while it's necessary for transliterating words like خوردن and خوابیدن that are called مصدر in Farsi.
 
-7. I added a row for the verb root «آ» in entries.
+7. Added a row for the verb root «آ» in entries.
 
-8. I changed the frequency for نما as a verb from 5000 to 5001 in its /namA/ form.
+8. Changed the frequency for نما as a verb from 5000 to 5001 in its /namA/ form.
 
-9. I added a row for /yam/ transliteration of یم in verbs.
+9. Added a row for /yam/ transliteration of یم in verbs.
 
-10. I changed the frequency of kon for the word کن to 5001 since I think the present tense of کردن is used way more than کندن!
+10. Changed the frequency of kon for the word کن to 5001 since I think the present tense of کردن is used way more than کندن!
 
-11. I added an instance for each letter with T as their PoS in entries, basically, for when we have to go for a letter by itself. So, it's basically a letter to letter mapping.
+11. Added an instance for each letter with T as their PoS in entries, basically, for when we have to go for a letter by itself. So, it's basically a letter to letter mapping.
 
-12. I added a row for the affix ست when it's pronounced /st/.
+12. Added a row for the affix ست when it's pronounced /st/.
 
-13. Changed the transliteration for اسماً from 'esmAn to 'esman
+13. Changed the transliteration of اسماً from 'esmAn to 'esman
 
-14. Changed the transliteration for استدلالاً from 'estedlAllan to 'estedlAlan
+14. Changed the transliteration of استدلالاً from 'estedlAllan to 'estedlAlan
 
 15. Omitted all instances of ً  (tanvin /an/) from entries. 224 words were normalized.
 
-16. I changed the frequency for گ with T as its PoS (item 11 in this list) from 1 to 3 since Ab (abbreviation) had a frequency of 2 and would have priority otherwise.
+16. Changed the frequency of گ with T as its PoS (item 11 in this list) from 1 to 3 since Ab (abbreviation) had a frequency of 2 and would have priority otherwise.
+
+17. Changed the frequency of /'arz/ for عرض to 31 so it has a higher frequency than /'araz/
