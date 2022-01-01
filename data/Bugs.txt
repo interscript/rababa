@@ -1,6 +1,6 @@
 1. The word نیایشگرانی is transliterated /nayeyaSgarAnayi/ This is so odd. Can't tell how that's happened. 
 
-2. The word پیتر is transliterated پیtar while پیت exists in the entries. So, seems like the code is not looking for the biggest substring of the word that exists in entries. It's just finding the biggest substring starting in the end of words. This whole starting in the end, which was actually in the beginning of the string for rule 20, doesn't apply to the last rule. So, we just need to look for the biggest substring. I know this makes the code even slower, but this is what works best.
+2. The word پیتر is transliterated پیtar while پیت exists in the entries. So, seems like the code is not looking for the biggest substring of the word that exists in entries. It's just finding the biggest substring starting at the end of words. This whole starting in the end, which was actually at the beginning of the string for rule 20, doesn't apply to the last rule. So, we just need to look for the biggest substring. I know this makes the code even slower, but this is what works best. I'm not sure when the code succeeds at finding two different parts of an uncharted word and when it fails. E.g. اینحال doesn't exist in entries and the code finds and combines the two parts perfectly.
 
 3. There's also another bug hidden somewhere. The word پاری is transliterated پاreyi. The whole first part of word being left in Farsi aside, the second part, ری, exists in entries as rey, so where does the /i/ in the end come from?!
 
