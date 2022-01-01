@@ -9,3 +9,5 @@
 5. In rule 24 there's this part that says we must use single letters with T as their PoS when we're left at only one letter. That doesn't seem to be implemented. We can check اثیات in line 566 later to make sure it is.
 
 6. The verb نتوانسته است in line 566 is transliterated naAst! And it's not a problem with the library lemmatizing it wrong. The library lemmatizes it into توانست#توان and we choose the first one based on rule 3. Then we transliterate ن in the beginning according to rule 21. The rest is clear. The output should be /natavAneste 'ast/ and I don't see any complications. MAYBE it has something to do with how rule 5 is implemented. Maybe است is lemmatized before being checked in entries. However, even in that case, the whole verb root /tavAnest/ shouldn't have been omitted.
+
+7. The word نفسی in line 68 is transliterated /naفsi/ while the library perfectly stems it to نفس which exists in entries. So the implementation of rule 24 is actually interfering with other rules while it was supposed to decode uncharted words when nothing else worked. THIS IS THE BIGGEST BUG IN THE CODE I'VE FOUND SO FAR.
