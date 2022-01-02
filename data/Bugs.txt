@@ -13,3 +13,5 @@
 7. The word نفسی in line 68 is transliterated /naفsi/ while the library perfectly stems it to نفس which exists in entries. So the implementation of rule 24 is actually interfering with other rules while it was supposed to decode uncharted words when nothing else worked. THIS IS THE BIGGEST BUG IN THE CODE I'VE FOUND SO FAR.
 
 8. I won't mention all the too many problems caused by the code looking for affixes first, but that needs to be fixed. I think rule 24 is clear enough for that.
+
+9. The word نیروهای in line 652 is the same as bug number 7, but with two suffixes instead of one. So, rule 20 is used here. I think previous models were able to produce correct outputs for نیروهای and نفسی. Then implementation of rule 24 is sometimes interfering with normal cases. Both these words are nouns if this can help.
