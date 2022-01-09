@@ -15,3 +15,5 @@
 8. I won't mention all the too many problems caused by the code looking for affixes first, but that needs to be fixed. I think rule 24 is clear enough for that.
 
 9. The word نیروهای in line 652 is the same as bug number 7, but with two suffixes instead of one. So, rule 20 is used here. I think previous models were able to produce correct outputs for نیروهای and نفسی. Then implementation of rule 24 is sometimes interfering with normal cases. Both these words are nouns if this can help.
+
+10. The word میگوید in line 942 is a verb that library hasn't lemmatized. So, rule 24! However, with all the wrong outputs produced because the code would try to recognize affixes first, in one of the few cases that could help, the code hasn't recognized می in the beginning as a prefix to help transliterate the word! The correct transliteration is /miguyad/
