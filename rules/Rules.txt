@@ -28,7 +28,7 @@
 
 14. The affix می is a collision. If it's a prefix, we know it's part of a verb and we use the second transliteration. If it's a suffix, we use the first transliteration even if the word before it isn't a number.
 
-15. If we lemmatize a verb, but none of the two results are part of the verb we have lemmatized, it's possible the root of the verb has an آ letter that's been mentioned in our verb in ا form. Make sure to check that if such a case happens.
+15. If we lemmatize a verb, but none of the two results are part of the verb we have lemmatized, it's possible the root of the verb has an آ letter that's been mentioned in our verb in ا form. Make sure to check that if such a case happens. If the verb has multiple instances of ا, usually only the first one needs to change to آ to be found in the database, but not always. So, check other combinations if changing the first ا to آ doesn't help. Only one ا needs to change to آ.
 
 16. The affix ون, always a suffix, is a collision. To choose between the two, if the word before it, ends in /i/, choose the second transliteration, else, choose the first transliteration.
 
