@@ -18,7 +18,7 @@
 
 9. The affix ات is a collision. Note that it's always a suffix, never a prefix. When faced, if it's attached to the word with no space or semispace, the first transliteration should be chosen. If there's a space or semispace before it, then choose the second  transliteration.
 
-10. The affix ان is a collision. Two of its instances are marked for nouns. It's always a suffix, never a prefix and to choose between the two, when it's attached to a noun, if the noun ends in ی, choose the last transliteration, else, choose the first transliteration.
+10. The affix ان is a collision. Two of its instances are marked for nouns. It's always a suffix, never a prefix and to choose between the two, when it's attached to a noun or adjective, if the noun/adjective ends in /i/, choose the last transliteration, else, choose the first transliteration.
 
 11. The affix ش, always a suffix, is also a collision. If it's attached to a noun, choose the first transliteration, if it's anything else, choose the second transliteration.
 
