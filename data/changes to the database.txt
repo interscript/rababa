@@ -31,3 +31,5 @@
 16. Changed the frequency of گ with T as its PoS (item 11 in this list) from 1 to 3 since Ab (abbreviation) had a frequency of 2 and would have priority otherwise.
 
 17. Changed the frequency of /'arz/ for عرض to 31 so it has a higher frequency than /'araz/
+
+18. Changed digits 0 to 9 in Farsi entries to the Farsi versions of them so they change to corresponding English ones.
