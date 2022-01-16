@@ -38,3 +38,6 @@ https://www.researchgate.net/publication/348656132_An_Accurate_Persian_Part-of-S
 Towards the Development of an Automatic Diacritizer for the Persian Orthography 
 based on the Xerox Finite State Transducer
 https://ruor.uottawa.ca/bitstream/10393/20158/1/Nojoumian_Peyman_2011_thesis.pdf
+
+#### Spellchecker
+https://github.com/hunspell/hunspell
