@@ -33,3 +33,5 @@
 17. Changed the frequency of /'arz/ for عرض to 31 so it has a higher frequency than /'araz/
 
 18. Changed digits 0 to 9 in Farsi entries to the Farsi versions of them so they change to corresponding English ones.
+
+19. Added a row for آ with T PoS and another for ئ transliterated /'/
