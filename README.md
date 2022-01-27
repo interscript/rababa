@@ -15,6 +15,10 @@ This way both tasks and roles are well defined and confined.
 
 ### Python Dependencies
 Has to be ran alongside the python dependancies of farsi branch
+> ENV["PYTHON"] = "...my python path with hazm installed..."
+> import Pkg
+> Pkg.add("PyCall")
+> Pkg.build("PyCall") 
 
 ### Install Julia
 [julia downloads](https://julialang.org/downloads/)
