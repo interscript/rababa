@@ -56,7 +56,7 @@ brainsList = df_Brains[!, "Label"]
 
 if !(brainEntry in brainsList)
 
-    @warning "brain-entry not found in graph!
+    @warn "brain-entry not found in graph!
               (notice that lowercases of node names are taken)"
     exit()
 
