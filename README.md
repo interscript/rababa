@@ -1,5 +1,9 @@
 # README
 
+
+### Graph Parsed
+> resources/TestFarsiTrans.*
+
 ### Python Dependencies
 Has to be ran alongside the python dependancies of farsi branch
 
