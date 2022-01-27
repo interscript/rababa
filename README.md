@@ -2,7 +2,7 @@
 
 ## Farsi Learn
 
-Farsi learn is a software allowing a non technical expert to 
+Farsi learn is a software allowing a non technical experts to 
 sketch rules and logic steps needed for the task of transliteration of Farsi.
 
 We have created this system to speed up and make flexible this general part of the work. 
