@@ -55,8 +55,16 @@ function createTree(node::Union{Node, Nothing},
         node.x[:map] = size(df_ids.Label)[1] > 1 ?
                 Dict(map(x -> x[2] => x[1], enumerate(df_ids.Label))) :
                 nothing
+        
+
+        if !haskey(dicCODE, node.x[:Label])
+            
+            @warn "unimplemented Node:: Id", node.x[:Id], " Name: " , node.x[:Label]
+            
+        end
 
         if size(df_ids)[1] > 0
+        
             node.children = map(ix ->
                         createTree(Node(get_node(ix, df_Nodes), nothing),
                                    df_Nodes, df_Arrows),

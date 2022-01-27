@@ -10,6 +10,7 @@ using Serialization
 include("src/Graphs.jl")
 include("src/Utils.jl")
 include("src/Agent.jl")
+include("src/Code.jl")
 
 
 function parse_commandline()
