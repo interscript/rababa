@@ -1,5 +1,14 @@
 # README
 
+## Farsi Learn
+
+Farsi learn is a software allowing a non technical expert to 
+sketch rules and logic steps needed for the task of transliteration of Farsi.
+
+We have created this system to speed up and make flexible this general part of the work. 
+
+Whie the language specialist can design and try easily his own rules, the developer implements the code corresponding to the rules. 
+This way both tasks and roles are well defined and confined.
 
 ### Graph Parsed
 > resources/TestFarsiTrans.*
