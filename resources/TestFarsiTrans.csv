@@ -1,0 +1,29 @@
+Id,Name,Shape Library,Page ID,Contained By,Group,Line Source,Line Destination,Source Arrow,Destination Arrow,Status,Text Area 1
+1,Document,,,,,,,,,,Farsi Transliteration - only words in the database
+2,Page,,,,,,,,,,Page 1
+3,Decision,Flowchart Shapes,2,,,,,,,,Is the word found in the DB?
+4,Process,Flowchart Shapes,2,,,,,,,,Output its transliteration!
+5,Decision,Flowchart Shapes,2,,,,,,,,Output it!
+6,Decision,Flowchart Shapes,2,,,,,,,,Collision?
+7,Process,Flowchart Shapes,2,,,,,,,,Collision-handler
+8,Process,Flowchart Shapes,2,,,,,,,,Change all instances of ي and ك in the text to ی and ک
+9,Curly Brace Note,Flowchart Shapes,2,,,,,,,,Collision-handler
+10,Decision,Flowchart Shapes,2,,,,,,,,Is there only one instance of the word with the desired PoS?
+11,Process,Flowchart Shapes,2,,,,,,,,Return the transliteration of the instance with the desired PoS!
+12,Process,Flowchart Shapes,2,,,,,,,,Return the transliteration of the instance with the desired PoS that has the highest frequency!
+13,Decision,Flowchart Shapes,2,,,,,,,,Is there an instance of the word with the desired PoS?
+14,Process,Flowchart Shapes,2,,,,,,,,Return the transliteration of the instance with the highest frequency!
+15,Curly Brace Note,Flowchart Shapes,2,,,,,,,,Transliterator
+16,Line,,2,,,3,6,None,Arrow,,Yes
+17,Line,,2,,,3,5,None,Arrow,,No
+18,Line,,2,,,6,7,None,Arrow,,Yes
+19,Line,,2,,,7,4,None,Arrow,,
+20,Line,,2,,,8,3,None,Arrow,,
+21,Line,,2,,,6,4,None,Arrow,,No
+22,Line,,2,,,10,11,None,Arrow,,Yes
+23,Line,,2,,,10,12,None,Arrow,,No
+24,Line,,2,,,13,10,None,Arrow,,Yes
+25,Line,,2,,,13,14,None,Arrow,,No
+26,Line,,2,,,9,13,None,Arrow,,
+27,Line,,2,,,15,8,None,Arrow,,
+28,Page,,,,,,,,,,Page 2
