@@ -17,7 +17,7 @@ This way both tasks and roles are well defined and confined.
 Has to be ran alongside the python dependancies of farsi branch
 
 ### Install Julia
-(https://julialang.org/downloads/)[julia downloads]
+[julia downloads](https://julialang.org/downloads/)
 
 ### Julia Dependencies 
 > julia packageInstall.jl 
