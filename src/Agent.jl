@@ -30,7 +30,6 @@ function processNode(node::Node, data::Union{Nothing, Any})
 end
 
 
-
 function runAgent(node::Node, 
                   dicBRAINS::Dict{String, Node}, 
                   data::Union{Nothing, Any})
@@ -72,3 +71,4 @@ function runAgent(node::Node,
     runAgent(node, dicBRAINS, data)
         
 end
+

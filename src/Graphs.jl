@@ -76,3 +76,4 @@ function createTree(node::Union{Node, Nothing},
     node
 
 end
+
