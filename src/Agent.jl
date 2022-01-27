@@ -36,14 +36,13 @@ function runAgent(node::Node,
                   data::Union{Nothing, Any})
 
     name = node.x[:Label]
-    println("node::> ", name)
+    @info "node::> ", name
         
     node = 
     
         if haskey(dicBRAINS, node.x[:Label])
             
-            # println("switched brain: ", node.x[:Label])
-            @warn "switched brain: ", node.x[:Label]
+            @info "brain switch ::> ", node.x[:Label]
             node.children[1]
             
         else
@@ -68,6 +67,7 @@ function runAgent(node::Node,
             end
                 
         end
+    
     
     runAgent(node, dicBRAINS, data)
         

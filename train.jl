@@ -38,7 +38,6 @@ parsedArgs = parse_commandline()
 graphName = parsedArgs["path-lucidchart-csv"]
 modelName = parsedArgs["path-model"]
 brainEntry = lowercase(parsedArgs["brain-entry"])
-# println("brainEntry", brainEntry)
 entryFound = false
 
 # Parse csv data
@@ -57,15 +56,15 @@ brainsList = df_Brains[!, "Label"]
 
 if !(brainEntry in brainsList)
 
-    println("brain-entry not found in graph!")
-    println("(notice that lowercases of node names are taken)")
+    @warning "brain-entry not found in graph!
+              (notice that lowercases of node names are taken)"
     exit()
 
 end
 
 for b in brainsList
 
-    println("build brain: ", b)
+    @info "build brain: ", b
 
     try
         dicBRAINS[b] = get_node(b, df_Brains) |>
@@ -74,7 +73,6 @@ for b in brainsList
     catch
 
         @error "error! brain : ", b
-        # println("error! brain : ", b)
 
     end
 end
