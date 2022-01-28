@@ -11,7 +11,6 @@ function processNode(node::Node, data::Union{Nothing, Any})
         
         if unrecFields != String[]
             
-            println("dbg")
             @error string("command :: ", command,
                           " fields not recognised:: ", unrecFields)
             return nothing
