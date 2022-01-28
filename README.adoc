@@ -12,8 +12,8 @@ While the language specialist can design and try easily his own rules,
 the developer implements the code corresponding to the rules. This way
 both tasks and roles are well defined and confined.
 
-=== "Learning Strategy"
-Any lucidchart diagram is encoded as a graph.
+=== Learning Strategy
+Any lucidchart diagram  is encoded and "learnt" as a graph.
 
 
 ==== Graph Parsed
