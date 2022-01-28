@@ -8,9 +8,9 @@ using Serialization
 
 
 include("src/Graphs.jl")
-include("src/Utils.jl")
 include("src/Agent.jl")
 include("src/Code.jl")
+
 
 
 function parse_commandline()
@@ -79,8 +79,6 @@ end
 
 
 println("save data to: ", modelName)
-
 serialize(modelName, Dict(:dicBrains => dicBRAINS,
                           :entry => brainEntry))
-
 println("data saved to: ", modelName)

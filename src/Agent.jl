@@ -31,15 +31,28 @@ end
 function runAgent(node::Node, 
                   dicBRAINS::Dict{String, Node}, 
                   data::Union{Nothing, Any})
+    
+    
 
     name = node.x[:Label]
     @info "node::> ", name
+
         
     node = 
     
         if haskey(dicBRAINS, node.x[:Label])
-            
-            @info "brain switch ::> ", node.x[:Label]
+        
+            @info "brain name ::> ", name
+                    
+            if data["brain"] != name
+                        
+                # run elsewhere in graph 
+                runAgent(dicBRAINS[name], dicBRAINS, data)
+                data["brain"] = name
+                
+            end
+        
+            # continue locally
             node.children[1]
             
         else

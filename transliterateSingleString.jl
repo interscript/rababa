@@ -9,15 +9,10 @@ using Serialization
 
 include("src/Graphs.jl")
 include("src/Code.jl")
-include("src/Utils.jl")
 include("src/Agent.jl")
 
-using PyCall
 
-#ENV["PYTHON"] = "/home/jair/anaconda3/envs/rababa/bin/python"
-#import Pkg
-#Pkg.add("PyCall")
-#Pkg.build("PyCall")
+using PyCall
 
 hazm = pyimport("hazm")
 
@@ -28,6 +23,7 @@ stemmer = hazm.Stemmer()
 lemmatizer = hazm.Lemmatizer()
 normalizer = hazm.Normalizer()
 tagger = hazm.POSTagger(model=PATH_HAZM);
+
 
 
 function parse_commandline()
@@ -59,11 +55,14 @@ entryBrain = data[:entry]
 dicBRAINS = data[:dicBrains]
 graph = dicBRAINS[entryBrain]
 
+
 # prepare data
 data = Dict{String, Any}(
             "word" => parsedArgs["farsi-text"],
             "pos" => parsedArgs["pos-tagging"],
-            "state" => nothing)
+            "state" => nothing, # used for messages back to system
+            "brain" => entryBrain) # current brain or graph
+
 
 # run agent
 runAgent(graph, dicBRAINS, data) |>
