@@ -1,0 +1,59 @@
+== README
+
+=== Farsi Learn
+
+Farsi learn is a software allowing a non technical experts to sketch
+rules and logic steps needed for the task of transliteration of Farsi.
+
+We have created this system to speed up and make flexible this general
+part of the work.
+
+While the language specialist can design and try easily his own rules,
+the developer implements the code corresponding to the rules. This way
+both tasks and roles are well defined and confined.
+
+=== "Learning Strategy"
+Any lucidchart diagram is encoded as a graph.
+
+
+==== Graph Parsed
+
+____
+resources/TestFarsiTrans.*
+____
+
+==== Python Dependencies
+
+Has to be ran alongside the python dependancies of farsi branch
+[source,bash]
+----
+ENV[``PYTHON''] = ``…my python path with hazm installed…''
+import Pkg; Pkg.add(``PyCall''); Pkg.build(``PyCall'')
+----
+
+==== Install Julia
+
+https://julialang.org/downloads/[julia downloads]
+
+==== Julia Dependencies
+
+[source,bash]
+----
+julia packageInstall.jl
+----
+
+==== Commands
+
+[source,bash]
+----
+julia train.jl –help
+julia train.jl –path-lucidchart-csv resources/TestFarsiTrans.csv
+–brain-entry transliterator –path-model resources/TestFarsiTrans.dat
+----
+
+[source,bash]
+----
+julia transliterateSingleString.jl –help
+julia transliterateSingleString.jl –path-model
+resources/TestFarsiTrans.dat –farsi-text یویو –pos-tagging N
+----
