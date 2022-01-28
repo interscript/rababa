@@ -20,7 +20,6 @@ function processNode(node::Node, data::Union{Nothing, Any})
                 
     else
                 
-        println("dbg")
         @error string("command not found/built :: ", command)
         nothing
                 
