@@ -19,8 +19,10 @@ Any lucidchart diagram  is encoded and "learnt" as a graph.
 ==== Graph Parsed
 
 ____
-resources/TestFarsiTrans.*
+resources/TestFarsiTrans.csv
+resources/TestFarsiTrans.png
 ____
+
 
 ==== Python Dependencies
 
