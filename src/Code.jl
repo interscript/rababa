@@ -1,6 +1,6 @@
 
 
-include("hazm/py_code")
+include("hazm/py_code.jl")
 
 
 dicCODE = Dict{String, Functor}()
