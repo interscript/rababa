@@ -1,11 +1,12 @@
 
 
-include("hazm/model.jl")
-include("hazm/model_new.jl")
+include("hazm/py_code")
 
 
 dicCODE = Dict{String, Functor}()
 
+
+# transliterator
 
 dicCODE["change all instances of ي and ك in the text to ی and ک"] = 
     Functor(d -> (d["word"]=py"""normalise"""(d["word"]); d), 
@@ -43,5 +44,30 @@ dicCODE["collision?"] =
 
 dicCODE["output its transliteration!"] =
     Functor(d -> (d["res"] = data["data"][1]["PhonologicalForm"]; d),
+            Dict(:in => ["data"], :out => ["res"]))
+
+
+
+
+# collision-handler
+
+dicCODE["is there an instance of the word with the desired pos?"] = 
+    Functor(d -> (d["state"] = py"""has_entries_search_pos"""(d["data"], d["pos"]); d),
+            Dict(:in => ["data", "pos"], :out => ["state"]))
+
+dicCODE["is there only one instance of the word with the desired pos?"] =
+    Functor(d -> (d["state"] = py"""has_only_one_search_pos"""(d["data"], d["pos"]); d),
+            Dict(:in => ["data", "pos"], :out => ["state"]))
+
+dicCODE["return the transliteration of the instance with the desired pos!"] =
+    Functor(d -> (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); d),
+            Dict(:in => ["data", "pos"], :out => ["res"]))
+
+dicCODE["return the transliteration of the instance with the desired pos that has the highest frequency!"] =
+    Functor(d -> (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); d),
+            Dict(:in => ["data", "pos"], :out => ["res"]))
+
+dicCODE["return the transliteration of the instance with the highest frequency!"] =
+    Functor(d -> (d["res"] = py"""return_highest_search"""(d["data"]); d),
             Dict(:in => ["data"], :out => ["res"]))
 
