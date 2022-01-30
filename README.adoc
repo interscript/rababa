@@ -41,7 +41,7 @@ curl -sSL https://github.com/secryst/rababa-models/releases/download/untagged-d9
 curl -sSL https://github.com/secryst/rababa-models/releases/download/untagged-d9108f5298deeb17ecac/postagger.model -o resources/postagger.model
 ----
 
-==== Install transliterateSingleStringJulia
+==== Install Julia
 
 https://julialang.org/downloads/[julia downloads]
 
