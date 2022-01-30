@@ -14,25 +14,25 @@ end
 
 
 mutable struct Functor
-    
+
     fct::Function
     meta::Dict{Symbol, Vector{String}}
-    
+
 end
 
 
-function get_node(id::Int64, df_Nodes::DataFrame)
+function get_node(id::Int64, df_Nodes::DataFrame, depth::Int64=0)
 
     filter(row -> row.Id == id, df_Nodes)[1,:] |>
-        (x -> Dict(pairs(x)))
+        (x -> (d=Dict(pairs(x));d[:depth]=depth;d))
 
 end
 
 
-function get_node(interfaceName::String, df_Nodes::DataFrame)
+function get_node(interfaceName::String, df_Nodes::DataFrame, depth::Int64=0)
 
     filter(row -> row.Label == interfaceName, df_Nodes)[1,:] |>
-        (x -> Dict(pairs(x)))
+        (x -> (d=Dict(pairs(x));d[:depth]=depth;d))
 
 end
 
@@ -46,7 +46,8 @@ end
 
 function createTree(node::Union{Node, Nothing},
                     df_Nodes::DataFrame,
-                    df_Arrows::DataFrame)
+                    df_Arrows::DataFrame,
+                    df_Brains::DataFrame)
 
     if node != nothing
 
@@ -55,19 +56,22 @@ function createTree(node::Union{Node, Nothing},
         node.x[:map] = size(df_ids.Label)[1] > 1 ?
                 Dict(map(x -> x[2] => x[1], enumerate(df_ids.Label))) :
                 nothing
-        
 
-        if !haskey(dicCODE, node.x[:Label])
-            
+
+        if !haskey(dicCODE, node.x[:Label]) &
+                !(node.x[:Label] in df_Brains[!, "Label"])
+
             @warn "unimplemented Node:: Id", node.x[:Id], " Name: " , node.x[:Label]
-            
+
         end
 
         if size(df_ids)[1] > 0
-        
+
             node.children = map(ix ->
-                        createTree(Node(get_node(ix, df_Nodes), nothing),
-                                   df_Nodes, df_Arrows),
+                    createTree(
+                            Node(get_node(ix, df_Nodes, node.x[:depth]+1),
+                                 nothing),
+                               df_Nodes, df_Arrows, df_Brains),
                                 df_ids[!,"Line Destination"])
         end
 
@@ -76,4 +80,3 @@ function createTree(node::Union{Node, Nothing},
     node
 
 end
-

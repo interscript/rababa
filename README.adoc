@@ -33,7 +33,15 @@ ENV[``PYTHON''] = ``…my python path with hazm installed…''
 import Pkg; Pkg.add(``PyCall''); Pkg.build(``PyCall'')
 ----
 
-==== Install Julia
+==== Ressources Dependencies
+Farsi resources can be found on https://github.com/secryst/rababa-models/releases[secryst] and manually downloaded there. Assets are to be put under resources. Alternatively, run the following commands:
+[source,bash]
+----
+curl -sSL https://github.com/secryst/rababa-models/releases/download/untagged-d9108f5298deeb17ecac/farsi_assets.pickle -o resources/farsi_assets.pickle
+curl -sSL https://github.com/secryst/rababa-models/releases/download/untagged-d9108f5298deeb17ecac/postagger.model -o resources/postagger.model
+----
+
+==== Install transliterateSingleStringJulia
 
 https://julialang.org/downloads/[julia downloads]
 
@@ -46,6 +54,7 @@ julia packageInstall.jl
 
 ==== Commands
 
+* Train
 [source,bash]
 ----
 julia train.jl –help
@@ -53,9 +62,18 @@ julia train.jl –path-lucidchart-csv resources/TestFarsiTrans.csv
 –brain-entry transliterator –path-model resources/TestFarsiTrans.dat
 ----
 
+* Transliterate single string (with debugging mode)
 [source,bash]
 ----
 julia transliterateSingleString.jl –help
 julia transliterateSingleString.jl –path-model
 resources/TestFarsiTrans.dat –farsi-text یویو –pos-tagging N
+----
+
+* Run Tests (data data/tests.csv)
+[source,bash]
+----
+julia runTests.jl –help
+julia runTests.jl –path-model
+resources/TestFarsiTrans.dat
 ----

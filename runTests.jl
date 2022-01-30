@@ -10,6 +10,7 @@ using Serialization
 include("src/Graphs.jl")
 include("src/Code.jl")
 include("src/Agent.jl")
+include("src/Metrics.jl")
 
 
 using PyCall
@@ -31,12 +32,9 @@ function parse_commandline()
     s = ArgParseSettings()
 
     @add_arg_table! s begin
+
         "--path-model"
             help = "path to the train model"
-        "--farsi-text"
-            help = "farsi text to be transliterated"
-        "--pos-tagging"
-                help = "PoS tagging, as found by hazm POSTagger"
 
     end
 
@@ -59,12 +57,30 @@ graph = dicBRAINS[entryBrain]
 
 # prepare data
 data = Dict{String, Any}(
-            "word" => parsedArgs["farsi-text"],
-            "pos" => parsedArgs["pos-tagging"],
+            "word" => nothing,
+            "pos" => nothing,
             "state" => nothing, # used for messages back to system
             "brain" => entryBrain) # current brain or graph
 
 
-# run agent
-runAgent(graph, dicBRAINS, data) |>
-    println
+df_Test = DataFrame(CSV.File("data/test.csv"))
+
+df_Test[!,"transModel"] =
+    map(d -> d |>
+            py"""normalise""" |>
+                hazm.word_tokenize |>
+                    tagger.tag |>
+                        (D -> map(d -> (data["word"] = d[1];
+                                        data["pos"] = d[2];
+                                        data["state"] = nothing;
+                               runAgent(graph, dicBRAINS, data)), D)) |>
+                            (L -> join(L, " ")),
+        df_Test[!,"orig"]);
+
+
+ids = evaluation(df_Test[!, "trans"], df_Test[!, "transModel"], df_Test[!, "orig"])
+
+df_Bugs = df_Test[ids,:]
+
+println("error summary in: tests/test_debug.csv")
+CSV.write("tests/test_debug.csv", df_Bugs);

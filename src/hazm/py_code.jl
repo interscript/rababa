@@ -27,8 +27,8 @@ def search_db(wrd, pos_pos=None):
 def has_entries_search_pos(l_search, pos):
     for d in l_search:
         if d_map_FLEXI.get(d['SynCatCode'], False)==pos:
-            return "true"
-    return "false"
+            return "yes"
+    return "no"
 
 def has_only_one_search_pos(l_search, pos):
     l_search_tmp = [d for d in l_search
@@ -50,11 +50,11 @@ def votation_entries(l_search, entries=True):
     return list(d_results.items())[idx][0]
 
 def return_highest_search_pos(l_search, pos):
-    return votation_entires(
+    return votation_entries(
         [d for d in l_search
          if d_map_FLEXI.get(d['SynCatCode'], False)==pos])
 
 def return_highest_search(l_search):
-    return votation_entires(l_search)
+    return votation_entries(l_search)
 
 """

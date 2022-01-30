@@ -67,14 +67,17 @@ for b in brainsList
     @info "build brain: ", b
 
     try
+
         dicBRAINS[b] = get_node(b, df_Brains) |>
-                (D -> Node(D, nothing)) |>
-                    (N -> createTree(N, df_Nodes, df_Arrows))
+                (D -> (n=Node(D, nothing); n.x[:depth]=0; n)) |>
+                    (N -> createTree(N, df_Nodes, df_Arrows, df_Brains))
+
     catch
 
         @error "error! brain : ", b
 
     end
+
 end
 
 
