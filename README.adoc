@@ -58,8 +58,8 @@ julia packageInstall.jl
 [source,bash]
 ----
 julia train.jl –help
-julia train.jl –path-lucidchart-csv resources/TestFarsiTrans.csv
-–brain-entry transliterator –path-model resources/TestFarsiTrans.dat
+julia train.jl --path-lucidchart-csv resources/TestFarsiTrans.csv
+julia train.jl --brain-entry transliterator --path-model resources/TestFarsiTrans.dat
 ----
 
 * Transliterate single string (with debugging mode)
