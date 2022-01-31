@@ -46,7 +46,19 @@ dicCODE["output its transliteration!"] =
     Functor(d -> (d["res"] = data["data"][1]["PhonologicalForm"]; d),
             Dict(:in => ["data"], :out => ["res"]))
 
+dicCODE["stem it!"] =
+    Functor(d -> (d["stem"] = stemmer.stem(d["word"]); d),
+            Dict(:in => ["word"], :out => ["stem"]))
 
+dicCODE["is the verb root found in the db?"] =
+    Functor(d -> (d["data"]=py"""search_db"""(d["lemma"], d["pos"]);
+            d["state"] = typeof(d["data"]) != String ? "yes" : "no"; d),
+            Dict(:in => ["lemma", "pos"], :out => ["data", "state"]))
+
+dicCODE["does the root of the word exist in the database?"] =
+    Functor(d -> (d["data"]=py"""search_db"""(d["stem"], d["pos"]);
+            d["state"] = typeof(d["data"]) != String ? "yes" : "no"; d),
+            Dict(:in => ["stem", "pos"], :out => ["data", "state"]))
 
 
 # collision-handler
