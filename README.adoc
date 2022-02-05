@@ -58,7 +58,7 @@ julia packageInstall.jl
 * Train
 [source,bash]
 ----
-julia train.jl –help
+julia train.jl –-help
 julia train.jl --path-lucidchart-csv resources/TestFarsiTrans.csv
 julia train.jl --brain-entry transliterator --path-model resources/TestFarsiTrans.dat
 ----
@@ -66,7 +66,7 @@ julia train.jl --brain-entry transliterator --path-model resources/TestFarsiTran
 * Transliterate single string (with debugging mode)
 [source,bash]
 ----
-julia transliterateSingleString.jl –help
+julia transliterateSingleString.jl –-help
 julia transliterateSingleString.jl –path-model
 resources/TestFarsiTrans.dat –farsi-text یویو –pos-tagging N
 ----
