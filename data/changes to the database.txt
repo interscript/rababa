@@ -35,3 +35,5 @@
 18. Changed digits 0 to 9 in Farsi entries to the Farsi versions of them so they change to corresponding English ones.
 
 19. Added a row for آ with T PoS and another for ئ transliterated /'/
+
+20. I changed the transliteration for گروتسک from /gerotsek/ to /gerotesk/
