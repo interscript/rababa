@@ -76,7 +76,7 @@ resources/TestFarsiTrans.dat –farsi-text یویو –pos-tagging N
 run diacritization on file:
 [source,bash]
 ----
-julia run.jl –help
+julia run.jl –-help
 julia run.jl --path-model resources/TestFarsiTrans.dat --file-name data/test_poems.txt
 ----
 
