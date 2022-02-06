@@ -63,16 +63,27 @@ graph = dicBRAINS[entryBrain]
 pos = parsedArgs["pos-tagging"] |> 
     (p -> string(uppercase(p[1]), p[2:end]))
 
-if !(pos in vcat(py"""l_PoS""", collect(keys(py"""d_map_FLEXI"""))))
+l_supported_POS = vcat(py"""l_PoS""", 
+                       collect(keys(py"""d_map_FLEXI""")),
+                       collect(keys(py"""d_map_HAZM""")))
+
+if !(pos in l_supported_POS)
     
-    @error "pos unrecognised, needs to be within: ", 
-               vcat(py"""l_PoS""", collect(keys(py"""d_map_FLEXI""")))
+    @error "pos unrecognised, needs to be within: ", l_supported_POS
     exit()
         
 else
 
-    pos = !(pos in py"""l_PoS""") ? py"""d_map_FLEXI"""[pos] : pos
-
+    if pos in collect(keys(py"""d_map_FLEXI"""))
+       
+        pos = py"""d_map_FLEXI"""[pos]
+        
+    elseif pos in collect(keys(py"""d_map_HAZM"""))
+        
+        pos = py"""d_map_HAZM"""[pos]
+        
+    end
+       
 end
 
 
