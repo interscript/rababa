@@ -23,7 +23,7 @@ function parse_commandline()
         "--brain-entry"
             help = "brain entry"
         "--path-model"
-            help = "path to the train model"
+            help = "path to the train model, e.g. resources/model.dat"
 
     end
 

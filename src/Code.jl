@@ -36,7 +36,7 @@ dicCODE["does only one of the verb roots exist in the verb?"] =
 
 dicCODE["output it!"] =
     Functor(d -> d,
-            Dict(:in => ["word"], :out => []))
+            Dict(:in => ["data"], :out => []))
 
 dicCODE["collision?"] =
     Functor(d -> (d["state"] = length(d["data"]) == 1 ? "no" : "yes"; d),
@@ -44,7 +44,7 @@ dicCODE["collision?"] =
 
 dicCODE["output its transliteration!"] =
     Functor(d -> (d),
-            Dict(:in => ["data"], :out => ["res"]))
+            Dict(:in => [], :out => []))
 
 dicCODE["stem it!"] =
     Functor(d -> (d["stem"] = stemmer.stem(d["word"]); d),
@@ -60,6 +60,10 @@ dicCODE["does the root of the word exist in the database?"] =
             d["state"] = typeof(d["data"]) != String ? "yes" : "no"; d),
             Dict(:in => ["stem", "pos"], :out => ["data", "state"]))
 
+dicCODE["transliterate each side of underscore separately in proper order"] =
+    Functor(d -> split(d["lemma"], "_") |> 
+                (D -> map(x -> py"""return_highest_search_pos"""(x, d["pos"]), D) |> join),
+            Dict(:in => ["lemma"], :out => ["res"]))
 
 # collision-handler
 
