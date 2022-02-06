@@ -68,7 +68,7 @@ dicCODE["transliterate each side of underscore separately in proper order"] =
 # collision-handler
 
 dicCODE["is there an instance of the word with the desired pos?"] =
-    Functor(d -> ( #println(d["data"]);
+    Functor(d -> ( # println(d["data"]);
             d["state"] = py"""has_entries_search_pos"""(d["data"], d["pos"]); d),
             Dict(:in => ["data", "pos"], :out => ["state"]))
 
@@ -77,7 +77,7 @@ dicCODE["is there only one instance of the word with the desired pos?"] =
             Dict(:in => ["data", "pos"], :out => ["state"]))
 
 dicCODE["return the transliteration of the instance with the desired pos!"] =
-    Functor(d -> (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); println(d["res"]);d),
+    Functor(d -> (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]);d),
             Dict(:in => ["data", "pos"], :out => ["res"]))
 
 dicCODE["return the transliteration of the instance with the desired pos that has the highest frequency!"] =
