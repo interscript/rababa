@@ -31,8 +31,7 @@ end
 
 function runAgent(node::Node,
                   dicBRAINS::Dict{String, Node},
-                  data::Union{Nothing, Any}) #, 
-                  #debug::Bool=false)
+                  data::Union{Nothing, Any})
 
     name = node.x[:Label]
 
@@ -79,10 +78,8 @@ function runAgent(node::Node,
 
         end
     
-    #if mode
+
     @info "data::> ", data
-    #end
-    
-    runAgent(node, dicBRAINS, data) #, mode)
+    runAgent(node, dicBRAINS, data)
 
 end
