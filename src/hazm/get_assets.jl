@@ -36,6 +36,7 @@ df_Affixes = dic_assets['affixes']
 df_Entries = dic_assets['entries']
 d_FLEXI = dic_assets['d_FLEXI']
 d_map_FLEXI = dic_assets['d_map_FLEXI']
+l_PoS = list(set([s for s in d_map_FLEXI.values()]))
 d_HAZM = dic_assets['d_HAZM']
 d_map_HAZM = dic_assets['d_map_HAZM']
 

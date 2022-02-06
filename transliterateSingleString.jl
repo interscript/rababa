@@ -10,6 +10,7 @@ using Serialization
 include("src/Graphs.jl")
 include("src/Code.jl")
 include("src/Agent.jl")
+include("src/hazm/get_assets.jl") # for PoS processing
 
 
 using PyCall
@@ -58,9 +59,26 @@ graph = dicBRAINS[entryBrain]
 
 
 # prepare data
+
+pos = parsedArgs["pos-tagging"] |> 
+    (p -> string(uppercase(p[1]), p[2:end]))
+
+if !(pos in vcat(py"""l_PoS""", collect(keys(py"""d_map_FLEXI"""))))
+    
+    @error "pos unrecognised, needs to be within: ", 
+               vcat(py"""l_PoS""", collect(keys(py"""d_map_FLEXI""")))
+    exit()
+        
+else
+
+    pos = !(pos in py"""l_PoS""") ? py"""d_map_FLEXI"""[pos] : pos
+
+end
+
+
 data = Dict{String, Any}(
             "word" => parsedArgs["farsi-text"],
-            "pos" => parsedArgs["pos-tagging"],
+            "pos" => pos,
             "state" => nothing, # used for messages back to system
             "brain" => entryBrain) # current brain or graph
 

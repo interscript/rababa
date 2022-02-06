@@ -3,6 +3,7 @@
 function processNode(node::Node, data::Union{Nothing, Any})
 
     command = node.x[:Label]
+    
     if haskey(dicCODE, command)
 
         states = collect(keys(data))
@@ -34,7 +35,6 @@ function runAgent(node::Node,
 
     name = node.x[:Label]
 
-
     node =
 
         if haskey(dicBRAINS, name)
@@ -64,8 +64,10 @@ function runAgent(node::Node,
             end
 
             if length(node.children) > 1
-
-                id = node.x[:map][data["state"]]
+                
+                state = data["state"]
+                @info "response::> ", state
+                id = node.x[:map][state]
                 node.children[id]
 
             else

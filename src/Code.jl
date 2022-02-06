@@ -35,7 +35,7 @@ dicCODE["does only one of the verb roots exist in the verb?"] =
             Dict(:in => ["word", "lemma"], :out => ["state"]))
 
 dicCODE["output it!"] =
-    Functor(d -> d, #println(d["word"]),
+    Functor(d -> d,
             Dict(:in => ["word"], :out => []))
 
 dicCODE["collision?"] =
@@ -43,7 +43,7 @@ dicCODE["collision?"] =
             Dict(:in => ["data"], :out => ["state"]))
 
 dicCODE["output its transliteration!"] =
-    Functor(d -> (d["res"] = data["data"][1]["PhonologicalForm"]; d),
+    Functor(d -> (d),
             Dict(:in => ["data"], :out => ["res"]))
 
 dicCODE["stem it!"] =
@@ -64,7 +64,8 @@ dicCODE["does the root of the word exist in the database?"] =
 # collision-handler
 
 dicCODE["is there an instance of the word with the desired pos?"] =
-    Functor(d -> (d["state"] = py"""has_entries_search_pos"""(d["data"], d["pos"]); d),
+    Functor(d -> ( #println(d["data"]);
+            d["state"] = py"""has_entries_search_pos"""(d["data"], d["pos"]); d),
             Dict(:in => ["data", "pos"], :out => ["state"]))
 
 dicCODE["is there only one instance of the word with the desired pos?"] =
@@ -72,7 +73,7 @@ dicCODE["is there only one instance of the word with the desired pos?"] =
             Dict(:in => ["data", "pos"], :out => ["state"]))
 
 dicCODE["return the transliteration of the instance with the desired pos!"] =
-    Functor(d -> (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); d),
+    Functor(d -> (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); println(d["res"]);d),
             Dict(:in => ["data", "pos"], :out => ["res"]))
 
 dicCODE["return the transliteration of the instance with the desired pos that has the highest frequency!"] =

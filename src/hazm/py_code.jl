@@ -33,6 +33,7 @@ def has_entries_search_pos(l_search, pos):
 def has_only_one_search_pos(l_search, pos):
     l_search_tmp = [d for d in l_search
                     if d_map_FLEXI.get(d['SynCatCode'], False)==pos]
+
     return "yes" if len(l_search_tmp) == 1 else "no"
 
 def votation_entries(l_search, entries=True):
@@ -52,7 +53,7 @@ def votation_entries(l_search, entries=True):
 def return_highest_search_pos(l_search, pos):
     return votation_entries(
         [d for d in l_search
-         if d_map_FLEXI.get(d['SynCatCode'], False)==pos])
+             if d_map_FLEXI.get(d['SynCatCode'], False)==pos])
 
 def return_highest_search(l_search):
     return votation_entries(l_search)
