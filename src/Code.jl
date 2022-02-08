@@ -35,7 +35,10 @@ dicCODE["does only one of the verb roots exist in the verb?"] =
             Dict(:in => ["word", "lemma"], :out => ["state"]))
 
 dicCODE["output it!"] =
-    Functor(d -> d,
+    Functor(d -> (haskey(d, "res") ? d :
+                   typeof(d["data"]) == Vector{Dict{Any, Any}} ?
+                        (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); d) :
+                         d),
             Dict(:in => ["data"], :out => []))
 
 dicCODE["collision?"] =
@@ -43,7 +46,10 @@ dicCODE["collision?"] =
             Dict(:in => ["data"], :out => ["state"]))
 
 dicCODE["output its transliteration!"] =
-    Functor(d -> (d),
+    Functor(d -> (haskey(d, "res") ? d :
+                    typeof(d["data"]) == Vector{Dict{Any, Any}} ?
+                        (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); d) :
+                         d),
             Dict(:in => [], :out => []))
 
 dicCODE["stem it!"] =
@@ -61,7 +67,7 @@ dicCODE["does the root of the word exist in the database?"] =
             Dict(:in => ["stem", "pos"], :out => ["data", "state"]))
 
 dicCODE["transliterate each side of underscore separately in proper order"] =
-    Functor(d -> split(d["lemma"], "_") |> 
+    Functor(d -> split(d["lemma"], "_") |>
                 (D -> map(x -> py"""return_highest_search_pos"""(x, d["pos"]), D) |> join),
             Dict(:in => ["lemma"], :out => ["res"]))
 
