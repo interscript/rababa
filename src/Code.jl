@@ -18,7 +18,7 @@ dicCODE["is the word found in the db?"] =
             Dict(:in => ["word", "pos"], :out => ["data", "state"]))
 
 dicCODE["is it a verb?"] =
-    Functor(d -> (d["state"] = d["pos"] == "V" ? "yes" : "no"; d),
+    Functor(d -> (d["state"] = d["pos"] == "Verb" ? "yes" : "no"; d),
             Dict(:in => ["pos"], :out => ["state"]))
 
 dicCODE["lemmatize it!"] =
