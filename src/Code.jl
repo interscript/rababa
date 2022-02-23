@@ -71,6 +71,7 @@ dicCODE["transliterate each side of underscore separately in proper order"] =
                 (D -> map(x -> py"""return_highest_search_pos"""(x, d["pos"]), D) |> join),
             Dict(:in => ["lemma"], :out => ["res"]))
 
+
 # collision-handler
 
 dicCODE["is there an instance of the word with the desired pos?"] =
@@ -93,3 +94,183 @@ dicCODE["return the transliteration of the instance with the desired pos that ha
 dicCODE["return the transliteration of the instance with the highest frequency!"] =
     Functor(d -> (d["res"] = py"""return_highest_search"""(d["data"]); d),
             Dict(:in => ["data"], :out => ["res"]))
+
+
+# Full Model
+
+#===
+dicCODE["find the longest substring of the input that exists in affixes and starts in the beginning of the input and run affix-handler on it then omit that substring from the input and do this again until the input is empty. then return the concatenation of all the returned transliterations."] = 
+    Functor(, 
+            Dict())
+
+dicCODE["is there only one instance of the affix?"] =
+    Functor(d -> ,
+            Dict(:in => ["affix"], :out => ["state"]))
+===#
+
+dicCODE["return \"id\""] = 
+    Functor(d -> d,
+            Dict(:in => [], :out => []))
+
+dicCODE["terminator"] = 
+    Functor(d -> d,
+            Dict(:in => [], :out => []))
+
+
+# affix-handler
+
+dicCODE["is it ست?"] =
+    Functor(d -> d["state"] = d["affix"] == "ست" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+dicCODE["is it ی?"] = 
+    Functor(d -> d["state"] = d["affix"] == "ی" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+dicCODE["is it ات?"] = 
+    Functor(d -> d["state"] = d["affix"] == "ات" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+dicCODE["is it ان?"] = 
+    Functor(d -> d["state"] = d["affix"] == "ان" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+dicCODE["is it ش?"] =
+    Functor(d -> d["state"] = d["affix"] == "ش" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+dicCODE["is it م?"] = 
+    Functor(d -> d["state"] = d["affix"] == "م" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+
+dicCODE["is it مان?"] =
+    Functor(d -> d["state"] = d["affix"] == "مان" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+dicCODE["is it می?"] =
+    Functor(d -> d["state"] = d["affix"] == "می" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+dicCODE["is it ون?"] =
+    Functor(d -> d["state"] = d["affix"] == "ون" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+dicCODE["is it ید?"] =
+    Functor(d -> d["state"] = d["affix"] == "ید" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+dicCODE["is it یم?"] =
+    Functor(d -> d["state"] = d["affix"] == "یم" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+dicCODE["is it ن?"] =
+    Functor(d -> d["state"] = d["affix"] == "ن" ? "yes" : "no",
+            Dict(:in => ["affix"], :out => ["state"]))
+
+
+
+dicCODE["return \"st\""] = 
+    Functor(d -> d["res"] = "st",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"ast\""] =
+    Functor(d -> d["res"] = "ast",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"i\""] =
+    Functor(d -> d["res"] = "i",
+            Dict(:in => [], :out => ["res"]))
+            
+dicCODE["return \"ye\""] = 
+    Functor(d -> d["res"] = "ye",
+            Dict(:in => [], :out => ["res"]))
+          
+dicCODE["return \"at\""] =
+    Functor(d -> d["res"] = "at",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"'at\""] =
+    Functor(d -> d["res"] = "'at",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"yan\""] =
+        Functor(d -> d["res"] = "yan",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"an\""] =
+    Functor(d -> d["res"] = "an",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"as\""] =
+    Functor(d -> d["res"] = "as",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"es\""] = 
+    Functor(d -> d["res"] = "es",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"om\""] =
+    Functor(d -> d["res"] = "om",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"am\""] = 
+    Functor(d -> d["res"] = "am",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"man\""] = 
+    Functor(d -> d["res"] = "man",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"eman\""] = 
+    Functor(d -> d["res"] = "eman",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"omi\""] = 
+    Functor(d -> d["res"] = "omi",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"mi\""] = 
+    Functor(d -> d["res"] = "mi",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"yun\""] = 
+    Functor(d -> d["res"] = "yun",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"un\""] =
+        Functor(d -> d["res"] = "un",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"yad\""] = 
+    Functor(d -> d["res"] = "yad",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"im\""] = 
+    Functor(d -> d["res"] = "im",
+            Dict(:in => [], :out => ["res"]))
+
+dicCODE["return \"yam\""] = 
+    Functor(d -> d["res"] = "yam",
+            Dict(:in => [], :out => ["res"]))
+
+
+# dicCODE["return \"im\""] =
+# dicCODE["return \"im\""] =
+# dicCODE["return \"an\""] =
+
+dicCODE["is it a suffix?"] =
+    Functor(d -> (aff = d["affix"]; d["state"] = d["word"][length(aff)] == aff ? "yes" : "no"),
+            Dict(:in => ["word", "affix"], :out => ["state"]))
+
+dicCODE["is there only one instance of the affix?"] = 
+    Functor(d -> (d["state"] = py"""has_only_one_search_pos"""(d["data"]); d),
+            Dict(:in => ["data"], :out => ["state"]))
+
+dicCODE["use it! "] =
+    Functor(d -> d, #(d["state"] = py"""has_only_one_search_pos"""(d["data"]); d),
+            Dict(:in => ["lemma"], :out => ["lemma"]))
+
+dicCODE["is the word before it a verb?"] =
+    Functor(d -> d, #(d["state"] = py"""has_only_one_search_pos"""(d["data"]); d),
+            Dict(:in => ["lemma"], :out => ["lemma"]))

@@ -30,9 +30,13 @@ def has_entries_search_pos(l_search, pos):
             return "yes"
     return "no"
 
-def has_only_one_search_pos(l_search, pos):
-    l_search_tmp = [d for d in l_search
-                    if d_map_FLEXI.get(d['SynCatCode'], False)==pos]
+def has_only_one_search_pos(l_search, pos=None):
+
+    if not pos is None: 
+        l_search_tmp = [d for d in l_search
+                        if d_map_FLEXI.get(d['SynCatCode'], False)==pos]
+    else:
+        l_search_tmp = l_search
 
     return "yes" if len(l_search_tmp) == 1 else "no"
 
