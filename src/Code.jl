@@ -52,6 +52,9 @@ dicCODE["output its transliteration!"] =
                          d),
             Dict(:in => [], :out => []))
 
+dicCODE["return its transliteration!"] = dicCODE["output its transliteration!"]
+
+
 dicCODE["stem it!"] =
     Functor(d -> (d["stem"] = stemmer.stem(d["word"]); d),
             Dict(:in => ["word"], :out => ["stem"]))
@@ -222,6 +225,10 @@ dicCODE["return \"man\""] =
     Functor(d -> d["res"] = "man",
             Dict(:in => [], :out => ["res"]))
 
+dicCODE["return \"na\""] =
+    Functor(d -> d["res"] = "na",
+            Dict(:in => [], :out => ["res"]))
+
 dicCODE["return \"eman\""] = 
     Functor(d -> d["res"] = "eman",
             Dict(:in => [], :out => ["res"]))
@@ -268,9 +275,105 @@ dicCODE["is there only one instance of the affix?"] =
             Dict(:in => ["data"], :out => ["state"]))
 
 dicCODE["use it! "] =
-    Functor(d -> d, #(d["state"] = py"""has_only_one_search_pos"""(d["data"]); d),
+    Functor(d -> d,
             Dict(:in => ["lemma"], :out => ["lemma"]))
 
 dicCODE["is the word before it a verb?"] =
-    Functor(d -> d, #(d["state"] = py"""has_only_one_search_pos"""(d["data"]); d),
+    Functor(d -> d,
             Dict(:in => ["lemma"], :out => ["lemma"]))
+
+dicCODE["is the word to-which it's attached, a noun?"] =
+    Functor(d -> (d["state"] = d["pos"] == "Noun" ? "true" : "false"; d),
+            Dict(:in => ["pos"], :out => ["state"]))
+
+dicCODE["is the word to-which it's attached, a number or چند?"] = 
+    Functor(d -> (d["state"] = contains(d["word"], "چند") ? "yes" :
+        d["pos"] == "Number" ? "true" : "false"; d),
+            Dict(:in => ["pos", "affix"], :out => ["state"]))
+
+dicCODE["is the verb root to-which it's attached, marked as v2 in the database?"] = 
+    Functor(d -> d,
+            Dict(:in => ["verb_root"], :out => ["state"]))
+
+dicCODE["does the verb root to-which it's attached, end in any of the /e, a, u/ sounds?"] =
+    Functor(d -> d,
+            Dict(:in => ["verb_root"], :out => ["state"]))
+
+dicCODE["is there a space or semi-space before it?"] =
+    Functor(d -> (n = first(findlast(d["affix"], d["word"]));
+                  if n > 1
+                      d["word"][n-1:n-1] == " " ? 
+                           d["state"] = "yes" :
+                        if n > 4
+                            d["state"] = 
+                                d["word"][n-3:n-1+length(d["affix"])] == string('\u200c', d["affix"]) ?
+                                "yes" : "no"
+                        else
+                            d["state"] = "no"
+                        end
+                  else
+                      d["state"] = "no" 
+                  end; 
+                  d),
+            Dict(:in => ["word", "affix"], :out => ["state"]))
+
+dicCODE["is is found in affixes?"] =
+    Functor(d -> (d["data"] = py"""affix_search"""(d["affix"]);
+                  d["state"] = length(d["data"]) > 0 ? "true" : "false"; d),
+            Dict(:in => ["affix"], :out => ["state", "data"]))
+
+dicCODE["return its transliteration in affixes"] =
+    Functor(d -> (d["res"] = d["data"][1]["PhonologicalForm"];
+                  d["state"] = length(d["data"]) > 0 ? "true" : "false";
+                  d),
+            Dict(:in => ["data"], :out => ["res"]))
+
+
+dicCODE["is the prefix ب or بی?"] =
+    Functor(d -> (d["state"] = d["prefix"] in ["ب" ,"بی"] ? "true" : "false";
+                  d),
+            Dict(:in => ["prefix"], :out => ["state"]))
+    
+
+#dicCODE["do both verb roots exist in the verb?"] =
+#    Functor(d -> (#d["res"] = d["data"][1]["PhonologicalForm"];
+#                  d["state"] = length(d["data"]) > 0 ? "true" : "false";
+#                  d),
+#            #Dict(:in => ["stem"], :out => ["state"])
+#            Dict(:in => ["word", "lemma"], :out => ["state"]))
+
+dicCODE["do both verb roots exist in the verb?"] =
+    Functor(d -> (d["state"] = length(filter(x -> occursin(x, d["word"]),
+                                      split(d["lemma"], "#"))) == 2 ? "yes" : "no"; d),
+            Dict(:in => ["word", "lemma"], :out => ["state"]))
+
+
+dicCODE["use the second verb root!"] =
+    Functor(d -> (d["res"] = split(d["lemma"], "#")[2]; d),
+            Dict(:in => ["lemma"], :out => ["res"]))
+
+dicCODE["use the first verb root!"] =
+    Functor(d -> (d["state"] = split(d["lemma"], "#")[1]; d),
+            Dict(:in => ["lemma"], :out => ["res"]))
+
+dicCODE["undo the change to the first verb root and use it!"] =
+    Functor(d -> (d["res"] = split(d["lemma"], "#")[1]; d),
+            Dict(:in => ["lemma"], :out => ["res"]))
+
+dicCODE["undo the change to the second verb root and use it!"] =
+    Functor(d -> (d["res"] = split(d["lemma"], "#")[2]; d),
+            Dict(:in => ["lemma"], :out => ["res"]))
+
+dicCODE["is there an آ in the verb roots?"] = 
+    Functor(d -> (d["res"] = split(d["lemma"], "#")[2]; d),
+            Dict(:in => ["lemma"], :out => ["res"]))
+
+#===
+dicCODE["change the first آ in the verb root(s) to ا."] =
+    Functor(d -> (d["res"] = split(d["lemma"], "#")[2]; d),
+            Dict(:in => ["lemma"], :out => ["res"]))
+
+dicCODE["undo the change to the verb root and use it! "] = 
+    Functor(d -> (d["res"] = split(d["lemma"], "#")[2]; d),
+            Dict(:in => ["lemma"], :out => ["res"]))
+===#

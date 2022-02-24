@@ -24,6 +24,18 @@ def search_db(wrd, pos_pos=None):
     else: # if one unique found, return the form
         return l_search
 
+def affix_search(affix, pos_pos=None):
+
+    if affix == '':
+        return ''
+
+    l_search = assets.df_Affixes[assets.df_Affixes['Affix']==affix].to_dict('records')
+
+    if len(l_search) == 0: # if not found, returns affix
+        return affix
+    else:
+        return l_search
+
 def has_entries_search_pos(l_search, pos):
     for d in l_search:
         if d_map_FLEXI.get(d['SynCatCode'], False)==pos:
