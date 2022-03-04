@@ -1,6 +1,9 @@
 
 
-function processNode(node::Node, data::Union{Nothing, Any})
+function processNode(node::Node,
+                     dicBRAINS::Dict{String, Node},
+                     df_Nodes::DataFrame,
+                     data::Union{Nothing, Any})
 
     command = node.x[:Label]
     
@@ -17,7 +20,7 @@ function processNode(node::Node, data::Union{Nothing, Any})
             return nothing
         end
 
-        dicCODE[command].fct(data)
+        dicCODE[command].fct(data, dicBRAINS, df_Nodes)
 
     else
 
@@ -31,6 +34,7 @@ end
 
 function runAgent(node::Node,
                   dicBRAINS::Dict{String, Node},
+                  df_Nodes::DataFrame,
                   data::Union{Nothing, Any})
 
     name = node.x[:Label]
@@ -44,7 +48,7 @@ function runAgent(node::Node,
             if data["brain"] != name
 
                 # run elsewhere in graph
-                runAgent(dicBRAINS[name].children[1], dicBRAINS, data)
+                runAgent(dicBRAINS[name].children[1], dicBRAINS, df_Nodes, data)
                 data["brain"] = name
 
             end
@@ -55,11 +59,11 @@ function runAgent(node::Node,
         else
             
             @info "node::> ", name
-            data = processNode(node, data)
+            data = processNode(node, dicBRAINS, df_Nodes, data)
 
             if node.children == nothing
 
-                return haskey(data,"res") ? data["res"] : data["word"]
+                return haskey(data, "res") ? data["res"] : data["word"]
 
             end
 
@@ -80,6 +84,6 @@ function runAgent(node::Node,
     
 
     @info "data::> ", data
-    runAgent(node, dicBRAINS, data)
+    runAgent(node, dicBRAINS, df_Nodes, data)
 
 end
