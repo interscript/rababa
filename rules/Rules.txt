@@ -14,7 +14,7 @@
 
 7. The affix ی, always a suffix, never a prefix, is used with verbs and nouns. For verbs, it has only one transliteration. If the word before it, is not a verb, which will usually be a noun (not always), if the transliteration of the word before it ends in /a,e,o,A,u/, the last transliteration of the noun kind, /ye/, should be used, else, the first transliteration should be used. I added PoS tags to the last two ones since they're for verbs.
 
-8. Wherever there's the letter ۀ as in the word همۀ the transliteration of the word containing it should end in /eye/ based on the database transliteration system. That letter can also be written down as  هٔ as in the word همهٔ. So it may consist of one or two characters. Note that the word containing this letter already ends in /e/ so we only need to add the /ye/ part to the end of it.
+8. Wherever there's the letter ۀ as in the word همۀ the transliteration of the word containing it should end in /eye/ based on the database transliteration system. That letter can also be written down as هٔ as in the word همهٔ. So it may consist of one or two characters. Note that the word containing this letter already ends in /e/ so we only need to add the /ye/ part to the end of it.
 
 9. The affix ات is a collision. Note that it's always a suffix, never a prefix. When faced, if it's attached to the word with no space or semispace, the first transliteration should be chosen. If there's a space or semispace before it, then choose the second  transliteration.
 
