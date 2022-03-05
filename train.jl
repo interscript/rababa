@@ -83,5 +83,6 @@ end
 
 println("save data to: ", modelName)
 serialize(modelName, Dict(:dicBrains => dicBRAINS,
+                          :df_Nodes => df_Nodes,
                           :entry => brainEntry))
 println("data saved to: ", modelName)

@@ -401,7 +401,8 @@ dicCODE["is it a single letter?"] =
 
 
 dicCODE["is it found in affixes?"] =
-    Functor((d,e=nothing,f=nothing) -> (d["state"] = length(py""""affix_search"""(d["affix"])) > 0 ? "yes" : "no"; d),
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = length(py""""affix_search"""(d["affix"])) > 0 ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 
@@ -478,7 +479,7 @@ dicCODE["transliterate it using affix-handler"] =
 
 
 dicCODE["run affix-handler on affix vector"] =
-    Functor((d,e=nothing,f=nothing) -> 
+    Functor((d,e=nothing,f=nothing) ->
                             (interfaceName = "affix-handler";
                              node = get_node(interfaceName, f);
                              join([processNode(node, e, (d["affix"]=a;d))
@@ -486,8 +487,8 @@ dicCODE["run affix-handler on affix vector"] =
             Dict(:in => ["l_affix"], :out => ["res"]))
 
 
-dicCODE["find the longest substring of the input that exists in the database."] = 
-    Functor((d,e=nothing,f=nothing) -> 
+dicCODE["find the longest substring of the input that exists in the database."] =
+    Functor((d,e=nothing,f=nothing) ->
                             (d["res"] = recu_entries(d["word"]); d),
             Dict(:in => ["word"], :out => ["res"]))
 
@@ -495,7 +496,7 @@ dicCODE["find the longest substring of the input that exists in the database."] 
 dicCODE["transliterate each side of it separately in proper order and put its transliteration with the highest frequency between them."] =
     Functor((d,e=nothing,f=nothing) -> d,
             Dict(:in => ["word"], :out => ["res"]))
-    
+
 dicCODE["transliterate each side of it separately in proper order and put its transliteration with the highest frequency between them"] =
     Functor((d,e=nothing,f=nothing) -> d,
             Dict(:in => ["word"], :out => ["res"]))

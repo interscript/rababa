@@ -59,6 +59,7 @@ data = deserialize(parsedArgs["path-model"])
 
 entryBrain = data[:entry]
 dicBRAINS = data[:dicBrains]
+df_Nodes = data[:df_Nodes]
 graph = dicBRAINS[entryBrain]
 
 
@@ -73,7 +74,7 @@ data = Dict{String, Any}(
 if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
    
 
-    df_Test = DataFrame(CSV.File("data/test.csv"))
+    df_Test = DataFrame(CSV.File("data/test_data.csv"))
 
     df_Test[!,"transModel"] =
         map(d -> d |>
@@ -83,7 +84,7 @@ if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
                         (D -> map(d -> (data["word"] = d[1];
                                         data["pos"] = d[2];
                                         data["state"] = nothing;
-                               runAgent(graph, dicBRAINS, data)), D)) |>
+                               runAgent(graph, dicBRAINS, df_Nodes, data)), D)) |>
                             (L -> join(L, " ")),
     df_Test[!,"orig"])
 
@@ -107,7 +108,7 @@ else # transliterate the file
                         (D -> map(d -> (data["word"] = d[1];
                                         data["pos"] = d[2];
                                         data["state"] = nothing;
-                               runAgent(graph, dicBRAINS, data)), D)) |>
+                               runAgent(graph, dicBRAINS, df_Nodes, data)), D)) |>
                             (L -> join(L, " ")) |>
                                 println,
             D))
