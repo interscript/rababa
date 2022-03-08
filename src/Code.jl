@@ -315,9 +315,10 @@ dicCODE["is is found in affixes?"] =
             Dict(:in => ["affix"], :out => ["state", "data"]))
 
 dicCODE["return its transliteration in affixes"] =
-    Functor((d,e=nothing,f=nothing) -> (d["res"] = d["data"][1]["PhonologicalForm"];
-                  d["state"] = length(d["data"]) > 0 ? "true" : "false";
-                  d),
+    Functor((d,e=nothing,f=nothing) ->
+        (d["res"] = d["data"][1]["PhonologicalForm"];
+         d["state"] = length(d["data"]) > 0 ? "true" : "false";
+         d),
             Dict(:in => ["data"], :out => ["res"]))
 
 
@@ -405,7 +406,8 @@ dicCODE["is it a single letter?"] =
 
 dicCODE["is it found in affixes?"] =
     Functor((d,e=nothing,f=nothing) ->
-        (d["state"] = length(py""""affix_search"""(d["word"])) > 0 ? "yes" : "no"; d),
+        (d["state"] = length(py"""affix_search"""(d["word"])) > 0 ? "yes" : "no";
+         d),
             Dict(:in => ["word"], :out => ["state"]))
 
 

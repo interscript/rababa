@@ -29,7 +29,7 @@ def affix_search(affix, pos_pos=None):
     if affix == '':
         return ''
 
-    l_search = assets.df_Affixes[assets.df_Affixes['Affix']==affix].to_dict('records')
+    l_search = df_Affixes[df_Affixes['Affix']==affix].to_dict('records')
 
     if len(l_search) == 0: # if not found, returns affix
         return affix
