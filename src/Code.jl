@@ -322,9 +322,12 @@ dicCODE["return its transliteration in affixes"] =
 
 
 dicCODE["is the prefix ب or بی?"] =
-    Functor((d,e=nothing,f=nothing) -> (d["state"] = d["prefix"] in ["ب" ,"بی"] ? "true" : "false";
-                  d),
-            Dict(:in => ["prefix"], :out => ["state"]))
+    Functor((d,e=nothing,f=nothing) ->
+                (wrd = d["word"];
+                 root = filter(x -> contains(wrd, x), split(d["lemma"], "#"))[1];
+                 idx = findfirst(root, wrd)[1];
+                 d["state"] = wrd[1:idx] in ["ب", "بی"] ? "yes" : "no"; d),
+            Dict(:in => ["lemma", "word"], :out => ["state"]))
 
 
 dicCODE["do both verb roots exist in the verb?"] =
