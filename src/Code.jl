@@ -405,8 +405,8 @@ dicCODE["is it a single letter?"] =
 
 dicCODE["is it found in affixes?"] =
     Functor((d,e=nothing,f=nothing) ->
-        (d["state"] = length(py""""affix_search"""(d["affix"])) > 0 ? "yes" : "no"; d),
-            Dict(:in => ["affix"], :out => ["state"]))
+        (d["state"] = length(py""""affix_search"""(d["word"])) > 0 ? "yes" : "no"; d),
+            Dict(:in => ["word"], :out => ["state"]))
 
 
 dicCODE["return the transliteration with t as its pos"] =
