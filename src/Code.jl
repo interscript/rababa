@@ -47,7 +47,9 @@ dicCODE["collision?"] =
             Dict(:in => ["data"], :out => ["state"]))
 
 dicCODE["output its transliteration!"] =
-    Functor((d,e=nothing,f=nothing) -> (haskey(d, "res") ? d :
+    Functor((d,e=nothing,f=nothing) -> (
+            println(d["data"], " : ", d["pos"]);
+            haskey(d, "res") ? d :
                     typeof(d["data"]) == Vector{Dict{Any, Any}} ?
                         (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); d) :
                          d),
