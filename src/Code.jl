@@ -22,7 +22,8 @@ dicCODE["is it a verb?"] =
             Dict(:in => ["pos"], :out => ["state"]))
 
 dicCODE["lemmatize it!"] =
-    Functor((d,e=nothing,f=nothing) -> (d["lemma"] = lemmatizer.lemmatize(d["word"]); d),
+    Functor((d,e=nothing,f=nothing) ->
+        (d["lemma"] = lemmatizer.lemmatize(d["word"]); d),
             Dict(:in => ["word"], :out => ["lemma"]))
 
 dicCODE["includes underscores?"] =
@@ -342,7 +343,8 @@ dicCODE["use the second verb root!"] =
             Dict(:in => ["lemma"], :out => ["res"]))
 
 dicCODE["use the first verb root!"] =
-    Functor((d,e=nothing,f=nothing) -> (d["state"] = split(d["lemma"], "#")[1]; d),
+    Functor((d,e=nothing,f=nothing) ->
+            (d["lemma"] = split(d["lemma"], "#")[1]; d),
             Dict(:in => ["lemma"], :out => ["res"]))
 
 
@@ -395,8 +397,14 @@ dicCODE["is there anything after the word root?"] =
 
 
 dicCODE["is there anything before the word root?"] =
-    Functor((d,e=nothing,f=nothing) -> (d["state"] = 1 > last(findfirst(d["root"], d["word"])) ? "yes" : "no"; d),
-            Dict(:in => ["root", "word"], :out => ["state"]))
+    # lemma -> root
+    Functor((d,e=nothing,f=nothing) ->
+        (d["root"] = d["lemma"];
+         id = last(findfirst(d["lemma"], d["word"]));
+         d["state"] = 1 > last(findfirst(d["lemma"], d["word"])) ?
+            "yes" : "no"; d),
+            # Dict(:in => ["root", "word"], :out => ["state"])
+            Dict(:in => ["word"], :out => ["state"]))
 
 
 dicCODE["is it a single letter?"] =

@@ -6,7 +6,7 @@ function processNode(node::Node,
                      data::Union{Nothing, Any})
 
     command = node.x[:Label]
-    
+
     if haskey(dicCODE, command)
 
         states = collect(keys(data))
@@ -48,7 +48,8 @@ function runAgent(node::Node,
             if data["brain"] != name
 
                 # run elsewhere in graph
-                runAgent(dicBRAINS[name].children[1], dicBRAINS, df_Nodes, data)
+                runAgent(dicBRAINS[name].children[1],
+                         dicBRAINS, df_Nodes, data)
                 data["brain"] = name
 
             end
@@ -57,7 +58,7 @@ function runAgent(node::Node,
             node.children[1]
 
         else
-            
+
             @info "node::> ", name
             data = processNode(node, dicBRAINS, df_Nodes, data)
 
@@ -68,7 +69,7 @@ function runAgent(node::Node,
             end
 
             if length(node.children) > 1
-                
+
                 state = data["state"]
                 @info "response::> ", state
                 id = node.x[:map][state]
@@ -81,7 +82,6 @@ function runAgent(node::Node,
             end
 
         end
-    
 
     @info "data::> ", data
     runAgent(node, dicBRAINS, df_Nodes, data)
