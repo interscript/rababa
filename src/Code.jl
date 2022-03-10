@@ -266,12 +266,13 @@ dicCODE["is there only one instance of the affix?"] =
             Dict(:in => ["data"], :out => ["state"]))
 
 dicCODE["use it! "] =
-    Functor((d,e=nothing,f=nothing) -> d,
+    Functor((d,e=nothing,f=nothing) ->
+            (d["lemma"] = filter(x -> contains(d["word"], x),
+                                 split(d["lemma"], "#"))[1];
+             d),
             Dict(:in => ["lemma"], :out => ["lemma"]))
 
-dicCODE["use it!"] =
-    Functor((d,e=nothing,f=nothing) -> d,
-            Dict(:in => ["lemma"], :out => ["lemma"]))
+dicCODE["use it!"] = dicCODE["use it! "]
 
 dicCODE["is the word before it a verb?"] =
     Functor((d,e=nothing,f=nothing) -> d,
