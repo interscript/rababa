@@ -48,7 +48,6 @@ dicCODE["collision?"] =
 
 dicCODE["output its transliteration!"] =
     Functor((d,e=nothing,f=nothing) -> (
-            println(d["data"], " : ", d["pos"]);
             haskey(d, "res") ? d :
                     typeof(d["data"]) == Vector{Dict{Any, Any}} ?
                         (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); d) :
@@ -81,7 +80,7 @@ dicCODE["transliterate each side of underscore separately in proper order"] =
 # collision-handler
 
 dicCODE["is there an instance of the word with the desired pos?"] =
-    Functor((d,e=nothing,f=nothing) -> ( # println(d["data"]);
+    Functor((d,e=nothing,f=nothing) -> (
             d["state"] = py"""has_entries_search_pos"""(d["data"], d["pos"]); d),
             Dict(:in => ["data", "pos"], :out => ["state"]))
 
@@ -164,8 +163,9 @@ dicCODE["is it ن?"] =
     Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "ن" ? "yes" : "no",
             Dict(:in => ["affix"], :out => ["state"]))
 
-dicCODE["is it بی or نی?"] = # jair
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] in ["بی", "نی"] ? "yes" : "no",
+dicCODE["is it بی or نی?"] =
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] in ["بی", "نی"] ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["return \"st\""] =
@@ -262,7 +262,8 @@ dicCODE["is it a suffix?"] =
             Dict(:in => ["word", "affix"], :out => ["state"]))
 
 dicCODE["is there only one instance of the affix?"] =
-    Functor((d,e=nothing,f=nothing) -> (d["state"] = py"""has_only_one_search_pos"""(d["data"]); d),
+    Functor((d,e=nothing,f=nothing) -> (
+    d["state"] = py"""has_only_one_search_pos"""(d["data"]); d),
             Dict(:in => ["data"], :out => ["state"]))
 
 dicCODE["use it! "] =
@@ -395,8 +396,9 @@ dicCODE["does the transliteration of the segment before it end in any of the /a,
 
 
 dicCODE["is there anything after the word root?"] =
-    Functor((d,e=nothing,f=nothing) -> (d["state"] = length(d["word"]) > last(findlast(d["root"], d["word"])) ? "yes" : "no"; d),
-            Dict(:in => ["root", "word"], :out => ["state"]))
+    Functor((d,e=nothing,f=nothing) ->
+    (d["state"] = length(d["word"]) < last(findlast(reverse(d["lemma"]), reverse(d["word"]))) ? "yes" : "no"; d),
+            Dict(:in => ["lemma", "word"], :out => ["state"]))
 
 
 dicCODE["is there anything before the word root?"] =
@@ -449,8 +451,14 @@ dicCODE["mark it as prefix"] =
 
 
 dicCODE["mark it as suffix"] =
-    Functor((d,e=nothing,f=nothing) -> (d["prefix"] = d["word"][end(findlast(d["root"], d["word"]))+1:end]; d),
-            Dict(:in => ["word", "root"], :out => ["suffix"]))
+    Functor((d,e=nothing,f=nothing) ->
+      (d["suffix"] = (id = last(findlast(d["lemma"], d["word"]));
+       try
+          d["word"][id+1:end]
+       catch
+          d["word"][id+2:end]
+      end); d),
+            Dict(:in => ["word", "lemma"], :out => ["suffix"]))
 
 
 dicCODE["add it to the beginning of the root's transliteration"] =
@@ -481,22 +489,30 @@ dicCODE["return the concatenation of all the returned transliterations."] =
 
 dicCODE["transliterate it using affix-handler"] =
     Functor((d,e=nothing,f=nothing) -> d["res"] = if haskey(d, "prefix")
-                                            (interfaceName = "affix-handler";
+                                            (interfaceName = "is there only one instance of the affix?";
                                              node = get_node(interfaceName, f);
                                              d["affix"]=d["prefix"];
-                                             processNode(node, e, d))
+                                             d["res_prefix"] = processNode(node, e, d, f); d)
                                         elseif haskey(d, "suffix")
                                              (interfaceName = "affix-handler";
-                                             node = get_node(interfaceName, f);
-                                             d["affix"]=d["suffix"];
-                                             processNode(node, e, d))
+                                              node = e[interfaceName];
+                                              # println(1);
+                                              # println("abc: ", node.x[:Label]);
+                                              d["affix"] = d["suffix"];
+                                              d["word"] = d["suffix"];
+                                              println("############################");
+                                              println(py"""affix_search"""(d["affix"]));
+                                              println("############################");
+                                              d["data"] = py"""affix_search"""(d["affix"]);
+                                              d["res_suffix"] = runAgent(node, e, f, d);
+                                              d)
                                         end,
-            Dict(:in => ["prefix", "suffix"], :out => ["res"]))
+            Dict(:in => [], :out => ["res"]))
 
 
 dicCODE["run affix-handler on affix vector"] =
     Functor((d,e=nothing,f=nothing) ->
-                            (interfaceName = "affix-handler";
+                            (interfaceName = "is there only one instance of the affix?";
                              node = get_node(interfaceName, f);
                              join([processNode(node, e, (d["affix"]=a;d))
                                    for a in d["l_affix"]])),

@@ -44,7 +44,10 @@ def has_entries_search_pos(l_search, pos):
 
 def has_only_one_search_pos(l_search, pos=None):
 
-    if not pos is None: 
+    if type(l_search)==str:
+        return "yes"
+
+    if not pos is None:
         l_search_tmp = [d for d in l_search
                         if d_map_FLEXI.get(d['SynCatCode'], False)==pos]
     else:
