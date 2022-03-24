@@ -70,6 +70,10 @@ def votation_entries(l_search, entries=True):
     return list(d_results.items())[idx][0]
 
 def return_highest_search_pos(l_search, pos):
+
+    if type(l_search) == str:
+        return l_search
+
     data = [d for d in l_search
              if d_map_FLEXI.get(d['SynCatCode'], False)==pos]
     if len(data) == 0:

@@ -49,9 +49,9 @@ dicCODE["collision?"] =
 dicCODE["output its transliteration!"] =
     Functor((d,e=nothing,f=nothing) -> (
             haskey(d, "res") ? d :
-                    typeof(d["data"]) == Vector{Dict{Any, Any}} ?
-                        (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); d) :
-                         d),
+                typeof(d["data"]) == Vector{Dict{Any, Any}} ?
+                    (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); d) :
+                    (d["res"] = d["word"]; d)),
             Dict(:in => [], :out => []))
 
 dicCODE["return its transliteration!"] = dicCODE["output its transliteration!"]
@@ -462,12 +462,14 @@ dicCODE["mark it as suffix"] =
 
 
 dicCODE["add it to the beginning of the root's transliteration"] =
-    Functor((d,e=nothing,f=nothing) -> (d["res"] = string(d["res_prefix"], d["res"]); d),
+    Functor((d,e=nothing,f=nothing) ->
+        (d["res"] = string(d["res_prefix"], d["res"]); d),
             Dict(:in => ["res_prefix"], :out => ["res"]))
 
 
 dicCODE["add it to the end of the root's transliteration"] =
-    Functor((d,e=nothing,f=nothing) -> (d["res"] = string(d["res"], d["res_suffix"]); d),
+    Functor((d,e=nothing,f=nothing) ->
+        (d["res"] = string(d["res_root"], d["res_suffix"]); d),
             Dict(:in => ["res_suffix"], :out => ["res"]))
 
 
@@ -492,20 +494,22 @@ dicCODE["transliterate it using affix-handler"] =
                                             (interfaceName = "is there only one instance of the affix?";
                                              node = get_node(interfaceName, f);
                                              d["affix"]=d["prefix"];
+                                             d["word"] = d["prefix"];
+                                             res = d["res"];
+                                             delete!(d, "res");
+                                             d["data"] = py"""affix_search"""(d["affix"]);
+                                             d["res_root"] = res;
                                              d["res_prefix"] = processNode(node, e, d, f); d)
                                         elseif haskey(d, "suffix")
                                              (interfaceName = "affix-handler";
                                               node = e[interfaceName];
-                                              # println(1);
-                                              # println("abc: ", node.x[:Label]);
                                               d["affix"] = d["suffix"];
                                               d["word"] = d["suffix"];
-                                              println("############################");
-                                              println(py"""affix_search"""(d["affix"]));
-                                              println("############################");
+                                              res = d["res"];
+                                              delete!(d, "res");
                                               d["data"] = py"""affix_search"""(d["affix"]);
                                               d["res_suffix"] = runAgent(node, e, f, d);
-                                              d)
+                                              d["res_root"] = res; d)
                                         end,
             Dict(:in => [], :out => ["res"]))
 
