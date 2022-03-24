@@ -84,6 +84,7 @@ if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
                         (D -> map(d -> (data["word"] = d[1];
                                         data["pos"] = d[2];
                                         data["state"] = nothing;
+                                        println(data["word"], " : ", data["pos"]);
                                runAgent(graph, dicBRAINS, df_Nodes, data)), D)) |>
                             (L -> join(L, " ")),
     df_Test[!,"orig"])

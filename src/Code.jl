@@ -58,8 +58,8 @@ dicCODE["return its transliteration!"] = dicCODE["output its transliteration!"]
 
 
 dicCODE["stem it!"] =
-    Functor((d,e=nothing,f=nothing) -> (d["stem"] = stemmer.stem(d["word"]); d),
-            Dict(:in => ["word"], :out => ["stem"]))
+    Functor((d,e=nothing,f=nothing) -> (d["lemma"] = stemmer.stem(d["word"]); d),
+            Dict(:in => ["word"], :out => ["lemma"])) # lemma
 
 dicCODE["is the verb root found in the db?"] =
     Functor((d,e=nothing,f=nothing) -> (d["data"]=py"""search_db"""(d["lemma"], d["pos"]);
@@ -67,9 +67,9 @@ dicCODE["is the verb root found in the db?"] =
             Dict(:in => ["lemma", "pos"], :out => ["data", "state"]))
 
 dicCODE["does the root of the word exist in the database?"] =
-    Functor((d,e=nothing,f=nothing) -> (d["data"]=py"""search_db"""(d["stem"], d["pos"]);
+    Functor((d,e=nothing,f=nothing) -> (d["data"]=py"""search_db"""(d["lemma"], d["pos"]);
             d["state"] = typeof(d["data"]) != String ? "yes" : "no"; d),
-            Dict(:in => ["stem", "pos"], :out => ["data", "state"]))
+            Dict(:in => ["lemma", "pos"], :out => ["data", "state"]))
 
 dicCODE["transliterate each side of underscore separately in proper order"] =
     Functor((d,e=nothing,f=nothing) -> split(d["lemma"], "_") |>
@@ -115,52 +115,64 @@ dicCODE["terminator"] =
 # affix-handler
 
 dicCODE["is it ست?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "ست" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "ست" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["is it ی?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "ی" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "ی" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["is it ات?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "ات" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "ات" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["is it ان?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "ان" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "ان" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["is it ش?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "ش" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "ش" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["is it م?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "م" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "م" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 
 dicCODE["is it مان?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "مان" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "مان" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["is it می?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "می" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "می" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["is it ون?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "ون" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "ون" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["is it ید?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "ید" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "ید" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["is it یم?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "یم" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "یم" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["is it ن?"] =
-    Functor((d,e=nothing,f=nothing) -> d["state"] = d["affix"] == "ن" ? "yes" : "no",
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = d["affix"] == "ن" ? "yes" : "no"; d),
             Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["is it بی or نی?"] =
@@ -404,7 +416,7 @@ dicCODE["is there anything after the word root?"] =
 dicCODE["is there anything before the word root?"] =
     # lemma -> root
     Functor((d,e=nothing,f=nothing) ->
-        (d["root"] = d["lemma"];
+        (d["root"] = haskey(d, "root") ? d["root"] : d["lemma"];
          id = last(findfirst(d["lemma"], d["word"]));
          d["state"] = 1 > last(findfirst(d["lemma"], d["word"])) ?
             "yes" : "no"; d),
