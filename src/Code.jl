@@ -481,6 +481,7 @@ dicCODE["mark it as suffix"] =
        d["res_root"] = d["res"];
        delete!(d, "res");
        d["affix"] = d["suffix"];
+       d["word"] = d["suffix"];
        d["data"] = py"""affix_search"""(d["affix"]); d),
             Dict(:in => ["word", "lemma"], :out => ["suffix"]))
 
@@ -557,10 +558,6 @@ dicCODE["find the longest substring of the input that exists in the database."] 
 
 
 dicCODE["transliterate each side of it separately in proper order and put its transliteration with the highest frequency between them."] =
-    Functor((d,e=nothing,f=nothing) -> d,
-            Dict(:in => ["word"], :out => ["res"]))
-
-dicCODE["transliterate each side of it separately in proper order and put its transliteration with the highest frequency between them"] =
     Functor((d,e=nothing,f=nothing) -> d,
             Dict(:in => ["word"], :out => ["res"]))
 
