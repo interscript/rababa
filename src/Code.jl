@@ -270,7 +270,10 @@ dicCODE["return \"yam\""] =
 
 
 dicCODE["is it a suffix?"] =
-    Functor((d,e=nothing,f=nothing) -> (aff = d["affix"]; d["state"] = d["word"][length(aff)] == aff ? "yes" : "no"),
+    Functor((d,e=nothing,f=nothing) ->
+        (aff = d["affix"];
+         d["state"] = d["word"][length(aff)] == aff ? "yes" : "no";
+         d),
             Dict(:in => ["word", "affix"], :out => ["state"]))
 
 dicCODE["is there only one instance of the affix?"] =
@@ -425,13 +428,18 @@ dicCODE["is there anything before the word root?"] =
 
 
 dicCODE["is it a single letter?"] =
-    Functor((d,e=nothing,f=nothing) -> (d["state"] = length(d["affix"]) == 1 ? "yes" : "no"; d),
-            Dict(:in => ["affix"], :out => ["state"]))
+    Functor((d,e=nothing,f=nothing) -> (d["state"] = length(d["word"]) == 1 ? "yes" : "no"; d),
+            Dict(:in => ["word"], :out => ["state"]))
 
 
 dicCODE["is it found in affixes?"] =
     Functor((d,e=nothing,f=nothing) ->
-        (d["state"] = length(py"""affix_search"""(d["word"])) > 0 ? "yes" : "no";
+        (data = py"""affix_search"""(d["word"]);
+         d["state"] = if typeof(data) == String
+                "no"
+            else
+                length(data) > 0 ? "yes" : "no"
+         end;
          d),
             Dict(:in => ["word"], :out => ["state"]))
 
@@ -466,10 +474,14 @@ dicCODE["mark it as suffix"] =
     Functor((d,e=nothing,f=nothing) ->
       (d["suffix"] = (id = last(findlast(d["lemma"], d["word"]));
        try
-          d["word"][id+1:end]
+           d["word"][id+1:end]
        catch
-          d["word"][id+2:end]
-      end); d),
+           d["word"][id+2:end]
+       end);
+       d["res_root"] = d["res"];
+       delete!(d, "res");
+       d["affix"] = d["suffix"];
+       d["data"] = py"""affix_search"""(d["affix"]); d),
             Dict(:in => ["word", "lemma"], :out => ["suffix"]))
 
 
@@ -481,8 +493,8 @@ dicCODE["add it to the beginning of the root's transliteration"] =
 
 dicCODE["add it to the end of the root's transliteration"] =
     Functor((d,e=nothing,f=nothing) ->
-        (d["res"] = string(d["res_root"], d["res_suffix"]); d),
-            Dict(:in => ["res_suffix"], :out => ["res"]))
+        (d["res"] = string(d["res_root"], d["res"]); d),
+            Dict(:in => ["res_root", "res"], :out => ["res"]))
 
 
 dicCODE["undo the change to the verb root and use it!"] =
@@ -540,7 +552,7 @@ dicCODE["run affix-handler on affix vector"] =
 
 dicCODE["find the longest substring of the input that exists in the database."] =
     Functor((d,e=nothing,f=nothing) ->
-                            (d["res"] = recu_entries(d["word"]); d),
+                            (d["res"] = py"""recu_entries"""(d["word"]); d),
             Dict(:in => ["word"], :out => ["res"]))
 
 
