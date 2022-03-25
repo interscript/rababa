@@ -494,6 +494,9 @@ dicCODE["undo the change to the verb root and use it!"] =
             Dict(:in => ["lemma"], :out => ["res"]))
 
 
+#dicCODE["undo the change to the verb root and use it! "] = dicCODE["undo the change to the verb root and use it!"]
+
+
 dicCODE["return the concatenation of all the returned transliterations."] =
     Functor((d,e=nothing,f=nothing) -> (d["res"]= string(haskey(d, "res_prefix") ? d["res_prefix"] : "",
                                    haskey(d, "res_prefix") ? d["res_suffix"] : "",);
@@ -503,7 +506,7 @@ dicCODE["return the concatenation of all the returned transliterations."] =
 
 dicCODE["transliterate it using affix-handler"] =
     Functor((d,e=nothing,f=nothing) -> d["res"] = if haskey(d, "prefix")
-                                            (interfaceName = "is there only one instance of the affix?";
+                                            (interfaceName = "affix-handler";
                                              node = get_node(interfaceName, f);
                                              d["affix"]=d["prefix"];
                                              d["word"] = d["prefix"];
@@ -528,7 +531,7 @@ dicCODE["transliterate it using affix-handler"] =
 
 dicCODE["run affix-handler on affix vector"] =
     Functor((d,e=nothing,f=nothing) ->
-                            (interfaceName = "is there only one instance of the affix?";
+                            (interfaceName = "affix-hanlder";
                              node = get_node(interfaceName, f);
                              join([processNode(node, e, (d["affix"]=a;d))
                                    for a in d["l_affix"]])),
@@ -550,5 +553,6 @@ dicCODE["transliterate each side of it separately in proper order and put its tr
             Dict(:in => ["word"], :out => ["res"]))
 
 dicCODE["move the longest substring of the input that exists in affixes and starts in the beginning of the input to affix vector. if the input is not empty and no substring of the input can be found in affixes, move contents of affix vector back to the input then run terminator on it."] =
-    Functor((d,e=nothing,f=nothing) -> d,
+    Functor((d,e=nothing,f=nothing) ->
+        (py"""recu_affixes"""(d, d["pos"])),
             Dict(:in => ["word"], :out => ["res"]))

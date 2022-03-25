@@ -53,7 +53,7 @@ def has_only_one_search_pos(l_search, pos=None):
     else:
         l_search_tmp = l_search
 
-    return "yes" if len(l_search_tmp) == 1 else "no"
+    return "yes" if len(set([d['PhonologicalForm'] for d in l_search_tmp])) == 1 else "no"
 
 def votation_entries(l_search, entries=True):
 
@@ -61,9 +61,9 @@ def votation_entries(l_search, entries=True):
     for item in l_search:
         form = item['PhonologicalForm']
         if d_results.get(form, False):
-            d_results[form] += item['Freq'] if entries else 1
+            d_results[form] += item.get('Freq', 1)
         else:
-            d_results[form] = item['Freq'] if entries else 1
+            d_results[form] = item.get('Freq', 1)
 
     M = max(d_results.values())
     idx = list(d_results.values()).index(M)
