@@ -102,6 +102,19 @@ def filter_search(l_search, pos_pos=None, pos_neg=None):
     return l_search
 
 
+#def recu_entries(wrd, pos_pos=None, pos_neg=None):
+#    #
+#    #    Recursive search in entries_DB:
+#    #    decompose wrd into largest substrings found in DB.
+#    #
+#    for i in range(len(wrd), 0, -1):
+#        if df_Entries[df_Entries['WrittenForm']==wrd[:i]].shape[0] > 0:
+#            l_search = #df_Entries[df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
+#           l_search = filter_search(l_search, pos_pos, pos_neg)
+#            return votation_entries(l_search) + recu_entries(wrd[i:], #pos_pos=pos_pos, pos_neg=pos_neg)
+#            break
+#
+#    return wrd
 
 
 def recu_entries(wrd, pos_pos=None, pos_neg=None):
@@ -113,8 +126,8 @@ def recu_entries(wrd, pos_pos=None, pos_neg=None):
         if df_Entries[df_Entries['WrittenForm']==wrd[:i]].shape[0] > 0:
             l_search = df_Entries[df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
             l_search = filter_search(l_search, pos_pos, pos_neg)
-            return votation_entries(l_search) + recu_entries(wrd[i:], pos_pos=pos_pos, pos_neg=pos_neg)
-            break
+ 
+            return votation_entries(l_search) + recu_affixes(wrd[i:])
 
     return wrd
 
