@@ -45,7 +45,7 @@ def has_entries_search_pos(l_search, pos):
 def has_only_one_search_pos(l_search, pos=None):
 
     if type(l_search)==str:
-        return "yes"
+        return "no"
 
     if not pos is None:
         l_search_tmp = [d for d in l_search
@@ -57,17 +57,19 @@ def has_only_one_search_pos(l_search, pos=None):
 
 def votation_entries(l_search, entries=True):
 
-    d_results = {}
+    d_results, c_results = {}, {}
     for item in l_search:
         form = item['PhonologicalForm']
         if d_results.get(form, False):
             d_results[form] += item.get('Freq', 1)
         else:
             d_results[form] = item.get('Freq', 1)
+            c_results[form] = item.get('SynCatCode', "")
 
     M = max(d_results.values())
     idx = list(d_results.values()).index(M)
-    return list(d_results.items())[idx][0]
+
+    return list(d_results.items())[idx][0], list(c_results.items())[idx][1]
 
 
 def return_highest_search_pos(l_search, pos):
@@ -91,13 +93,13 @@ def filter_search(l_search, pos_pos=None, pos_neg=None):
 
     if not pos_pos is None: # filter pos_pos only
         l_search_tmp = [d for d in l_search
-                        if assets.d_map_FLEXI.get(d['SynCatCode'], False)==pos_pos]
+                        if d_map_FLEXI.get(d['SynCatCode'], False)==pos_pos]
         if len(l_search_tmp) > 0:
             l_search = l_search_tmp
 
     if not pos_neg is None: # filter pos_neg out
         l_search = [d for d in l_search
-                    if assets.d_map_FLEXI.get(d['SynCatCode'], False)!=pos_neg]
+                    if d_map_FLEXI.get(d['SynCatCode'], False)!=pos_neg]
 
     return l_search
 
@@ -126,14 +128,14 @@ def recu_entries(wrd, pos_pos=None, pos_neg=None):
         if df_Entries[df_Entries['WrittenForm']==wrd[:i]].shape[0] > 0:
             l_search = df_Entries[df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
             l_search = filter_search(l_search, pos_pos, pos_neg)
- 
+
             return votation_entries(l_search) + recu_affixes(wrd[i:])
 
     return wrd
 
 
 def recu_affixes(wrd, pos_pos=None, pos_neg=None):
-    # 
+    #
     #    Recursive search in affixes_DB:
     #    decompose wrd into largest substrings found in DB.
     #
@@ -141,7 +143,12 @@ def recu_affixes(wrd, pos_pos=None, pos_neg=None):
         if df_Affixes[df_Affixes['Affix']==wrd[:i]].shape[0] > 0:
             l_search = df_Affixes[df_Affixes['Affix']==wrd[:i]].to_dict('records')
             l_search = filter_search(l_search, pos_pos, pos_neg)
-            return votation_entries(l_search, entries=False) + recu_affixes(wrd[i:], pos_pos=pos_pos, pos_neg=pos_neg)
+            vota = votation_entries(l_search, entries=False)
+            #return vota[0]
+            if wrd[i:] != '':
+                return [vota[0]] + recu_affixes(wrd[i:], pos_pos=pos_pos, pos_neg=pos_neg)
+            else:
+                return [vota[0]]
             break
 
     return wrd

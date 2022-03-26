@@ -55,7 +55,9 @@ function runAgent(node::Node,
             end
 
             if isnothing(node.children)
+
                 @goto __OUT
+
             end
 
             # continue locally
