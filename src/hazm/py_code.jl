@@ -104,19 +104,25 @@ def filter_search(l_search, pos_pos=None, pos_neg=None):
     return l_search
 
 
-#def recu_entries(wrd, pos_pos=None, pos_neg=None):
-#    #
-#    #    Recursive search in entries_DB:
-#    #    decompose wrd into largest substrings found in DB.
-#    #
-#    for i in range(len(wrd), 0, -1):
-#        if df_Entries[df_Entries['WrittenForm']==wrd[:i]].shape[0] > 0:
-#            l_search = #df_Entries[df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
-#           l_search = filter_search(l_search, pos_pos, pos_neg)
-#            return votation_entries(l_search) + recu_entries(wrd[i:], #pos_pos=pos_pos, pos_neg=pos_neg)
-#            break
-#
-#    return wrd
+def largest_root_and_affixes(wrd):
+
+    n = len(wrd)
+    w_max, l_max = '', 0
+    idces = None
+    for i in range(n-1):
+        for j in range(i+1):
+            w = wrd[j:(n-i)]
+            if len(w) > l_max:
+                if df_Entries[df_Entries['WrittenForm']==w].shape[0] > 0:
+                    l_search = df_Entries[df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
+                    idces_ij = (i,j)
+
+    if idces_ij is None:
+        return wrd
+    else:
+        i,j = idces_ij
+        w = wrd[j:(n-i)]
+        return {'root': wrd[j:(n-i)], 'prefix': wrd[:j], 'suffix': wrd[(n-i):]}
 
 
 def recu_entries(wrd, pos_pos=None, pos_neg=None):
@@ -129,6 +135,7 @@ def recu_entries(wrd, pos_pos=None, pos_neg=None):
             l_search = df_Entries[df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
             l_search = filter_search(l_search, pos_pos, pos_neg)
             vota = votation_entries(l_search)
+
             if wrd[i:] != '':
                 return [vota[0]] + recu_affixes(wrd[i:])
             else:
@@ -148,11 +155,12 @@ def recu_affixes(wrd, pos_pos=None, pos_neg=None):
             l_search = filter_search(l_search, pos_pos, pos_neg)
             vota = votation_entries(l_search, entries=False)
             if wrd[i:] != '':
-                return [vota[0]] + recu_affixes(wrd[i:], pos_pos=pos_pos, pos_neg=pos_neg)
+                recu = recu_affixes(wrd[i:], pos_pos=pos_pos, pos_neg=pos_neg)
+                return [vota[0]] + recu
             else:
                 return [vota[0]]
             break
 
-    return wrd
+    return [wrd]
 
 """
