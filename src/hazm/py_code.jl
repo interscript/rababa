@@ -128,8 +128,11 @@ def recu_entries(wrd, pos_pos=None, pos_neg=None):
         if df_Entries[df_Entries['WrittenForm']==wrd[:i]].shape[0] > 0:
             l_search = df_Entries[df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
             l_search = filter_search(l_search, pos_pos, pos_neg)
-
-            return votation_entries(l_search) + recu_affixes(wrd[i:])
+            vota = votation_entries(l_search)
+            if wrd[i:] != '':
+                return [vota[0]] + recu_affixes(wrd[i:])
+            else:
+                return [vota[0]]
 
     return wrd
 
@@ -144,7 +147,6 @@ def recu_affixes(wrd, pos_pos=None, pos_neg=None):
             l_search = df_Affixes[df_Affixes['Affix']==wrd[:i]].to_dict('records')
             l_search = filter_search(l_search, pos_pos, pos_neg)
             vota = votation_entries(l_search, entries=False)
-            #return vota[0]
             if wrd[i:] != '':
                 return [vota[0]] + recu_affixes(wrd[i:], pos_pos=pos_pos, pos_neg=pos_neg)
             else:

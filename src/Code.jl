@@ -571,7 +571,7 @@ dicCODE["run affix-handler on affix vector"] =
 
 dicCODE["find the longest substring of the input that exists in the database."] =
     Functor((d,e=nothing,f=nothing) ->
-                            (d["res"] = py"""recu_entries"""(d["word"]); d),
+                            (d["res"] = join(py"""recu_entries"""(d["word"]), ""); d),
             Dict(:in => ["word"], :out => ["res"]))
 
 
