@@ -163,4 +163,22 @@ def recu_affixes(wrd, pos_pos=None, pos_neg=None):
 
     return [wrd]
 
+
+def recu_affixes_subs(wrd, pos_pos=None, pos_neg=None):
+    #
+    #    Recursive search in affixes_DB:
+    #    decompose wrd into largest substrings found in DB.
+    #
+    for i in range(len(wrd), 0, -1):
+        w = wrd[:i]
+        if df_Affixes[df_Affixes['Affix']==w].shape[0] > 0:
+            if wrd[i:] != '':
+                recu = recu_affixes_subs(wrd[i:], pos_pos=pos_pos, pos_neg=pos_neg)
+                return [w] + recu
+            else:
+                return [w]
+            break
+
+    return [wrd]
+
 """

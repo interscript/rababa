@@ -570,14 +570,23 @@ dicCODE["transliterate it using affix-handler"] =
 
 dicCODE["run affix-handler on affix vector"] =
     Functor((d,e=nothing,f=nothing) ->
-        (d["res"] = join(d["l_affix"], ""); d),
+        (interfaceName = "affix-handler";
+         res = map(w -> (node = e[interfaceName];
+                        if haskey(d, "res")
+                            delete!(d, "res")
+                        end;
+                        d["affix"] = w;
+                        d["data"] = py"""affix_search"""(w);
+                        runAgent(node, e, f, d)),
+                   d["l_affix"]);
+         d["res"] = join(res, ""); d),
             Dict(:in => ["l_affix"], :out => ["res"]))
 
 
 dicCODE["find the longest substring of the input that exists in the database."] =
     Functor((d,e=nothing,f=nothing) ->
         (d["d_substring"] = py"""largest_root_and_affixes"""(d["word"]);
-         #d["res"] = join(py"""recu_entries"""(d["word"]), "");
+         # d["res"] = join(py"""recu_entries"""(d["word"]), "");
         d),
             Dict(:in => ["word"], :out => ["res"]))
 
@@ -611,5 +620,5 @@ dicCODE["transliterate each side of it separately in proper order and put its tr
 
 dicCODE["move the longest substring of the input that exists in affixes and starts in the beginning of the input to affix vector. if the input is not empty and no substring of the input can be found in affixes, move contents of affix vector back to the input then run terminator on it."] =
     Functor((d,e=nothing,f=nothing) ->
-        (d["l_affix"] = py"""recu_affixes"""(d["affix"], d["pos"]); d),
+        (d["l_affix"] = py"""recu_affixes_subs"""(d["affix"], d["pos"]); d),
             Dict(:in => ["affix"], :out => ["res"]))
