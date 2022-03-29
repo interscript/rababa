@@ -24,6 +24,16 @@ def search_db(wrd, pos_pos=None):
     else: # if one unique found, return the form
         return l_search
 
+def get_in_db(wrd, pos_pos=None):
+
+    # all matches
+    l_search = df_Entries[df_Entries['WrittenForm']==wrd].to_dict('records')
+
+    if len(l_search) == 0: # if not found, returns wrd
+        return wrd
+    else: # if one unique found, return the form
+        return return_highest_search_pos(l_search, pos_pos)
+
 def affix_search(affix, pos_pos=None):
 
     if affix == '':
@@ -35,6 +45,16 @@ def affix_search(affix, pos_pos=None):
         return affix
     else:
         return l_search
+
+def get_in_affixes(affix, pos_pos=None):
+
+    # all matches
+    l_search = df_Affixes[df_Affixes['Affix']==affix].to_dict('records')
+    if len(l_search) == 0: # if not found, returns wrd
+        return affix
+    else: # if one unique found, return the form
+        return return_highest_search_pos(l_search, pos_pos)
+
 
 def has_entries_search_pos(l_search, pos):
     for d in l_search:
@@ -84,10 +104,6 @@ def return_highest_search_pos(l_search, pos):
     else:
         return votation_entries(data)
 
-def return_highest_search(l_search):
-    return votation_entries(l_search)
-
-
 
 def filter_search(l_search, pos_pos=None, pos_neg=None):
 
@@ -104,7 +120,7 @@ def filter_search(l_search, pos_pos=None, pos_neg=None):
     return l_search
 
 
-def largest_root_and_affixes(wrd):
+def longest_root_and_affixes(wrd):
 
     n = len(wrd)
     w_max, l_max = '', 0
@@ -116,6 +132,8 @@ def largest_root_and_affixes(wrd):
                 if df_Entries[df_Entries['WrittenForm']==w].shape[0] > 0:
                     l_search = df_Entries[df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
                     idces_ij = (i,j)
+                    w_max = w
+                    l_max = len(w_max)
 
     if idces_ij is None:
         return wrd

@@ -571,51 +571,77 @@ dicCODE["transliterate it using affix-handler"] =
 dicCODE["run affix-handler on affix vector"] =
     Functor((d,e=nothing,f=nothing) ->
         (interfaceName = "affix-handler";
-         res = map(w -> (node = e[interfaceName];
+         d["res"] = if length(d["l_affix"]) == 1
+                v = py"""get_in_db"""(d["l_affix"][1], d["pos"]);
+                d["SynCatCode"] = v[2];
+                v[1]
+            else
+                map(w -> (node = e[interfaceName];
                         if haskey(d, "res")
                             delete!(d, "res")
                         end;
                         d["affix"] = w;
                         d["data"] = py"""affix_search"""(w);
                         runAgent(node, e, f, d)),
-                   d["l_affix"]);
-         d["res"] = join(res, ""); d),
+                    d["l_affix"]) |> (D -> join(D, ""))
+            end;
+         d),
             Dict(:in => ["l_affix"], :out => ["res"]))
 
 
 dicCODE["find the longest substring of the input that exists in the database."] =
     Functor((d,e=nothing,f=nothing) ->
-        (d["d_substring"] = py"""largest_root_and_affixes"""(d["word"]);
-         # d["res"] = join(py"""recu_entries"""(d["word"]), "");
-        d),
+        (d["d_substring"] = py"""longest_root_and_affixes"""(d["word"]);
+         d),
             Dict(:in => ["word"], :out => ["res"]))
 
 
 dicCODE["transliterate each side of it separately in proper order and put its transliteration with the highest frequency between them."] =
     Functor((d,e=nothing,f=nothing) ->
-        (# root
-         res_root = py"""recu_entries"""(d["d_substring"]["root"], d["pos"]) |>
-            (D -> typeof(D) == String ? D : D[1]);
-         # prefix
-         interfaceName = "affix-handler";
-         node = e[interfaceName];
-         prefix = d["d_substring"]["prefix"];
-         d["affix"] = prefix;
-         d["prefix"] = prefix;
-         haskey(d, "res") ? delete!(d, "res") : "";
-         d["data"] = py"""affix_search"""(d["affix"]);
-         res_prefix = runAgent(node, e, f, d);
-         # suffix
-         node = e[interfaceName];
-         suffix = d["d_substring"]["suffix"];
-         delete!(d, "prefix");
-         d["affix"] = suffix;
-         d["suffix"] = suffix;
-         haskey(d, "res") ? delete!(d, "res") : "";
-         d["data"] = py"""affix_search"""(d["affix"]);
-         res_suffix = runAgent(node, e, f, d);
-         # res aggregating strings
-         d["res"] = string(res_prefix, res_root, res_suffix); d),
+        (d_substrings = d["d_substring"];
+         # root
+         root = py"""get_in_db"""(d_substrings["root"], d["pos"]);
+         prefix = d_substrings["prefix"];
+         suffix = d_substrings["suffix"];
+
+         # prefix and suffix
+         prefix = if length(prefix) > 0
+             dd = copy(d);
+             interfaceName = "affix-handler";
+             node = e[interfaceName];
+             dd["affix"]= prefix;
+             dd["prefix"] = prefix;
+             if haskey(dd, "res")
+                 dd["res_root"] = dd["res"]
+                 delete!(dd, "res")
+             end;
+             dd["data"] = py"""affix_search"""(dd["affix"]);
+             runAgent(node, e, f, dd);
+         else
+             ""
+         end;
+
+         suffix = if length(suffix) > 0
+             dd = copy(d);
+             interfaceName = "affix-handler";
+             node = e[interfaceName];
+             dd["affix"] = suffix;
+             dd["suffix"] = suffix;
+             if haskey(dd, "res")
+                 dd["res_root"] = dd["res"]
+                 delete!(dd, "res")
+             end;
+             dd["data"] = py"""affix_search"""(dd["affix"]);
+             runAgent(node, e, f, dd);
+         else
+             ""
+         end;
+
+         # postprocess
+         d["SynCatCode"] = root[2];
+         d["root"] = root[1];
+         d["res"] = string(prefix, root[1], suffix);
+         d),
             Dict(:in => ["d_substring"], :out => ["res"]))
 
 dicCODE["move the longest substring of the input that exists in affixes and starts in the beginning of the input to affix vector. if the input is not empty and no substring of the input can be found in affixes, move contents of affix vector back to the input then run terminator on it."] =
