@@ -603,7 +603,6 @@ dicCODE["transliterate each side of it separately in proper order and put its tr
          root = py"""get_in_db"""(d_substrings["root"], d["pos"]);
          prefix = d_substrings["prefix"];
          suffix = d_substrings["suffix"];
-
          # prefix and suffix
          prefix = if length(prefix) > 0
              dd = copy(d);
@@ -620,7 +619,6 @@ dicCODE["transliterate each side of it separately in proper order and put its tr
          else
              ""
          end;
-
          suffix = if length(suffix) > 0
              dd = copy(d);
              interfaceName = "affix-handler";
@@ -636,7 +634,6 @@ dicCODE["transliterate each side of it separately in proper order and put its tr
          else
              ""
          end;
-
          # postprocess
          d["SynCatCode"] = root[2];
          d["root"] = root[1];
