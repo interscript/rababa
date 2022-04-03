@@ -3,6 +3,14 @@
 include("hazm/py_code.jl")
 
 
+data = Dict{String, Any}(
+            "word" => nothing,
+            "pos" => nothing, # d["pos"],
+            "pre_pos" => nothing, #d["pre_pos"],
+            "state" => nothing,
+            "brain" => "transliterator");
+
+
 dicCODE = Dict{String, Functor}()
 
 
@@ -36,9 +44,13 @@ dicCODE["does only one of the verb roots exist in the verb?"] =
             Dict(:in => ["word", "lemma"], :out => ["state"]))
 
 dicCODE["output it!"] =
-    Functor((d,e=nothing,f=nothing) -> (haskey(d, "res") ? d :
-                   typeof(d["data"]) == Vector{Dict{Any, Any}} ?
-                        (d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]); d) :
+    Functor((d,e=nothing,f=nothing) ->
+        (haskey(d, "res") ?
+            "" :
+            (typeof(d["data"]) == Vector{Dict{Any, Any}} ?
+                  d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]) :
+                  d["res"] = d["word"]); #isnothing(d["res"]) ? d["res"] = d["word"] : "";
+                  println("DBG", d);
                          d),
             Dict(:in => ["data"], :out => []))
 
@@ -477,7 +489,7 @@ dicCODE["change the word root's transliteration from /rav/ to /ro/"] =
 dicCODE["mark it as prefix"] =
     Functor((d,e=nothing,f=nothing) ->
         (l = length(collect(d["lemma"]));
-         d["prefix"] = join(collect(d["word"])[1:l-1]); #join(collect(d["word"])[1:end-l]);
+         d["prefix"] = join(collect(d["word"])[1:end-2]); #join(collect(d["word"])[1:l-1]); #join(collect(d["word"])[1:end-l]);
          d["affix"] = d["prefix"];
          d["res_root"] = d["res"]; d),
             Dict(:in => ["word", "lemma"], :out => ["prefix"]))
@@ -531,13 +543,26 @@ dicCODE["undo the change to the verb root and use it!"] =
 
 dicCODE["return the concatenation of all the returned transliterations."] =
     Functor((d,e=nothing,f=nothing) ->
-        (#d["res"] = if haskey(d, "suffix")
-        #    string(d["res_root"], d["res"])
-        #else
-        #    string(d["res"], d["res_root"])
-        #end;
-        d),
-            Dict(:in => [], :out => ["res"]))
+        (l_res = for w in d["l_affix"]
+            dd = copy(data);
+            dd["word"] = w;
+            dd["pos"] = d["pos"];
+            dd["pre_pos"] = d["pre_pos"];
+            interfaceName = "transliterator"; # "affix-handler";
+            node = e[interfaceName];
+            runAgent(node, e, f, dd)
+        end;
+         d["res"] = join(l_res, " ");
+         println("res:: ", d["res"]);
+
+         #d["res"] = if haskey(d, "suffix")
+         #    string(d["res_root"], d["res"])
+         #else
+         #    string(d["res"], d["res_root"])
+         #end;
+         exit();
+         d),
+            Dict(:in => ["l_affix"], :out => ["res"]))
 
 
 dicCODE["transliterate it using affix-handler"] =
@@ -573,8 +598,11 @@ dicCODE["run affix-handler on affix vector"] =
         (interfaceName = "affix-handler";
          d["res"] = if length(d["l_affix"]) == 1
                 v = py"""get_in_db"""(d["l_affix"][1], d["pos"]);
-                d["SynCatCode"] = v[2];
-                v[1]
+                #println("dbg///// ",v);
+                if !(typeof(v) == String)
+                    d["SynCatCode"] = v[2];
+                end
+
             else
                 map(w -> (node = e[interfaceName];
                         if haskey(d, "res")
@@ -599,37 +627,45 @@ dicCODE["find the longest substring of the input that exists in the database."] 
 dicCODE["transliterate each side of it separately in proper order and put its transliteration with the highest frequency between them."] =
     Functor((d,e=nothing,f=nothing) ->
         (d_substrings = d["d_substring"];
+         if typeof(d_substrings) == String
+             d["res"] = d_substrings
+             println("DBG11")
+             #exit()
+             @goto OUT
+         end;
          # root
          root = py"""get_in_db"""(d_substrings["root"], d["pos"]);
          prefix = d_substrings["prefix"];
          suffix = d_substrings["suffix"];
          # prefix and suffix
          prefix = if length(prefix) > 0
-             dd = copy(d);
-             interfaceName = "affix-handler";
+             dd = copy(data);
+             dd["word"] = prefix;
+             dd["pos"] = d["pos"];
+             dd["pre_pos"] = d["pre_pos"];
+             interfaceName = "transliterator"; # "affix-handler";
              node = e[interfaceName];
-             dd["affix"]= prefix;
-             dd["prefix"] = prefix;
              if haskey(dd, "res")
                  dd["res_root"] = dd["res"]
                  delete!(dd, "res")
              end;
-             dd["data"] = py"""affix_search"""(dd["affix"]);
+             # dd["data"] = py"""affix_search"""(dd["affix"]);
              runAgent(node, e, f, dd);
          else
              ""
          end;
          suffix = if length(suffix) > 0
-             dd = copy(d);
-             interfaceName = "affix-handler";
+             dd = copy(data);
+             dd["word"] = suffix;
+             dd["pos"] = d["pos"];
+             dd["pre_pos"] = d["pre_pos"];
+             interfaceName = "transliterator";
              node = e[interfaceName];
-             dd["affix"] = suffix;
-             dd["suffix"] = suffix;
              if haskey(dd, "res")
                  dd["res_root"] = dd["res"]
                  delete!(dd, "res")
              end;
-             dd["data"] = py"""affix_search"""(dd["affix"]);
+             # dd["data"] = py"""affix_search"""(dd["affix"]);
              runAgent(node, e, f, dd);
          else
              ""
@@ -638,8 +674,10 @@ dicCODE["transliterate each side of it separately in proper order and put its tr
          d["SynCatCode"] = root[2];
          d["root"] = root[1];
          d["res"] = string(prefix, root[1], suffix);
+         @label OUT;
          d),
             Dict(:in => ["d_substring"], :out => ["res"]))
+
 
 dicCODE["move the longest substring of the input that exists in affixes and starts in the beginning of the input to affix vector. if the input is not empty and no substring of the input can be found in affixes, move contents of affix vector back to the input then run terminator on it."] =
     Functor((d,e=nothing,f=nothing) ->

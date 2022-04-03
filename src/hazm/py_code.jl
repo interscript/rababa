@@ -124,13 +124,12 @@ def longest_root_and_affixes(wrd):
 
     n = len(wrd)
     w_max, l_max = '', 0
-    idces = None
+    idces_ij = None
     for i in range(n-1):
-        for j in range(i+1):
-            w = wrd[j:(n-i)]
+        for j in range(i, n):
+            w = wrd[i:j]
             if len(w) > l_max:
                 if df_Entries[df_Entries['WrittenForm']==w].shape[0] > 0:
-                    l_search = df_Entries[df_Entries['WrittenForm']==wrd[:i]].to_dict('records')
                     idces_ij = (i,j)
                     w_max = w
                     l_max = len(w_max)
@@ -139,8 +138,8 @@ def longest_root_and_affixes(wrd):
         return wrd
     else:
         i,j = idces_ij
-        w = wrd[j:(n-i)]
-        return {'root': wrd[j:(n-i)], 'prefix': wrd[:j], 'suffix': wrd[(n-i):]}
+        return {'root': wrd[i:j], 'prefix': wrd[:i], 'suffix': wrd[j:]}
+
 
 
 def recu_entries(wrd, pos_pos=None, pos_neg=None):
