@@ -49,9 +49,7 @@ dicCODE["output it!"] =
             "" :
             (typeof(d["data"]) == Vector{Dict{Any, Any}} ?
                   d["res"] = py"""return_highest_search_pos"""(d["data"], d["pos"]) :
-                  d["res"] = d["word"]); #isnothing(d["res"]) ? d["res"] = d["word"] : "";
-                  println("DBG", d);
-                         d),
+                  d["res"] = d["word"]); d),
             Dict(:in => ["data"], :out => []))
 
 dicCODE["collision?"] =
@@ -553,8 +551,6 @@ dicCODE["return the concatenation of all the returned transliterations."] =
             runAgent(node, e, f, dd)
         end;
          d["res"] = join(l_res, " ");
-         println("res:: ", d["res"]);
-
          #d["res"] = if haskey(d, "suffix")
          #    string(d["res_root"], d["res"])
          #else
@@ -598,7 +594,6 @@ dicCODE["run affix-handler on affix vector"] =
         (interfaceName = "affix-handler";
          d["res"] = if length(d["l_affix"]) == 1
                 v = py"""get_in_db"""(d["l_affix"][1], d["pos"]);
-                #println("dbg///// ",v);
                 if !(typeof(v) == String)
                     d["SynCatCode"] = v[2];
                 end
@@ -629,8 +624,6 @@ dicCODE["transliterate each side of it separately in proper order and put its tr
         (d_substrings = d["d_substring"];
          if typeof(d_substrings) == String
              d["res"] = d_substrings
-             println("DBG11")
-             #exit()
              @goto OUT
          end;
          # root
