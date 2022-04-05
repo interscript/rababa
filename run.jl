@@ -8,12 +8,12 @@ using Serialization
 
 
 include("src/Graphs.jl")
-include("src/Code.jl")
+include("src/Rules.jl")
 include("src/Agent.jl")
 include("src/Metrics.jl")
 
 using Logging
-Logging.disable_logging(Logging.Info) 
+Logging.disable_logging(Logging.Info)
 
 using PyCall
 
@@ -37,7 +37,7 @@ function parse_commandline()
 
         "--path-model"
             help = "path to the train model"
-        
+
         "--file-name"
             help = "file-name to be transliterated \n
                     excepted if file-name = data/test.csv \n
@@ -72,7 +72,7 @@ data = Dict{String, Any}(
 
 
 if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
-   
+
 
     df_Test = DataFrame(CSV.File("data/test_data.csv"))
 
@@ -96,11 +96,11 @@ if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
     println("error summary in: tests/test_debug.csv")
     CSV.write("tests/test_debug.csv", df_Bugs)
 
-    
+
 else # transliterate the file
 
-    
-    readlines(parsedArgs["file-name"], keep=true) |> 
+
+    readlines(parsedArgs["file-name"], keep=true) |>
       (D ->
         map(d -> d |>
             py"""normalise""" |>
@@ -113,5 +113,5 @@ else # transliterate the file
                             (L -> join(L, " ")) |>
                                 println,
             D))
-    
+
 end
