@@ -342,7 +342,14 @@ dicCODE["use it!"] = dicCODE["use it! "]
 
 dicCODE["is the word before it a verb?"] =
     Functor((d,e=nothing,f=nothing) ->
-        (d["state"] = d["pre_pos"] == "Verb" ? "yes" : "no"; d),
+        (d["state"] =
+            if d["affix"] == get(d, "suffix", "nothing") # affix?
+                haskey(d,"lemma") && d["pos"] == "Verb" ? "yes" : "no";
+            elseif d["affix"] == get(d, "prefix", "nothing") # suffix
+                d["pre_pos"] == "Verb" ? "yes" : "no"
+            else
+                "no"
+            end; d),
             Dict(:in => ["pre_pos"], :out => ["state"]))
 
 dicCODE["is the word to-which it's attached, a noun?"] =
