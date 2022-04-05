@@ -453,7 +453,7 @@ dicCODE["does the transliteration of the segment before it end in any of the /a,
     Functor((d,e=nothing,f=nothing) ->
         (d["state"] =
             if haskey(d, "l_res")
-                d["l_res"][end] in ['a', 'e', 'o', 'u'] ?
+                d["l_res"][end] in ['A', 'e', 'o', 'u'] ?
                     "yes" : "no";
             elseif haskey(d, "res_root") && haskey(d, "suffix")
                 d["res_root"][end] in ['a', 'e', 'o', 'u'] ? "yes" : "no";
