@@ -37,3 +37,5 @@
 19. Added a row for آ with T PoS and another for ئ transliterated /'/
 
 20. I changed the transliteration for گروتسک from /gerotsek/ to /gerotesk/
+
+21. I omitted the word "مردی" transliterated as /mardi/, N1, 405, WS as it wasn't necessary and caused some problems with the verb مردن.
