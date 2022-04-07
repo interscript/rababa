@@ -74,7 +74,7 @@ data = Dict{String, Any}(
 if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
 
 
-    df_Test = DataFrame(CSV.File("data/test_data.csv"))
+    df_Test = DataFrame(CSV.File("data/test.csv")) #_data.csv"))
 
     df_Test[!,"transModel"] =
         map(d -> d |>
@@ -84,8 +84,12 @@ if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
                         (D -> map(d -> (data["word"] = d[1];
                                         data["pos"] = d[2];
                                         data["state"] = nothing;
-                                        println(data["word"], " : ", data["pos"]);
-                               runAgent(graph, dicBRAINS, df_Nodes, data)), D)) |>
+                            try
+                                runAgent(graph, dicBRAINS, df_Nodes, data)
+                            catch
+                                println(data["word"], " : ", data["pos"])
+                                ""
+                            end), D)) |>
                             (L -> join(L, " ")),
     df_Test[!,"orig"])
 

@@ -56,24 +56,43 @@ dicCODE["collision?"] =
     Functor((d,e=nothing,f=nothing) -> (d["state"] = length(d["data"]) == 1 ? "no" : "yes"; d),
             Dict(:in => ["data"], :out => ["state"]))
 
-#===
-dd = Dict{String, Any}("data" => Dict{Any, Any}[Dict("جایگاه" => "2", "SynCatCode" => "N1", "هجاسازی مجدد" => false, "تغییرات آوایی در وندافزایی" => "", "Affix" => "یم", "id" => 23, "مقولة ستاک+وند" => "", "نام وند" => "PEC", "نوع" => "0", "PhonologicalForm" => "yam", "درج واج در وندافزایی" => "", "کد معنا" => "03", "طرح تکیه" => "W", "واکه" => "1", "هم\u200cنویسه با واحد واژگانی" => ""), Dict("جایگاه" => "3", "SynCatCode" => "N1", "هجاسازی مجدد" => false, "تغییرات آوایی در وندافزایی" => "", "Affix" => "یم", "id" => 42, "مقولة ستاک+وند" => "", "نام وند" => "COC", "نوع" => "0", "PhonologicalForm" => "yam", "درج واج در وندافزایی" => "", "کد معنا" => "05", "طرح تکیه" => "W", "واکه" => "1", "هم\u200cنویسه با واحد واژگانی" => ""), Dict("جایگاه" => "2", "SynCatCode" => "V1", "هجاسازی مجدد" => false, "تغییرات آوایی در وندافزایی" => "", "Affix" => "یم", "id" => 65, "مقولة ستاک+وند" => "", "نام وند" => "PEI", "نوع" => "0", "PhonologicalForm" => "im", "درج واج در وندافزایی" => "", "کد معنا" => "20", "طرح تکیه" => "W", "واکه" => "0", "هم\u200cنویسه با واحد واژگانی" => ""), Dict("جایگاه" => "2", "SynCatCode" => "V2", "هجاسازی مجدد" => false, "تغییرات آوایی در وندافزایی" => "", "Affix" => "یم", "id" => 71, "مقولة ستاک+وند" => "", "نام وند" => "PEI", "نوع" => "0", "PhonologicalForm" => "im", "درج واج در وندافزایی" => "", "کد معنا" => "21", "طرح تکیه" => "W", "واکه" => "1", "هم\u200cنویسه با واحد واژگانی" => ""), Dict("جایگاه" => "2", "SynCatCode" => "V2", "هجاسازی مجدد" => false, "تغییرات آوایی در وندافزایی" => "", "Affix" => "یم", "id" => 175, "مقولة ستاک+وند" => "", "نام وند" => "PEI", "نوع" => "0", "PhonologicalForm" => "im", "درج واج در وندافزایی" => "", "کد معنا" => "21", "طرح تکیه" => "W", "واکه" => "0", "هم\u200cنویسه با واحد واژگانی" => ""), Dict("جایگاه" => nothing, "SynCatCode" => "V1", "هجاسازی مجدد" => nothing, "تغییرات آوایی در وندافزایی" => "", "Affix" => "یم", "id" => nothing, "مقولة ستاک+وند" => nothing, "نام وند" => nothing, "نوع" => nothing, "PhonologicalForm" => "yam", "درج واج در وندافزایی" => "", "کد معنا" => 20, "طرح تکیه" => nothing, "واکه" => nothing, "هم\u200cنویسه با واحد واژگانی" => nothing)], "res" => "im", "SynCatCode" => "N1", "pre_pos" => nothing, "state" => "no", "pos" => "Noun", "res_root" => "mard", "suffix" => "یم", "affix" => "یم", "word" => "مردیم", "brain" => "affix-handler", "lemma" => "مرد")
+dicCODE["does it include u200c?"] =
+    Functor((d,e=nothing,f=nothing) ->
+        (d["state"] = contains(d["word"], "\u200c") ? "yes" : "no"; d),
+        Dict(:in => ["word"], :out => ["state"]))
 
 
-            dicCODE["output its transliteration!"] =
-                Functor((d,e=nothing,f=nothing) -> (
-                dd=data;
-                dd["pos"] = d["pos"];
-                dd["word"] = d["word"];
-                d = dd;
-                        haskey(d, "res") ? d :
-                            typeof(d["data"]) == Vector{Dict{Any, Any}} ?
-                                (v = py"""return_highest_search_pos"""(d["data"], d["pos"]);
-                                 d["res"] = v[1]; d["SynCatCode"] = v[2]; d) :
-                                (d["res"] = d["word"]; d)),
-                        Dict(:in => [], :out => []))
-===#
-#===#
+dicCODE["is the segment before it نمی?"] =
+    Functor((d,e=nothing,f=nothing) ->
+        (lStr = collect(d["word"]);
+         idx = indexin('\u200c', lStr)[1];
+         d["state"] = join(lStr[1:idx-1], "") == "نمی" ? "yes" : "no"; d),
+         Dict(:in => ["word"], :out => ["state"]))
+
+dicCODE["is the segment before it می?"] =
+    Functor((d,e=nothing,f=nothing) ->
+    (lStr = collect(d["word"]);
+     idx = indexin('\u200c', lStr)[1];
+     d["state"] = join(lStr[1:idx-1], "") == "می" ? "yes" : "no"; d),
+        Dict(:in => ["word"], :out => ["state"]))
+
+dicCODE["transliterate the segment after u200c as a verb and add mi to the beginning of it"] =
+    Functor((d,e=nothing,f=nothing) ->
+        (lStr = collect(d["word"]);
+         idx = indexin('\u200c', lStr)[1];
+         prev_wrd = join(lStr[1:idx-1], "");
+         wrd = join(lStr[idx+1:end], "");
+         dd=data;
+         dd["word"] = wrd;
+         dd["pos"] = "Verb";
+         interfaceName = "transliterator";
+         node = e[interfaceName];
+         res = "mi"*runAgent(node, e, f, dd);
+         d["res"] = "PREV_TO_BE_SOLVED_"*prev_wrd*res; d),
+         Dict(:in => ["word"], :out => ["res"])) # jair
+
+
+
 dicCODE["output its transliteration!"] =
     Functor((d,e=nothing,f=nothing) ->
         (if !haskey(d, "res")
@@ -84,7 +103,6 @@ dicCODE["output its transliteration!"] =
         end;
         d),
             Dict(:in => [], :out => []))
-#===#
 
 dicCODE["return its transliteration!"] = dicCODE["output its transliteration!"]
 
@@ -535,7 +553,7 @@ dicCODE["change the word root's transliteration from /rav/ to /ro/"] =
 dicCODE["mark it as prefix"] =
     Functor((d,e=nothing,f=nothing) ->
         (l = length(collect(d["lemma"]));
-         d["prefix"] = join(collect(d["word"])[1:end-2]); #join(collect(d["word"])[1:l-1]); #join(collect(d["word"])[1:end-l]);
+         d["prefix"] = join(collect(d["word"])[1:end-2]);
          d["affix"] = d["prefix"];
          d["res_root"] = d["res"]; d),
             Dict(:in => ["word", "lemma"], :out => ["prefix"]))
@@ -552,7 +570,7 @@ dicCODE["mark it as suffix"] =
        d["res_root"] = d["res"];
        delete!(d, "res");
        d["affix"] = d["suffix"];
-       #d["word"] = d["suffix"]; jair
+       #d["word"] = d["suffix"];
        d["data"] = py"""affix_search"""(d["affix"]);
        d["brain"] = "fixbug";
        d),
@@ -564,7 +582,7 @@ dicCODE["add it to the beginning of the root's transliteration"] =
         (d["res"] = haskey(d, "res_prefix") ?
             string(d["res_prefix"], d["res_root"]) :
             string(d["res"], d["res_root"]); d),
-            Dict(:in => ["res_root"], :out => ["res"]))
+        Dict(:in => ["res_root"], :out => ["res"]))
 
 
 dicCODE["add it to the end of the root's transliteration"] =
@@ -572,7 +590,7 @@ dicCODE["add it to the end of the root's transliteration"] =
         (d["res"] = haskey(d, "res_suffix") ?
             string(d["res_root"], d["res_suffix"]) :
             string(d["res_root"], d["res"]); d),
-            Dict(:in => ["res_root", "res"], :out => ["res"]))
+        Dict(:in => ["res_root", "res"], :out => ["res"]))
 
 
 dicCODE["undo the change to the verb root and use it!"] =
