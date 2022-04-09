@@ -98,15 +98,11 @@ dicCODE["transliterate the segment before u200c and mark the segment after u200c
          interfaceName = "transliterator";
          node = e[interfaceName];
          pre_res = runAgent(node, e, f, dd);
+         d["res_root"] = pre_res;
          # post u200c
-         dd["word"] = wrd;
-         dd["pos"] = join(lStr[idx+1:end], "");
-         dd["affix"] = wrd;
-         dd["suffix"] = wrd;
-         interfaceName = "affix-handler";
-         node = e[interfaceName];
-         post_res = runAgent(node, e, f, dd);
-         d["res"] = pre_res * post_res; d),
+         d["word"] = join(lStr[idx+1:end], "");
+         d["affix"] = d["word"];
+         d["suffix"] = d["word"]; d),
             Dict(:in => ["word"], :out => ["state"]))
 
 dicCODE["transliterate each side of it separately in proper order"] =
@@ -723,20 +719,20 @@ dicCODE["transliterate it using affix-handler"] =
 dicCODE["run affix-handler on affix vector"] =
     Functor((d,e=nothing,f=nothing) ->
         (interfaceName = "affix-handler";
+
+
          d["l_res"] = if length(d["l_affix"]) == 1
-                v = py"""get_in_db"""(d["l_affix"][1], d["pos"]);
-                if !(typeof(v) == String)
-                    d["SynCatCode"] = v[2];
-                end
+                w = d["l_affix"][1];
+                w = py"""get_in_affixes"""(w, d["pos"]);
+                [w[1]]
             else
-                vv=map(w -> (node = e[interfaceName];
-                        if haskey(d, "res")
-                            delete!(d, "res")
-                        end;
-                        d["affix"] = w;
-                        d["data"] = py"""affix_search"""(w);
-                        runAgent(node, e, f, d)),
-                    d["l_affix"]);
+                vv = map(w ->
+                            (dd = copy(data);
+                             dd["word"] = w;
+                             dd["affix"] = w;
+                             node = e[interfaceName];
+                             runAgent(node, e, f, dd)),
+                        d["l_affix"]);
                 vv
             end;
          d),
