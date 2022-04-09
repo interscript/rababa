@@ -427,11 +427,15 @@ dicCODE["is the word before it a verb?"] =
             if d["affix"] == get(d, "suffix", "nothing") # affix?
                 haskey(d,"lemma") && d["pos"] == "Verb" ? "yes" : "no";
             elseif d["affix"] == get(d, "prefix", "nothing") # suffix
-                d["pre_pos"] == "Verb" ? "yes" : "no"
+                if haskey(d, "pre_pos")
+                    d["pre_pos"] == "Verb" ? "yes" : "no"
+                else
+                    d["pos"] == "Verb" ?  "yes" : "no"
+                end;
             else
                 "no"
             end; d),
-            Dict(:in => ["pre_pos"], :out => ["state"]))
+            Dict(:in => [], :out => ["state"]))
 
 dicCODE["is the word to-which it's attached, a noun?"] =
     Functor((d,e=nothing,f=nothing) -> (d["state"] = d["pos"] == "Noun" ? "true" : "false"; d),
@@ -670,21 +674,22 @@ dicCODE["undo the change to the verb root and use it!"] =
 
 dicCODE["return the concatenation of all the returned transliterations."] =
     Functor((d,e=nothing,f=nothing) ->
-        (l_res = [];
-         for w in d["l_affix"]
-            dd = copy(data)
-            dd["word"] = w
-            dd["pos"] = d["pos"];
-            dd["pre_pos"] = d["pre_pos"];
-            interfaceName = "transliterator"; # "affix-handler";
-            node = e[interfaceName];
-            v = runAgent(node, e, f, dd);
-            push!(l_res, v);
-         end;
-         d["l_res"] = l_res;
-         d["res"] = join(l_res, "");
+        (d["res"] = join(d["l_res"], "");
+         #l_res = [];
+         #for w in d["l_affix"]
+        #    dd = copy(data)
+        #    dd["word"] = w
+        #    dd["pos"] = d["pos"];
+        #    dd["pre_pos"] = d["pre_pos"];
+        #    interfaceName = "transliterator"; # "affix-handler";
+        #    node = e[interfaceName];
+        #    v = runAgent(node, e, f, dd);
+        #    push!(l_res, v);
+         #end;
+         #d["l_res"] = l_res;
+         #d["res"] = join(l_res, "");
          d),
-            Dict(:in => ["l_affix"], :out => ["res", "l_res"]))
+            Dict(:in => ["l_res"], :out => ["res"]))
 
 
 dicCODE["transliterate it using affix-handler"] =
@@ -718,24 +723,24 @@ dicCODE["transliterate it using affix-handler"] =
 dicCODE["run affix-handler on affix vector"] =
     Functor((d,e=nothing,f=nothing) ->
         (interfaceName = "affix-handler";
-         d["res"] = if length(d["l_affix"]) == 1
+         d["l_res"] = if length(d["l_affix"]) == 1
                 v = py"""get_in_db"""(d["l_affix"][1], d["pos"]);
                 if !(typeof(v) == String)
                     d["SynCatCode"] = v[2];
                 end
-
             else
-                map(w -> (node = e[interfaceName];
+                vv=map(w -> (node = e[interfaceName];
                         if haskey(d, "res")
                             delete!(d, "res")
                         end;
                         d["affix"] = w;
                         d["data"] = py"""affix_search"""(w);
                         runAgent(node, e, f, d)),
-                    d["l_affix"]) |> (D -> join(D, ""))
+                    d["l_affix"]);
+                vv
             end;
          d),
-            Dict(:in => ["l_affix"], :out => ["res"]))
+            Dict(:in => ["l_affix"], :out => ["l_res"]))
 
 
 dicCODE["find the longest substring of the input that exists in the database."] =

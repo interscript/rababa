@@ -74,7 +74,7 @@ data = Dict{String, Any}(
 if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
 
 
-    df_Test = DataFrame(CSV.File("data/test.csv")) #_data.csv"))
+    df_Test = DataFrame(CSV.File("data/test_data.csv")) #_data.csv"))
 
     df_Test[!,"transModel"] =
         map(d -> d |>
