@@ -748,8 +748,6 @@ dicCODE["find the longest substring of the input that exists in the database."] 
         (d["d_substring"] = py"""longest_root_and_affixes"""(d["word"]);
          d["word_total"] = d["word"];
          d["data"] = py"""search_db"""(d["d_substring"]["root"]);
-         # println("/////:: ",d["d_substring"]);
-         # println("@@@@@@@@@@@@@@:: ", d);
          d),
             Dict(:in => ["word"], :out => ["d_substring", "data", "word_total"]))
 
