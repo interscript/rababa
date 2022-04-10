@@ -67,10 +67,12 @@ graph = dicBRAINS[entryBrain]
 data = Dict{String, Any}(
             "word" => nothing,
             "pos" => nothing,
+            "pre_pos" => nothing,
             "state" => nothing, # used for messages back to system
             "brain" => entryBrain) # current brain or graph
 
 
+m = 1
 if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
 
 
@@ -81,15 +83,21 @@ if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
             py"""normalise""" |>
                 hazm.word_tokenize |>
                     tagger.tag |>
-                        (D -> map(d -> (data["word"] = d[1];
-                                        data["pos"] = d[2];
-                                        data["state"] = nothing;
+                        (D -> map(d -> (dd = copy(data); 
+                                        dd["word"] = d[1];
+                                        dd["pos"] = d[2];
+                                        dd["state"] = nothing;
                             try
-                                runAgent(graph, dicBRAINS, df_Nodes, data)
+                        
+                                runAgent(graph, dicBRAINS, df_Nodes, dd);
+                        
                             catch
-                                println(data["word"], " : ", data["pos"])
-                                ""
-                            end), D)) |>
+                        
+                                println("DBG:: ", dd["word"], " : ", dd["pos"]);
+                                dd["word"]
+                        
+                            end
+                ), D)) |>
                             (L -> join(L, " ")),
     df_Test[!,"orig"])
 
