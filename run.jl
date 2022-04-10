@@ -72,6 +72,38 @@ data = Dict{String, Any}(
             "brain" => entryBrain) # current brain or graph
 
 
+VOCABFARSI = "ابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهی"
+
+function processPOS(pos)
+
+    l_supported_POS = vcat(py"""l_PoS""",
+                       collect(keys(py"""d_map_FLEXI""")),
+                       collect(keys(py"""d_map_HAZM""")))
+
+    if !(pos in l_supported_POS)
+
+        @error "pos unrecognised, needs to be within: ", l_supported_POS
+        exit()
+
+    else
+
+        if pos in collect(keys(py"""d_map_FLEXI"""))
+
+            pos = py"""d_map_FLEXI"""[pos]
+
+        elseif pos in collect(keys(py"""d_map_HAZM"""))
+
+            pos = py"""d_map_HAZM"""[pos]
+
+        end
+
+    end
+
+    pos
+
+end
+
+
 m = 1
 if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
 
@@ -84,12 +116,14 @@ if parsedArgs["file-name"] in ["data/test.csv", "test"] # Run the test
                 hazm.word_tokenize |>
                     tagger.tag |>
                         (D -> map(d -> (dd = copy(data); 
-                                        dd["word"] = d[1];
-                                        dd["pos"] = d[2];
+                                        dd["pos"] = processPOS(d[2]);
+                                        dd["word"] = d[2] != "Punctuation" ?
+                                                join(filter(c -> c in VOCABFARSI, d[1]), "") : d[1];
                                         dd["state"] = nothing;
                             try
                         
-                                runAgent(graph, dicBRAINS, df_Nodes, dd);
+                                dd["pos"] == "Punctuation" ?
+                                    dd["word"] : runAgent(graph, dicBRAINS, df_Nodes, dd)
                         
                             catch
                         

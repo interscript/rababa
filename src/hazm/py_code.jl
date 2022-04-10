@@ -6,7 +6,8 @@ include("get_assets.jl")
 py"""
 
 d_corrects = {'ي' : 'ی',
-              'ك'   : 'ک'}
+              'ك' : 'ک',
+               'ۀ' : 'هٔ'}
 
 d_corrects = dict([(d[0],d[1]) for d in d_corrects.items()])
 

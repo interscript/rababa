@@ -16,14 +16,19 @@ dicCODE = Dict{String, Functor}()
 
 # transliterator
 
-dicCODE["change all instances of ي and ك in the text to ی and ک"] =
+dicCODE["do nothing!"] =
+    Functor((d,e=nothing,f=nothing) -> d,
+        Dict(:in => ["word"], :out => ["word"]))
+
+dicCODE["change all instances of ي and ك and ۀ in the text to ی and ک and هٔ"] =
     Functor((d,e=nothing,f=nothing) ->
         (d["word"]=py"""normalise"""(d["word"]); d),
             Dict(:in => ["word"], :out => ["word"]))
 
 dicCODE["is the word found in the db?"] =
-    Functor((d,e=nothing,f=nothing) -> (d["data"]=py"""search_db"""(d["word"], d["pos"]);
-            d["state"] = typeof(d["data"]) != String ? "yes" : "no"; d),
+    Functor((d,e=nothing,f=nothing) ->
+        (d["data"]=py"""search_db"""(d["word"], d["pos"]);
+         d["state"] = typeof(d["data"]) != String ? "yes" : "no"; d),
             Dict(:in => ["word", "pos"], :out => ["data", "state"]))
 
 dicCODE["is it a verb?"] =
@@ -32,12 +37,15 @@ dicCODE["is it a verb?"] =
 
 dicCODE["lemmatize it!"] =
     Functor((d,e=nothing,f=nothing) ->
-        (d["lemma"] = lemmatizer.lemmatize(d["word"]); d),
+        (d["lemma"] = d["word"] |> lemmatizer.lemmatize |>
+            (S -> split(S, "#")) |>
+                (S -> filter(c -> c != "", S)) |>
+                    (S -> join(S, "#")); d),
             Dict(:in => ["word"], :out => ["lemma"]))
 
 dicCODE["includes underscores?"] =
-    Functor((d,e=nothing,f=nothing) -> (d["state"] = contains(d["lemma"], "_") ? "yes" : "no"; d),
-            Dict(:in => ["lemma"], :out => ["state"]))
+    Functor((d,e=nothing,f=nothing) -> (d["state"] = contains(d["word"], "_") ? "yes" : "no"; d),
+            Dict(:in => ["word"], :out => ["state"]))
 
 dicCODE["does only one of the verb roots exist in the verb?"] =
     Functor((d,e=nothing,f=nothing) -> (d["state"] = length(filter(x -> occursin(x, d["word"]),
@@ -136,7 +144,7 @@ dicCODE["transliterate the segment after u200c as a verb, starting at \"lemmatiz
          dd = copy(data);
          dd["word"] = wrd;
          dd["pos"] = "Verb";
-         interfaceName = "lemmatization-handler"; #"transliterator";
+         interfaceName = "verb-handler"; #"transliterator";
          node = e[interfaceName];
          res = "mi"*runAgent(node, e, f, dd);
          d["res"] = res; d),
@@ -150,7 +158,7 @@ dicCODE["transliterate the segment after u200c as a verb, starting at \"lemmatiz
          dd=copy(data);
          dd["word"] = wrd;
          dd["pos"] = "Verb";
-         interfaceName = "lemmatization-handler";
+         interfaceName = "verb-handler";
          node = e[interfaceName];
          d["res"] = "nemi"*runAgent(node, e, f, dd); d),
             Dict(:in => ["word"], :out => ["state"]))
@@ -179,13 +187,23 @@ dicCODE["is the verb root found in the db?"] =
             Dict(:in => ["lemma", "pos"], :out => ["data", "state"]))
 
 dicCODE["does the root of the word exist in the database?"] =
-    Functor((d,e=nothing,f=nothing) -> (d["data"]=py"""search_db"""(d["lemma"], d["pos"]);
-            d["state"] = typeof(d["data"]) != String ? "yes" : "no"; d),
+    Functor((d,e=nothing,f=nothing) ->
+        (d["data"]=py"""search_db"""(d["lemma"], d["pos"]);
+         d["state"] = typeof(d["data"]) != String ? "yes" : "no"; d),
             Dict(:in => ["lemma", "pos"], :out => ["data", "state"]))
 
 dicCODE["transliterate each side of underscore separately in proper order"] =
-    Functor((d,e=nothing,f=nothing) -> split(d["lemma"], "_") |>
-                (D -> map(x -> py"""return_highest_search_pos"""(x, d["pos"]), D) |> join),
+    Functor((d,e=nothing,f=nothing) ->
+        (d["res"] = map(w -> (dd = copy(data);
+                              dd["word"] = w;
+                              dd["pos"] = d["pos"];
+                              interfaceName = "transliterator";
+                              node = e[interfaceName];
+                              runAgent(node, e, f, dd)),
+                    split(d["word"], "_")) |>
+                        (D -> join(D, ""));
+         d["root"] = d["word"]; # to end computation
+         d),
             Dict(:in => ["lemma"], :out => ["res"]))
 
 
@@ -405,9 +423,12 @@ dicCODE["is it a suffix?"] =
             Dict(:in => ["word", "affix"], :out => ["state"]))
 
 dicCODE["is there only one instance of the affix?"] =
-    Functor((d,e=nothing,f=nothing) -> (
-    d["state"] = py"""has_only_one_search_pos"""(d["data"]); d),
-            Dict(:in => ["data"], :out => ["state"]))
+    Functor((d,e=nothing,f=nothing) ->
+    (if !haskey(d, "data")
+        d["data"] = py"""affix_search"""(d["affix"])
+     end;
+     d["state"] = py"""has_only_one_search_pos"""(d["data"]); d),
+            Dict(:in => ["affix"], :out => ["state"]))
 
 dicCODE["use it! "] =
     Functor((d,e=nothing,f=nothing) ->
@@ -520,11 +541,13 @@ dicCODE["is there an آ in the verb roots?"] =
 
 
 dicCODE["change the first آ in the verb root(s) to ا."] =
-    Functor((d,e=nothing,f=nothing) -> (d["lemma"] = split(d["lemma"], "#") |>
-                    (Ls -> map(x -> (idx = findfirst("آ", x) |> first;
-                                     string(replace(x[1:idx], "آ" => "ا"), x[idx+2:end])),
-                               Ls) |>
-                            (L -> join(split(L, "a"), "#"))); d),
+    Functor((d,e=nothing,f=nothing) ->
+        (d["lemma"] = split(d["lemma"], "#") |>
+            (Ls -> map(x -> (idx = findfirst("آ", x) |> first;
+                             string(replace(x[1:idx], "آ" => "ا"), x[idx+2:end])),
+                       Ls) |>
+                    (L -> join(L, "#")));
+             d),
             Dict(:in => ["lemma"], :out => ["lemma"]))
 
 
@@ -586,9 +609,7 @@ dicCODE["is there anything before the word root?"] =
             d["state"] = 1 == first(findfirst(d["lemma"], d["word"])) ? "no" : "yes"
          else
             "no"
-         end
-
-        ; d),
+         end; d),
             Dict(:in => ["lemma", "word"], :out => ["state"]))
 
 
@@ -679,11 +700,18 @@ dicCODE["add it to the end of the root's transliteration"] =
 
 
 dicCODE["undo the change to the verb root and use it!"] =
-    Functor((d,e=nothing,f=nothing) -> (d["res"] = d["lemma"] |>
-                    (x -> (idx = findfirst("ا", x) |> first;
-                           string(replace(x[1:idx], "آ" <= "ا"),
-                                  x[idx+2:end])));
-                  d),
+    Functor((d,e=nothing,f=nothing) ->
+        (w = collect(d["lemma"]);
+         idx = nothing;
+         for (i,v) in enumerate(w)
+             if v == 'ا'
+                 idx = i ; break
+             end
+         end;
+        d["res"] = string(join(replace(w[1:idx],
+                        'ا' => 'آ'), ""),
+                    join(w[idx+1:end],""));
+        d),
             Dict(:in => ["lemma"], :out => ["res"]))
 
 
