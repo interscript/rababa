@@ -6,7 +6,7 @@ include("hazm/py_code.jl")
 data = Dict{String, Any}(
             "word" => nothing,
             "pos" => nothing, # d["pos"],
-            "pre_pos" => nothing, #d["pre_pos"],
+            "pre_pos" => nothing, # d["pre_pos"],
             "state" => nothing,
             "brain" => "transliterator");
 
@@ -597,9 +597,13 @@ dicCODE["does the transliteration of the segment before it end in any of the /a,
 
 dicCODE["is there anything after the word root?"] =
     Functor((d,e=nothing,f=nothing) ->
-        (d["state"] = contains(d["word"], d["lemma"]) ?
+        (d["state"] = if length(d["lemma"]) == length(d["word"])
+            "no"
+        else
+        contains(d["word"], d["lemma"]) ?
             length(d["word"]) < last(findlast(reverse(d["lemma"]), reverse(d["word"]))) ? "yes" : "no" :
-            "no"; d),
+            "no"
+        end; d),
             Dict(:in => ["lemma", "word"], :out => ["state"]))
 
 
@@ -638,7 +642,8 @@ dicCODE["return the transliteration with t as its pos"] =
 
 
 dicCODE["return its transliteration then omit the ' symbol in the beginning of the word root that comes after it!"] =
-    Functor((d,e=nothing,f=nothing) -> (d["res"] = string(collect(d["data"][:PhonologicalForm])[1], "-'"); d),
+    Functor((d,e=nothing,f=nothing) ->
+        (d["res"] = string(collect(d["data"])[1]["PhonologicalForm"], "-'"); d),
             Dict(:in => ["data"], :out => ["res"]))
 
 
@@ -656,29 +661,44 @@ dicCODE["change the word root's transliteration from /rav/ to /ro/"] =
 
 dicCODE["mark it as prefix"] =
     Functor((d,e=nothing,f=nothing) ->
-        (l = length(collect(d["lemma"]));
-         d["prefix"] = join(collect(d["word"])[1:end-2]);
+        (nWord = length(collect(d["word"]));
+         n = length(collect(d["lemma"]));
+         idx = nothing;
+         for i=1:nWord-n+1
+             if join(collect(d["word"])[i:i+n-1], "") == d["lemma"]
+                 idx = i
+                 break
+             end
+         end;
+         d["prefix"] = join(collect(d["word"])[1:idx-1]);
          d["affix"] = d["prefix"];
-         d["res_root"] = d["res"]; d),
+         d["data"] = py"""affix_search"""(d["prefix"]);
+         d["res_root"] = haskey(d, "res_root") ? d["res_root"] : d["res"];
+         delete!(d, "res");
+         d),
             Dict(:in => ["word", "lemma"], :out => ["prefix"]))
 
 
 dicCODE["mark it as suffix"] =
     Functor((d,e=nothing,f=nothing) ->
-      (d["suffix"] = (id = last(findlast(d["lemma"], d["word"]));
-       try
-           d["word"][id+1:end]
-       catch
-           d["word"][id+2:end]
-       end);
+      (nWord = length(collect(d["word"]));
+       n = length(collect(d["lemma"]));
+       idx = nothing;
+       idx = nothing;
+       for i=reverse(1:nWord-n+1)
+           if join(collect(d["word"])[i:i+n-1], "") == d["lemma"]
+               idx = i
+               break
+           end
+       end;
+       d["suffix"] = join(collect(d["word"])[idx+n-1:end], "");
        d["res_root"] = d["res"];
        delete!(d, "res");
        d["affix"] = d["suffix"];
-       #d["word"] = d["suffix"];
        d["data"] = py"""affix_search"""(d["affix"]);
        d["brain"] = "fixbug";
        d),
-            Dict(:in => ["word", "lemma"], :out => ["suffix"]))
+        Dict(:in => ["word", "lemma"], :out => ["suffix"]))
 
 
 dicCODE["add it to the beginning of the root's transliteration"] =
@@ -695,7 +715,9 @@ dicCODE["add it to the end of the root's transliteration"] =
     Functor((d,e=nothing,f=nothing) ->
         (d["res"] = haskey(d, "res_suffix") ?
             string(d["res_root"], d["res_suffix"]) :
-            string(d["res_root"], d["res"]); d),
+            string(d["res_root"], d["res"]);
+         d["res"] = replace(d["res"], "-'"=>"", "-''"=>"");
+         d),
         Dict(:in => ["res_root", "res"], :out => ["res"]))
 
 
@@ -791,7 +813,6 @@ dicCODE["transliterate each side of it separately in proper order and put its tr
          # root
          root = if d["brain"] == "collision-handler"
              py"""return_highest_search_pos"""(d["data"], d["pos"])
-             # d["res"], get(d, "SynCatCode", "")
          else
              py"""get_in_db"""(d_substrings["root"], d["pos"])
          end;
@@ -803,13 +824,12 @@ dicCODE["transliterate each side of it separately in proper order and put its tr
              dd["word"] = prefix;
              dd["pos"] = d["pos"];
              dd["pre_pos"] = d["pre_pos"];
-             interfaceName = "transliterator"; # "affix-handler";
+             interfaceName = "transliterator";
              node = e[interfaceName];
              if haskey(dd, "res")
                  dd["res_root"] = dd["res"]
                  delete!(dd, "res")
              end;
-             # dd["data"] = py"""affix_search"""(dd["affix"]);
              runAgent(node, e, f, dd);
          else
              ""
@@ -825,7 +845,6 @@ dicCODE["transliterate each side of it separately in proper order and put its tr
                  dd["res_root"] = dd["res"]
                  delete!(dd, "res")
              end;
-             # dd["data"] = py"""affix_search"""(dd["affix"]);
              runAgent(node, e, f, dd);
          else
              ""
