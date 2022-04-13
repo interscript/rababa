@@ -684,20 +684,18 @@ dicCODE["mark it as suffix"] =
       (nWord = length(collect(d["word"]));
        n = length(collect(d["lemma"]));
        idx = nothing;
-       idx = nothing;
        for i=reverse(1:nWord-n+1)
            if join(collect(d["word"])[i:i+n-1], "") == d["lemma"]
                idx = i
                break
            end
        end;
-       d["suffix"] = join(collect(d["word"])[idx+n-1:end], "");
+       d["suffix"] = join(collect(d["word"])[idx+n:end], "");
        d["res_root"] = d["res"];
        delete!(d, "res");
        d["affix"] = d["suffix"];
        d["data"] = py"""affix_search"""(d["affix"]);
-       d["brain"] = "fixbug";
-       d),
+       d["brain"] = "hacktobesurebrainsjump"; d),
         Dict(:in => ["word", "lemma"], :out => ["suffix"]))
 
 
