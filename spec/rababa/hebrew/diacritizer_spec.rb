@@ -16,9 +16,7 @@ RSpec.describe Rababa::Hebrew::Diacritizer do
       # rubocop:disable Security/Open
       URI.open onnx_file do |remote|
         model = remote.read
-        File.open onnx_path, "wb" do |file|
-          file.write(model)
-        end
+        File.binwrite(onnx_path, model)
       end
       # rubocop:enable Security/Open
     end
@@ -35,8 +33,7 @@ RSpec.describe Rababa::Hebrew::Diacritizer do
     "מַה שׁלוֹמךַ"
   }
 
-  failing_tests = {
-  }
+  failing_tests = {}
 
   # Missing functionality:
   #

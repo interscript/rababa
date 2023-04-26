@@ -44,7 +44,7 @@ module Rababa
     ANY_NIQQUD = [RAFE] + NIQQUD[1..-1] + NIQQUD_SIN[1..-1] + DAGESH[1..-1]
     # rubocop:enable Style/SlicingWithRange
 
-    VALID_LETTERS = [" ", "!", '"', "'", "(", ")", ",", "-", ".", ":", ";", "?"] + \
+    VALID_LETTERS = [" ", "!", '"', "'", "(", ")", ",", "-", ".", ":", ";", "?"] +
       HEBREW_LETTERS
     SPECIAL_TOKENS = ["H", "O", "5"]
 
