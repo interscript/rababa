@@ -24,7 +24,7 @@ Please see the following README's, under the "`Try out Rababa`" section:
 
 This library was built for the
 https://www.interscript.org[Interscript project]
-(https://github.com/interscript/)[at GitHub]).
+(https://github.com/interscript/[at GitHub]).
 
 Diacritization strategy is following several steps with at heart a deep learning
 model:
@@ -80,3 +80,55 @@ We are working on the following improvements:
 
 * Enhancing architecture and encoding
 * Enhance datasets to improve models
+
+
+== License and copyright
+
+Rababa is copyright (c) 2021-2025, Ribose Inc. All rights reserved.
+
+Rababa is licensed under the BSD-2 Clause license. See the LICENSE.adoc file for
+details.
+
+
+== Attributions
+
+=== General
+
+The Rababa team would like to express their appreciation for the open-source
+work of these authors and researchers:
+
+* M. A. H. Madhfar and A. M. Qamar for their work on effective deep
+  learning models for automatic diacritization of Arabic text
+* Taha Zerrouki for the original Tashkeela dataset
+
+The team acknowledges the contributions of these authors and researchers in the
+field of Arabic diacritization and recognizes the importance of their work in
+advancing the state of the art in this area.
+
+Rababa does not redistribute any code or data from these attributed sources.
+Any redistribution of these attributed sources should be done in accordance with
+their respective licenses.
+
+Rababa is not responsible for any issues that may arise from the use of these
+external sources. These sources are provided for reference purposes only, and
+their use is at the user's own risk.
+
+=== Arabic diacritization models
+
+The neural network solution for Arabic diacritization is based on the work of
+M. A. H. Madhfar:
+
+* Repository: https://github.com/almodhfer/Arabic_Diacritization
+* License: MIT License
+* Citation: M. A. H. Madhfar and A. M. Qamar, "Effective Deep Learning Models
+  for Automatic Diacritization of Arabic Text," in IEEE Access, vol. 9,
+  pp. 273-288, 2021, doi: 10.1109/ACCESS.2020.3041676.
+
+=== Tashkeela dataset
+
+The Tashkeela dataset used for training is provided under GPL v2 license:
+
+* Original dataset by Taha Zerrouki: https://sourceforge.net/projects/tashkeela/
+* Processed dataset by Hamza Abbad:
+  https://sourceforge.net/projects/tashkeela-processed/
+* License: GPL v2
