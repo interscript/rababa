@@ -55,4 +55,8 @@ n_steps_avg_losses: [100, 500, 1_000, 5_000] # command line display of average l
 error_rates_n_batches: 10000 # if calculating error rate is slow, then you can specify the number of batches to be calculated
 
 test_model_path: null # load the last saved model
+
+# Path to model weights file (pytorch model)
+# This line is added to support testing without an existing model
+model_path: null
 train_resume_model_path: null # load last saved model

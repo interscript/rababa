@@ -3,22 +3,15 @@
 Middle-Eastern Language diacritization is useful for several practical business
 cases like text to speech or Romanization of texts or scripts.
 
-As of now, this library supports Hebrew and Arabic.
-
 == Purpose
 
 This repository contains everything to train a diacritization model in Python
 and run it in Python and Ruby.
 
-== Try out Rababa
+It supports the following languages:
 
-Rababa can be run both in Python and Ruby. Go the directory corresponding to the
-language you prefer to use.
-
-Please see the following README's, under the "`Try out Rababa`" section:
-
-* https://github.com/interscript/rababa/tree/main/python[Python]
-* https://github.com/interscript/rababa/tree/main/lib[Ruby]
+* Arabic
+* Hebrew
 
 == Library
 
@@ -74,12 +67,185 @@ In a similar fashion that a Rababa produces melody from a simple strings and
 pieces of wood, our library and diacritization gives a whole palette of colour
 and meanings to arabic scripts.
 
+
+== Try out Rababa
+
+Rababa can be run both in Python and Ruby. Go to the directory corresponding to the
+language you prefer to use.
+
+Training of Rababa models are only available in Python.
+
+
+=== Python (3.8+)
+
+==== Prerequisites
+
+The Python version of Rababa supports Python 3.8 and later. We recommend using a
+version manager like https://asdf-vm.com[asdf] or
+https://github.com/pyenv/pyenv[pyenv].
+
+[IMPORTANT]
+====
+*PyTorch Compatibility:* Rababa works with PyTorch 1.7.0 and later. Different
+versions of PyTorch may handle model loading differently, especially with the
+`weights_only` parameter introduced in PyTorch 2.6+.
+
+If you encounter model loading errors mentioning `weights_only`, you might be
+using a newer PyTorch version that is incompatible with the saved models. The
+setup steps below have been tested and should work across PyTorch versions.
+====
+
+With asdf:
+
+[source,bash]
+----
+# Install asdf (if not already installed)
+# See: https://asdf-vm.com/guide/getting-started.html
+
+# Install Python plugin
+asdf plugin add python
+
+# Install desired Python version
+asdf install python 3.9.13
+
+# Set Python version for this project
+asdf local python 3.9.13
+
+# Verify your Python version
+python --version
+----
+
+With pyenv:
+
+[source,bash]
+----
+# Install pyenv (if not already installed)
+brew install pyenv
+
+# Install desired Python version
+pyenv install 3.9.13
+
+# Set Python version for this project
+pyenv local 3.9.13
+
+# Verify your Python version
+python --version
+----
+
+==== Arabic Diacritization
+
+. Install the required dependencies:
++
+[source,bash]
+----
+cd python/arabic
+pip install --upgrade pip
+pip install torch numpy matplotlib pandas ruamel.yaml tensorboard diacritization-evaluation tqdm onnx onnxruntime pyyaml
+----
+
+. Download the pre-trained model:
++
+[source,bash]
+----
+mkdir -p log_dir/CA_MSA.base.cbhg/models
+curl -sSL https://github.com/secryst/rababa-models/releases/download/0.1/2000000-snapshot.pt -o log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt
+----
+
+. Run diacritization:
++
+[source,bash]
+----
+# Diacritize a single text
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'قطر'
+
+# Diacritize a text file
+python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text_file path_to_input_file --diacritized_text_file path_to_output_file
+----
+
+.Example Output
+[source]
+----
+# Input:  قطر
+# Output: قَطُرُ
+
+# Input:  مرحبا كيف حالك انا بخير
+# Output: مَرْحَبًا كَيْفَ حَالُك انَّا بِخَيْرٍ
+----
+
+[NOTE]
+====
+If you encounter model loading errors with newer versions of PyTorch (especially
+2.6+), you may see messages related to the `weights_only` parameter. The code
+has been updated to handle this compatibility issue, but if you still experience
+problems, please refer to the Troubleshooting section at the end of this
+document.
+====
+
+==== Hebrew Diacritization
+
+. Install the required dependencies:
++
+[source,bash]
+----
+cd python/hebrew
+pip install --upgrade pip
+pip install torch numpy matplotlib pandas ruamel.yaml tensorboard diacritization-evaluation tqdm onnx onnxruntime pyyaml
+----
+
+. Download the pre-trained model and configuration:
++
+[source,bash]
+----
+mkdir -p log_dir/base.cbhg
+curl -sSL https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/bchg_len90_dec0.9766_wor_0.8877.yml -o config/model_hebrew.yml
+curl -sSL https://github.com/secryst/rababa-models/releases/download/hebrew.0.1/model_len90_dec0.9766_wor_0.8877.pt -o log_dir/base.cbhg/model.pt
+----
+
+. Run diacritization:
++
+[source,bash]
+----
+# Diacritize a single text
+python diacritize.py --model_kind "cbhg" --config config/model_hebrew.yml --text 'מה שלומך'
+
+# Diacritize a text file
+python diacritize.py --model_kind "cbhg" --config config/model_hebrew.yml --text_file path_to_input_file --diacritized_text_file path_to_output_file
+----
+
+.Example Output
+[source]
+----
+# Input:  מה שלומך
+# Output: מָה שֶׁלוֹמְךַ
+
+# Input:  אני אוהב לקרוא ספרים
+# Output: אֲנִי אוֹהֵב לִקְרוֹא סְפָרִים
+----
+
+[NOTE]
+====
+The Hebrew model has similar PyTorch compatibility considerations as the Arabic
+model. The fixes applied ensure smooth operation across different PyTorch
+versions.
+====
+
+For more detailed instructions, please see the language-specific READMEs:
+
+* https://github.com/interscript/rababa/tree/main/python/arabic[Arabic]
+* https://github.com/interscript/rababa/tree/main/python/hebrew[Hebrew]
+* https://github.com/interscript/rababa/tree/main/lib[Ruby]
+
+
+// ==== Training
+
+// === Ruby
+
 == Under development
 
 We are working on the following improvements:
 
 * Enhancing architecture and encoding
-* Enhance datasets to improve models
+* Enhancing datasets to improve models
 
 
 == License and copyright
@@ -132,3 +298,53 @@ The Tashkeela dataset used for training is provided under GPL v2 license:
 * Processed dataset by Hamza Abbad:
   https://sourceforge.net/projects/tashkeela-processed/
 * License: GPL v2
+
+== Troubleshooting
+
+=== PyTorch Compatibility Issues
+
+If you encounter model loading errors related to the `weights_only` parameter in PyTorch, try one of the following solutions:
+
+1. *For Hebrew models:*
++
+If you see errors when loading the Hebrew model, verify that the fix for the `weights_only` parameter is applied in the Hebrew config_manager.py file. The load_model function should *not* include the `weights_only` parameter:
++
+[source,python]
+----
+saved_model = (
+    torch.load(model_path)
+    if torch.cuda.is_available()
+    else torch.load(model_path, map_location=torch.device("cpu"))
+)
+----
+
+2. *For Arabic models:*
++
+If you see errors when loading the Arabic model, the `weights_only` parameter should be explicitly set to `False` in the config_manager.py file:
++
+[source,python]
+----
+saved_model = torch.load(last_model_path, weights_only=False) if torch.cuda.is_available() else torch.load(last_model_path, map_location=torch.device('cpu'), weights_only=False)
+----
+
+3. *Using a specific PyTorch version:*
++
+If problems persist, installing a specific PyTorch version compatible with the saved model formats may help:
++
+[source,bash]
+----
+pip install torch==1.13.1
+----
+
+4. *Model conversion:*
++
+For persistent issues, you may need to load and re-save the models with your current PyTorch version:
++
+[source,python]
+----
+# Load model with explicit weights_only=False setting
+old_model = torch.load("model.pt", weights_only=False)
+
+# Save model in a compatible format
+torch.save(old_model, "new_model.pt")
+----
