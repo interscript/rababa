@@ -131,10 +131,6 @@ jobs:
     - name: Try training (WIP)
       working-directory: ./python/arabic
       run: |
-        # Fix for Python 3.9+ multiprocessing issue
-        if [[ "${{ matrix.python-version }}" == "3.9" || "${{ matrix.python-version }}" > "3.9" ]]; then
-          sed -i '1s/^/import multiprocessing\nif __name__ == "__main__":\n    multiprocessing.freeze_support()\n/' train.py
-        fi
         python train.py --model "cbhg" --config config/test_cbhg.yml
 
   security-scan:

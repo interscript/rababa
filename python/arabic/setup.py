@@ -23,7 +23,7 @@ setuptools.setup(
     description='Rababa for Arabic diacriticization',
     # packages=['rababa'],
     url='https://www.interscript.org',
-    python_requires='>=3.6, <4',
+    python_requires='>=3.8, <4',
     project_urls={
         'Documentation': 'https://github.com/interscript/rababa',
         'Source': 'https://github.com/interscript/rababa',

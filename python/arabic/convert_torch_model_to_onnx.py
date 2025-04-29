@@ -19,7 +19,7 @@ def main():
                 has to do with the model training and usage
     """
 
-    d_params = yaml.load(open("config/convert_torch_onnx.yml"))
+    d_params = yaml.safe_load(open("config/convert_torch_onnx.yml"))
 
     max_len = d_params["max_len"]  # 600 for the original length
     batch_size = d_params["batch_size"]
