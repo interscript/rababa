@@ -1,6 +1,6 @@
-
 import argparse
 import random
+import multiprocessing
 
 import numpy as np
 import torch
@@ -31,13 +31,19 @@ def train_parser():
     return parser
 
 
-parser = train_parser()
-args = parser.parse_args()
+def main():
+    parser = train_parser()
+    args = parser.parse_args()
+
+    if args.model_kind in ['baseline',"cbhg"]:
+        trainer = CBHGTrainer(args.config, args.model_kind)
+    else:
+        raise ValueError("The model kind is not supported")
+
+    trainer.run()
 
 
-if args.model_kind in ['baseline',"cbhg"]:
-    trainer = CBHGTrainer(args.config, args.model_kind)
-else:
-    raise ValueError("The model kind is not supported")
-
-trainer.run()
+if __name__ == "__main__":
+    # Fix for Python 3.9+ multiprocessing issues
+    multiprocessing.freeze_support()
+    main()

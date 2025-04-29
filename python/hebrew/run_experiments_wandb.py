@@ -1,6 +1,7 @@
 
 import argparse
 import random
+import multiprocessing
 
 import numpy as np
 import torch
@@ -36,9 +37,6 @@ def train_parser():
     return parser
 
 
-parser = train_parser()
-args = parser.parse_args()
-    
 # Define Experiments using Wandb
 sweep_config = {
     # search method
@@ -46,7 +44,7 @@ sweep_config = {
     # metric and objective
     'metric': {
       'name': 'dec',
-      'goal': 'maximize' #'minimize'   
+      'goal': 'maximize' #'minimize'
     },
     # define search parameters
     'parameters': {
@@ -69,7 +67,7 @@ sweep_config = {
         'post_cbhg_layers_units': {
             'values': [[256, 256]]
         },
-        
+
         'optimizer': {
             'values': ['Adam', 'SGD']
         },
@@ -78,26 +76,28 @@ sweep_config = {
         },
         'prenet_sizes': {
             'values': [[512, 256]]
-        }     
+        }
     }
 }
 
 
-# train code, with the search preprocessing logic    
+# train code, with the search preprocessing logic
 def train():
+    parser = train_parser()
+    args = parser.parse_args()
 
     with open('config/train.yml', "rb") as model_yaml:
         config = yaml.load(model_yaml)
-    
+
     # load default config
-    config_defaults = config 
+    config_defaults = config
     wandb.init(config=config_defaults) # , magic=True)
     config_wandb = wandb.config
-    
+
     # overwrite initial config
-    config = { **config, 
+    config = { **config,
                **config_wandb }
-    
+
     tmp_config_path = 'config/sweep_tmp.yml'
     with open(tmp_config_path, 'w') as yaml_file:
         yaml.dump(config, yaml_file, default_flow_style=False)
@@ -108,19 +108,21 @@ def train():
         raise ValueError("The model kind is not supported")
 
     trainer.run(config_wandb)
-    
 
-    
-##################################
-# MAIN                           #
-##################################
 
-# Run name
-run_name = "hyperparams search"
+def main():
+    # Run name
+    run_name = "hyperparams search"
 
-# Init wandb and search
-wandb.login()
-sweep_id = wandb.sweep(sweep_config, project=run_name)
+    # Init wandb and search
+    wandb.login()
+    sweep_id = wandb.sweep(sweep_config, project=run_name)
 
-# Run search
-wandb.agent(sweep_id, train)
+    # Run search
+    wandb.agent(sweep_id, train)
+
+
+if __name__ == "__main__":
+    # Fix for Python 3.9+ multiprocessing issues
+    multiprocessing.freeze_support()
+    main()

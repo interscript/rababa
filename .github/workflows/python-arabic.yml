@@ -1,33 +1,82 @@
-name: python
+name: Python CI
 
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'python/**'
+      - '.github/workflows/python-arabic.yml'
   pull_request:
+    paths:
+      - 'python/**'
+      - '.github/workflows/python-arabic.yml'
+
+# Cancel in-progress runs for the same workflow and branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
 
 jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+
+  codeql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
   infer:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-
-    - uses: actions/cache@v2
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('python/arabic/setup.py') }}-${{ hashFiles('python/arabic/requirements.txt') }}
+        cache: 'pip'
+        cache-dependency-path: |
+          python/arabic/requirements.txt
+          python/arabic/setup.py
 
     - name: Install requirements
       working-directory: ./python/arabic
       run: |
+        python -m pip install --upgrade pip
         pip install --upgrade --upgrade-strategy eager -r requirements.txt -e .
+
+    - name: Create model directory
+      working-directory: ./python/arabic
+      run: |
+        mkdir -p log_dir/CA_MSA.base.cbhg/models/
 
     - name: Download PyTorch model
       working-directory: ./python/arabic
@@ -42,25 +91,29 @@ jobs:
 
   train:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-
-    - uses: actions/cache@v2
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('python/setup.py') }}-${{ hashFiles('python/requirements.txt') }}
+        cache: 'pip'
+        cache-dependency-path: |
+          python/arabic/requirements.txt
+          python/arabic/setup.py
 
     - name: Install requirements
       working-directory: ./python/arabic
       run: |
+        python -m pip install --upgrade pip
         pip install --upgrade --upgrade-strategy eager -r requirements.txt -e .
 
     - name: Prepare dataset
@@ -79,3 +132,30 @@ jobs:
       working-directory: ./python/arabic
       run: |
         python train.py --model "cbhg" --config config/test_cbhg.yml
+
+  security-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install safety
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety
+
+    - name: Check for vulnerabilities in Arabic requirements
+      working-directory: ./python/arabic
+      run: |
+        safety check -r requirements.txt --full-report || true
+
+    - name: Check for vulnerabilities in Hebrew requirements
+      working-directory: ./python/hebrew
+      run: |
+        safety check -r requirements.txt --full-report || true

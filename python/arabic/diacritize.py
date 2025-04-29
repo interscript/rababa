@@ -2,6 +2,7 @@ import argparse
 from diacritizer import Diacritizer
 from itertools import repeat
 import random
+import multiprocessing
 
 import numpy as np
 import torch
@@ -25,22 +26,29 @@ def diacritization_parser():
     return parser
 
 
-parser = diacritization_parser()
-args = parser.parse_args()
+def main():
+    parser = diacritization_parser()
+    args = parser.parse_args()
 
-if args.text is None and args.text_file is None:
-    raise ValueError("text or text_file params required!")
+    if args.text is None and args.text_file is None:
+        raise ValueError("text or text_file params required!")
 
-if args.model_kind == "cbhg":
-    diacritizer = Diacritizer(args.config, args.model_kind, 'log_dir')
-elif args.model_kind == "baseline":
-    diacritizer = Diacritizer(args.config, args.model_kind, 'log_dir')
-else:
-    raise ValueError("The model kind is not supported")
+    if args.model_kind == "cbhg":
+        diacritizer = Diacritizer(args.config, args.model_kind, 'log_dir')
+    elif args.model_kind == "baseline":
+        diacritizer = Diacritizer(args.config, args.model_kind, 'log_dir')
+    else:
+        raise ValueError("The model kind is not supported")
 
-if args.text_file is None:
-    txt = diacritizer.diacritize_text(args.text)
-    print(txt)
-else:
-    for txt in diacritizer.diacritize_file(args.text_file):
+    if args.text_file is None:
+        txt = diacritizer.diacritize_text(args.text)
         print(txt)
+    else:
+        for txt in diacritizer.diacritize_file(args.text_file):
+            print(txt)
+
+
+if __name__ == "__main__":
+    # Fix for Python 3.9+ multiprocessing issues
+    multiprocessing.freeze_support()
+    main()

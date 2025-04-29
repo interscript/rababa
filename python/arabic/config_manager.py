@@ -188,9 +188,9 @@ class ConfigManager:
                 return model, 1
         else:
             last_model_path = model_path
-        
-        saved_model = torch.load(last_model_path) if torch.cuda.is_available() else torch.load(last_model_path, map_location=torch.device('cpu'))
-            
+
+        saved_model = torch.load(last_model_path, weights_only=False) if torch.cuda.is_available() else torch.load(last_model_path, map_location=torch.device('cpu'), weights_only=False)
+
         out = model.load_state_dict(saved_model["model_state_dict"])
         # print(out) check...
         global_step = saved_model["global_step"] + 1
