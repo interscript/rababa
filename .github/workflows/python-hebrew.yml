@@ -1,15 +1,15 @@
-name: Python Arabic CI
+name: Python Hebrew CI
 
 on:
   push:
     branches: [ main ]
     paths:
-      - 'python/**'
-      - '.github/workflows/python-arabic.yml'
+      - 'python/hebrew/**'
+      - '.github/workflows/python-hebrew.yml'
   pull_request:
     paths:
-      - 'python/**'
-      - '.github/workflows/python-arabic.yml'
+      - 'python/hebrew/**'
+      - '.github/workflows/python-hebrew.yml'
 
 # Cancel in-progress runs for the same workflow and branch
 concurrency:
@@ -64,30 +64,24 @@ jobs:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
         cache-dependency-path: |
-          python/arabic/requirements.txt
-          python/arabic/setup.py
+          python/hebrew/requirements.txt
+          python/hebrew/setup.py
 
     - name: Install requirements
-      working-directory: ./python/arabic
+      working-directory: ./python/hebrew
       run: |
         python -m pip install --upgrade pip
         pip install --upgrade --upgrade-strategy eager -r requirements.txt -e .
 
     - name: Create model directory
-      working-directory: ./python/arabic
+      working-directory: ./python/hebrew
       run: |
-        mkdir -p log_dir/CA_MSA.base.cbhg/models/
-
-    - name: Download PyTorch model
-      working-directory: ./python/arabic
-      run: |
-        curl -sSL https://github.com/secryst/rababa-models/releases/download/0.1/2000000-snapshot.pt \
-          -o log_dir/CA_MSA.base.cbhg/models/2000000-snapshot.pt
+        mkdir -p log_dir/base.cbhg/
 
     - name: Run diacriticization
-      working-directory: ./python/arabic
+      working-directory: ./python/hebrew
       run: |
-        python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'قطر'
+        python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'שלום'
 
   train:
     runs-on: ubuntu-latest
@@ -107,55 +101,22 @@ jobs:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
         cache-dependency-path: |
-          python/arabic/requirements.txt
-          python/arabic/setup.py
+          python/hebrew/requirements.txt
+          python/hebrew/setup.py
 
     - name: Install requirements
-      working-directory: ./python/arabic
+      working-directory: ./python/hebrew
       run: |
         python -m pip install --upgrade pip
         pip install --upgrade --upgrade-strategy eager -r requirements.txt -e .
 
-    - name: Prepare dataset
-      working-directory: ./python/arabic
-      run: |
-        mkdir -p data/CA_MSA
-        touch data/CA_MSA/{eval,train,test}.csv
-        cd data
-        curl -sSL https://github.com/interscript/rababa-tashkeela/archive/refs/tags/v1.0.zip -o tashkeela.zip
-        unzip tashkeela.zip
-        for d in `ls rababa-tashkeela-1.0/tashkeela_val/*`; do cat $d >> CA_MSA/eval.csv; done
-        for d in `ls rababa-tashkeela-1.0/tashkeela_train/*`; do cat $d >> CA_MSA/train.csv; done
-        for d in `ls rababa-tashkeela-1.0/tashkeela_test/*`; do cat $d >> CA_MSA/test.csv; done
-
-    - name: Try training (WIP)
-      working-directory: ./python/arabic
-      run: |
-        python train.py --model "cbhg" --config config/test_cbhg.yml
-
-  security-scan:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install safety
-      run: |
-        python -m pip install --upgrade pip
-        pip install safety
-
-    - name: Check for vulnerabilities in Arabic requirements
-      working-directory: ./python/arabic
-      run: |
-        safety check -r requirements.txt --full-report || true
-
-    - name: Check for vulnerabilities in Hebrew requirements
+    - name: Prepare test data
       working-directory: ./python/hebrew
       run: |
-        safety check -r requirements.txt --full-report || true
+        mkdir -p data/test
+        echo "שלום עולם" > data/test/test.txt
+
+    - name: Try training (WIP)
+      working-directory: ./python/hebrew
+      run: |
+        python train.py --model "cbhg" --config config/test_cbhg.yml

@@ -29,7 +29,13 @@ from util import nakdimon_utils as utils
 from util import nakdimon_hebrew_model as hebrew
 from util import nakdimon_metrics
 
-import wandb
+# Make wandb optional
+try:
+    import wandb
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+    print("Warning: wandb not available in trainer.py, training will proceed without wandb logging")
 
 
 class Trainer:
@@ -249,8 +255,7 @@ class GeneralTrainer(Trainer):
                     validation_iterator, tqdm_error_rates
                 )
 
-                if not config_wandb is None:
-
+                if not config_wandb is None and WANDB_AVAILABLE:
                     wandb.log({**d_scores, **scores})
                     print("scores:: ", scores)
 
