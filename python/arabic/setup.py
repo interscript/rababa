@@ -2,6 +2,7 @@ import re
 from os import environ
 
 import setuptools
+from setuptools import find_packages
 
 with open("README.adoc", "r", encoding="utf-8") as fh:
     LONG_DESCRIPTION = fh.read()
@@ -15,13 +16,18 @@ if TAG_VERSION:
     PKG_VERSION = TAG_VERSION.group(1)
 
 setuptools.setup(
-    name='rababa',
+    name='rababa-arabic',
     version=PKG_VERSION,
     author="Ribose",
     author_email="open.source@ribose.com",
     license='MIT',
     description='Rababa for Arabic diacriticization',
-    # packages=['rababa'],
+    packages=find_packages(include=[
+        "*",
+        "models.*",
+        "modules.*",
+        "util.*",
+    ]),
     url='https://www.interscript.org',
     python_requires='>=3.8, <4',
     project_urls={
@@ -30,23 +36,17 @@ setuptools.setup(
         'Tracker': 'https://github.com/interscript/rababa/issues',
     },
     install_requires=[
-      'torch>=1.9.0',
-      'numpy',
-      'matplotlib',
-      'pandas',
-      'ruamel.yaml',
-      'tensorboard',
-      'diacritization-evaluation',
-      'tqdm',
-      'onnx',
-      'onnxruntime',
-      'pyyaml',
+      'torch>=1.9.0,<3.0.0',
+      'numpy>=1.20.0,<2.0.0',
+      'matplotlib>=3.3.3',
+      'pandas>=1.3.0',
+      'ruamel.yaml>=0.16.12',
+      'tensorboard>=2.4.0',
+      'diacritization-evaluation>=0.5',
+      'tqdm>=4.56.0',
+      'onnx>=1.9.0',
+      'onnxruntime>=1.8.1',
+      'pyyaml>=5.4.1',
     ],
-    # extras_require={'plotting': ['matplotlib>=2.2.0', 'jupyter']},
     setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
-    # entry_points={
-    #     'console_scripts': ['my-command=exampleproject.example:main']
-    # },
-    # package_data={'exampleproject': ['data/schema.json']}
 )

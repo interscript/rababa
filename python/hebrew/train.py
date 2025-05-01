@@ -5,7 +5,14 @@ import multiprocessing
 
 import numpy as np
 import torch
-import wandb
+
+# Make wandb optional
+try:
+    import wandb
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+    print("Warning: wandb not available, training will proceed without logging to wandb")
 
 from trainer import (
     CBHGTrainer
