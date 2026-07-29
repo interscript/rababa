@@ -1,15 +1,12 @@
-from typing import Dict
-import torch
 import warnings
-import tqdm
+
 import pandas as pd
-import numpy as np
-from config_manager import ConfigManager
-from dataset import (DiacritizationDataset,
-                     collate_fn)
-from torch.utils.data import (DataLoader,
-                              Dataset)
+import torch
+import tqdm
 import util.reconcile_original_plus_diacritized as reconcile
+from config_manager import ConfigManager
+from dataset import DiacritizationDataset, collate_fn
+from torch.utils.data import DataLoader
 
 
 class Diacritizer:

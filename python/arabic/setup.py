@@ -3,7 +3,7 @@ from os import environ
 
 import setuptools
 
-with open("README.adoc", "r", encoding="utf-8") as fh:
+with open("README.adoc", encoding="utf-8") as fh:
     LONG_DESCRIPTION = fh.read()
 
 PKG_VERSION = "0.1.0"

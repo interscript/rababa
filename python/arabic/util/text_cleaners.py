@@ -1,6 +1,6 @@
 import re
-from util.constants import VALID_ARABIC, BASIC_HARAQAT, ALL_POSSIBLE_HARAQAT
-from diacritization_evaluation import util
+
+from util.constants import ALL_POSSIBLE_HARAQAT, BASIC_HARAQAT, VALID_ARABIC
 
 _whitespace_re = re.compile(r"\s+")
 

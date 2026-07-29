@@ -1,9 +1,9 @@
 
-from typing import List, Iterable
-
-import sys
 import contextlib
 import os
+import sys
+from collections.abc import Iterable
+from typing import List
 
 import numpy as np
 
@@ -20,7 +20,7 @@ def iterate_files(base_paths: Iterable[str]) -> List[str]:
 
 
 def read_file(filename):
-    with open(filename, 'r', encoding='utf-8') as f:
+    with open(filename, encoding='utf-8') as f:
         return f.read()
 
 

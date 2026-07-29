@@ -1,17 +1,14 @@
-from enum import Enum
 import os
-from pathlib import Path
 import shutil
 import subprocess
+from enum import Enum
+from pathlib import Path
 from typing import Any, Dict
 
 import ruamel.yaml
 import torch
-
 from models.baseline import BaseLineModel
 from models.cbhg import CBHGModel
-
-
 from options import AttentionType, LossType, OptimizerType
 from util.text_encoders import (
     TextEncoder,

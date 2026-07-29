@@ -1,10 +1,8 @@
-import torch
-import pickle
 
 import numpy as np
+import torch
 import yaml
 from diacritizer import Diacritizer
-
 
 """
     Key Params:
@@ -49,10 +47,9 @@ torch_out = dia.model(src, lengths)
     Load ONNX libs and export models into onnx
 """
 
-import torch
 import onnx
 import onnxruntime
-
+import torch
 
 # export model
 torch.onnx.export(

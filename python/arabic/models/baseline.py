@@ -1,6 +1,7 @@
 from typing import List
-from torch import nn
+
 import torch
+from torch import nn
 
 
 class BaseLineModel(nn.Module):
@@ -12,7 +13,7 @@ class BaseLineModel(nn.Module):
         layers_units: List[int] = [256, 256, 256],
         use_batch_norm: bool = False,
     ):
-        super(BaseLineModel, self).__init__()
+        super().__init__()
         self.targ_vocab_size = targ_vocab_size
         self.embedding = nn.Embedding(inp_vocab_size, embedding_dim)
 

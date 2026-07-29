@@ -3,16 +3,12 @@ import argparse
 import random
 
 import numpy as np
-import torch
 
 # import ruamel.yaml
 import ruamel.yaml as yaml
-
+import torch
 import wandb
-
-from trainer import (
-    CBHGTrainer
-)
+from trainer import CBHGTrainer
 
 SEED = 1234
 random.seed(SEED)
@@ -38,7 +34,7 @@ def train_parser():
 
 parser = train_parser()
 args = parser.parse_args()
-    
+
 # Define Experiments using Wandb
 sweep_config = {
     # search method
@@ -46,7 +42,7 @@ sweep_config = {
     # metric and objective
     'metric': {
       'name': 'dec',
-      'goal': 'maximize' #'minimize'   
+      'goal': 'maximize' #'minimize'
     },
     # define search parameters
     'parameters': {
@@ -69,7 +65,7 @@ sweep_config = {
         'post_cbhg_layers_units': {
             'values': [[256, 256]]
         },
-        
+
         'optimizer': {
             'values': ['Adam', 'SGD']
         },
@@ -78,26 +74,26 @@ sweep_config = {
         },
         'prenet_sizes': {
             'values': [[512, 256]]
-        }     
+        }
     }
 }
 
 
-# train code, with the search preprocessing logic    
+# train code, with the search preprocessing logic
 def train():
 
     with open('config/train.yml', "rb") as model_yaml:
         config = yaml.load(model_yaml)
-    
+
     # load default config
-    config_defaults = config 
+    config_defaults = config
     wandb.init(config=config_defaults) # , magic=True)
     config_wandb = wandb.config
-    
+
     # overwrite initial config
-    config = { **config, 
+    config = { **config,
                **config_wandb }
-    
+
     tmp_config_path = 'config/sweep_tmp.yml'
     with open(tmp_config_path, 'w') as yaml_file:
         yaml.dump(config, yaml_file, default_flow_style=False)
@@ -108,9 +104,9 @@ def train():
         raise ValueError("The model kind is not supported")
 
     trainer.run(config_wandb)
-    
 
-    
+
+
 ##################################
 # MAIN                           #
 ##################################

@@ -1,10 +1,9 @@
 import argparse
 import random
-from tester import DiacritizationTester
 
 import numpy as np
 import torch
-
+from tester import DiacritizationTester
 
 SEED = 1234
 random.seed(SEED)

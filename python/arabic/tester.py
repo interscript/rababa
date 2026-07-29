@@ -1,13 +1,9 @@
-from config_manager import ConfigManager
-import os
+
 import torch
-from typing import Dict
-
-from torch import nn
-from tqdm import tqdm
-from tqdm import trange
-
+from config_manager import ConfigManager
 from dataset import load_iterators
+from torch import nn
+from tqdm import trange
 from trainer import GeneralTrainer
 
 

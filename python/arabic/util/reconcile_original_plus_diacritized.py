@@ -1,5 +1,4 @@
-from util.constants import HARAQAT, ARAB_CHARS
-
+from util.constants import ARAB_CHARS, HARAQAT
 
 """
 ##################
@@ -65,7 +64,7 @@ def reconcile_strings(str_original, str_diacritized):
     """
     # we model the strings as dict
     d_original = dict((i,c) for i,c in
-                      enumerate(list([c for c in str_original if not c in HARAQAT])))
+                      enumerate(list([c for c in str_original if c not in HARAQAT])))
     d_diacritized = dict((i,c) for i,c in enumerate(list(str_diacritized)))
 
     # matching positions

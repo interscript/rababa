@@ -1,13 +1,13 @@
 import os
+from dataclasses import dataclass
+from itertools import repeat
 from typing import Any
 
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 from torch import nn
-from itertools import repeat
 from util.decorators import ignore_exception
-from dataclasses import dataclass
-import numpy as np
 
 
 @dataclass
@@ -199,7 +199,7 @@ def categorical_accuracy(preds, y, tag_pad_idx, device="cuda"):
     max_preds = preds.argmax(
         dim=1, keepdim=True
     )  # get the index of the max probability
-    non_pad_elements = torch.nonzero((y != tag_pad_idx))
+    non_pad_elements = torch.nonzero(y != tag_pad_idx)
     correct = max_preds[non_pad_elements].squeeze(1).eq(y[non_pad_elements])
     return correct.sum() / torch.FloatTensor([y[non_pad_elements].shape[0]]).to(device)
 

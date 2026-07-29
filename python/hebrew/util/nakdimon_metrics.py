@@ -1,11 +1,8 @@
 
-from typing import Tuple, List
 from pathlib import Path
-
-import numpy as np
+from typing import List, Tuple
 
 from util import nakdimon_hebrew_model as hebrew
-
 
 basepath = Path('tests/validation/expected')
 
