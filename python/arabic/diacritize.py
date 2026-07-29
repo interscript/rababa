@@ -30,9 +30,9 @@ if args.text is None and args.text_file is None:
     raise ValueError("text or text_file params required!")
 
 if args.model_kind == "cbhg":
-    diacritizer = Diacritizer(args.config, args.model_kind, 'log_dir')
+    diacritizer = Diacritizer(args.config, args.model_kind, "log_dir")
 elif args.model_kind == "baseline":
-    diacritizer = Diacritizer(args.config, args.model_kind, 'log_dir')
+    diacritizer = Diacritizer(args.config, args.model_kind, "log_dir")
 else:
     raise ValueError("The model kind is not supported")
 

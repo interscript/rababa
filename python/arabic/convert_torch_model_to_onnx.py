@@ -1,4 +1,3 @@
-
 import numpy as np
 import torch
 import yaml
@@ -151,7 +150,6 @@ test_id = 0
 print("***** Test MAX size :: Random Boolean vectors: *****")
 
 for test_run in range(3):
-
     vec = [[random.randint(0, 1) for i in range(max_len)] for i in range(batch_size)]
     src = torch.Tensor(vec).long()
     lengths = torch.Tensor([max_len for i in range(batch_size)]).long()
@@ -182,7 +180,6 @@ for test_run in range(3):
 print("***** Test MAX size :: Random float, vectors within 0:16 *****")
 
 for test_run in range(3):
-
     vec = [[random.randint(0, 17) for i in range(max_len)] for i in range(batch_size)]
     src = torch.Tensor(vec).long()
     torch_out = dia.model(src, lengths)
@@ -209,7 +206,6 @@ for test_run in range(3):
 print("***** Test Dynamical sizes :: Random Boolean vectors: *****")
 
 for l in [2, 10, 40, 100, 150]:
-
     print("length:: ", l)
 
     vec = [[1 for i in range(l)] for i in range(batch_size)]  # random.randint(0,1)
@@ -242,7 +238,6 @@ for l in [2, 10, 40, 100, 150]:
 print("***** Test Dynamical sizes :: Random float, vectors within 0:16 *****")
 
 for l in [2, 10, 40, 100, 150]:
-
     vec = [[random.randint(0, 17) for i in range(l)] for i in range(batch_size)]
     src = torch.Tensor(vec).long()
     lengths = torch.Tensor([l for i in range(batch_size)]).long()

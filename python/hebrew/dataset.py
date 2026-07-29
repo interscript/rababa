@@ -57,15 +57,11 @@ def load_training_data(config_manager: ConfigManager, loader_parameters):
     if not config_manager.config["load_training_data"]:
         return []
 
-    path = os.path.join(
-        config_manager.data_dir, "train", config_manager.config["train_file_name"]
-    )
+    path = os.path.join(config_manager.data_dir, "train", config_manager.config["train_file_name"])
 
     training_set = DiacritizationDataset(config_manager, path)
 
-    train_iterator = DataLoader(
-        training_set.data, collate_fn=collate_fn, **loader_parameters
-    )
+    train_iterator = DataLoader(training_set.data, collate_fn=collate_fn, **loader_parameters)
 
     print(f"Length of training iterator = {len(train_iterator)}")
     return train_iterator
@@ -78,15 +74,11 @@ def load_test_data(config_manager: ConfigManager, loader_parameters):
     if not config_manager.config["load_test_data"]:
         return []
     # test_file_name = config_manager.config.get("test_file_name", "test.csv")
-    path = os.path.join(
-        config_manager.data_dir, "test", config_manager.config["test_file_name"]
-    )
+    path = os.path.join(config_manager.data_dir, "test", config_manager.config["test_file_name"])
 
     test_dataset = DiacritizationDataset(config_manager, path)
 
-    test_iterator = DataLoader(
-        test_dataset.data, collate_fn=collate_fn, **loader_parameters
-    )
+    test_iterator = DataLoader(test_dataset.data, collate_fn=collate_fn, **loader_parameters)
 
     print(f"Length of test iterator = {len(test_iterator)}")
     return test_iterator
@@ -100,15 +92,11 @@ def load_validation_data(config_manager: ConfigManager, loader_parameters):
     if not config_manager.config["load_validation_data"]:
         return []
 
-    path = os.path.join(
-        config_manager.data_dir, "eval", config_manager.config["eval_file_name"]
-    )
+    path = os.path.join(config_manager.data_dir, "eval", config_manager.config["eval_file_name"])
 
     valid_dataset = DiacritizationDataset(config_manager, path)
 
-    valid_iterator = DataLoader(
-        valid_dataset.data, collate_fn=collate_fn, **loader_parameters
-    )
+    valid_iterator = DataLoader(valid_dataset.data, collate_fn=collate_fn, **loader_parameters)
 
     print(f"Length of valid iterator = {len(valid_iterator)}")
     return valid_iterator

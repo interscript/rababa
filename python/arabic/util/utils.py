@@ -61,8 +61,7 @@ def get_mask_from_lengths(memory, memory_lengths):
 
 def repeater(data_loader):
     for loader in repeat(data_loader):
-        for data in loader:
-            yield data
+        yield from loader
 
 
 def count_parameters(model):
@@ -89,19 +88,16 @@ def get_decoder_layers_attentions(model):
     return self_attns, src_attens
 
 
-def display_attention(
-    attention, path, global_step: int, name="att", n_heads=4, n_rows=2, n_cols=2
-):
+def display_attention(attention, path, global_step: int, name="att", n_heads=4, n_rows=2, n_cols=2):
     assert n_rows * n_cols == n_heads
 
     fig = plt.figure(figsize=(15, 15))
 
     for i in range(n_heads):
-
         ax = fig.add_subplot(n_rows, n_cols, i + 1)
 
         _attention = attention.squeeze(0)[i].transpose(0, 1).cpu().detach().numpy()
-        cax = ax.imshow(_attention, aspect="auto", origin="lower", interpolation="none")
+        ax.imshow(_attention, aspect="auto", origin="lower", interpolation="none")
 
     plot_name = f"{global_step}-{name}.png"
     plt.savefig(os.path.join(path, plot_name), dpi=300, format="png")
@@ -112,17 +108,11 @@ def plot_multi_head(model, path, global_step):
     encoder_attentions = get_encoder_layers_attentions(model)
     decoder_attentions, attentions = get_decoder_layers_attentions(model)
     for i in range(len(attentions)):
-        display_attention(
-            attentions[0][0], path, global_step, f"encoder-decoder-layer{i + 1}"
-        )
+        display_attention(attentions[0][0], path, global_step, f"encoder-decoder-layer{i + 1}")
     for i in range(len(decoder_attentions)):
-        display_attention(
-            decoder_attentions[0][0], path, global_step, f"decoder-layer{i + 1}"
-        )
+        display_attention(decoder_attentions[0][0], path, global_step, f"decoder-layer{i + 1}")
     for i in range(len(encoder_attentions)):
-        display_attention(
-            encoder_attentions[0][0], path, global_step, f"encoder-layer {i + 1}"
-        )
+        display_attention(encoder_attentions[0][0], path, global_step, f"encoder-layer {i + 1}")
 
 
 def make_src_mask(src, pad_idx=0):
@@ -196,9 +186,7 @@ def categorical_accuracy(preds, y, tag_pad_idx, device="cuda"):
     """
     Returns accuracy per batch, i.e. if you get 8/10 right, this returns 0.8, NOT 8
     """
-    max_preds = preds.argmax(
-        dim=1, keepdim=True
-    )  # get the index of the max probability
+    max_preds = preds.argmax(dim=1, keepdim=True)  # get the index of the max probability
     non_pad_elements = torch.nonzero(y != tag_pad_idx)
     correct = max_preds[non_pad_elements].squeeze(1).eq(y[non_pad_elements])
     return correct.sum() / torch.FloatTensor([y[non_pad_elements].shape[0]]).to(device)

@@ -3,7 +3,7 @@ import shutil
 import subprocess
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import ruamel.yaml
 import torch
@@ -29,7 +29,7 @@ class ConfigManager:
         self.config_path = Path(config_path)
         self.model_kind = model_kind
         self.yaml = ruamel.yaml.YAML()
-        self.config: Dict[str, Any] = self._load_config()
+        self.config: dict[str, Any] = self._load_config()
         self.set_device()
         self.session_name = ".".join(
             [self.config["session_name"], f"{model_kind}"]  # self.config["data_type"],
@@ -37,9 +37,7 @@ class ConfigManager:
 
         self.data_dir = Path(os.path.join(self.config["data_directory"]))
 
-        self.base_dir = Path(
-            os.path.join(self.config["log_directory"], self.session_name)
-        )
+        self.base_dir = Path(os.path.join(self.config["log_directory"], self.session_name))
 
         self.log_dir = Path(os.path.join(self.base_dir, "logs"))
         self.prediction_dir = Path(os.path.join(self.base_dir, "predictions"))
@@ -66,25 +64,17 @@ class ConfigManager:
     @staticmethod
     def _get_git_hash():
         try:
-            return (
-                subprocess.check_output(["git", "describe", "--always"])
-                .strip()
-                .decode()
-            )
+            return subprocess.check_output(["git", "describe", "--always"]).strip().decode()
         except Exception as e:
             print(f"WARNING: could not retrieve git hash. {e}")
 
     def _check_hash(self):
         try:
-            git_hash = (
-                subprocess.check_output(["git", "describe", "--always"])
-                .strip()
-                .decode()
-            )
+            git_hash = subprocess.check_output(["git", "describe", "--always"]).strip().decode()
             if self.config["git_hash"] != git_hash:
                 print(
                     f"""WARNING: git hash mismatch. Current: {git_hash}.
-                    Config hash: {self.config['git_hash']}"""
+                    Config hash: {self.config["git_hash"]}"""
                 )
         except Exception as e:
             print(f"WARNING: could not check git hash. {e}")
@@ -100,9 +90,7 @@ class ConfigManager:
                 recursion_level += 1
                 self._print_dictionary(dictionary[key], recursion_level)
             else:
-                self._print_dict_values(
-                    dictionary[key], key_name=key, level=recursion_level
-                )
+                self._print_dict_values(dictionary[key], key_name=key, level=recursion_level)
 
     def print_config(self):
         print("\nCONFIGURATION", self.session_name)
@@ -189,9 +177,7 @@ class ConfigManager:
             )
             check = model.load_state_dict(saved_model["model_state_dict"])
             print("Load model state dict:: ", check)  # check...
-            optimizer_stat_dict = (
-                saved_model["optimizer_state_dict"] if load_optimizer else None
-            )
+            optimizer_stat_dict = saved_model["optimizer_state_dict"] if load_optimizer else None
             global_step = saved_model["global_step"] + 1
 
         except:

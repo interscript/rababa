@@ -1,4 +1,3 @@
-
 import torch
 from config_manager import ConfigManager
 from dataset import load_iterators
@@ -11,9 +10,7 @@ class DiacritizationTester(GeneralTrainer):
     def __init__(self, config_path: str, model_kind: str) -> None:
         self.config_path = config_path
         self.model_kind = model_kind
-        self.config_manager = ConfigManager(
-            config_path=config_path, model_kind=model_kind
-        )
+        self.config_manager = ConfigManager(config_path=config_path, model_kind=model_kind)
         self.config = self.config_manager.config
         self.pad_idx = 0
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.pad_idx)

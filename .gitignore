@@ -15,3 +15,18 @@ Gemfile.lock
 
 .eggs
 __pycache__
+
+# Python training artifacts — never commit
+python/log_dir/
+python/data/
+python/models/
+python/__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.onnx
+*.pt
+
+# Editor
+.idea/
+.vscode/

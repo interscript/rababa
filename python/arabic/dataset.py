@@ -33,13 +33,10 @@ class DiacritizationDataset(Dataset):
         # Select sample
         id = self.list_ids[index]
         data_orig = self.data[id].strip()
-        text, inputs, diacritics = cleaners.extract_haraqat(
-                                        self.text_encoder.clean(data_orig))
+        text, inputs, diacritics = cleaners.extract_haraqat(self.text_encoder.clean(data_orig))
 
-        inputs = torch.Tensor(
-                    self.text_encoder.input_to_sequence("".join(inputs)))
-        diacritics = torch.Tensor(
-                    self.text_encoder.target_to_sequence(diacritics))
+        inputs = torch.Tensor(self.text_encoder.input_to_sequence("".join(inputs)))
+        diacritics = torch.Tensor(self.text_encoder.target_to_sequence(diacritics))
 
         return inputs, diacritics, data_orig
 
@@ -94,24 +91,18 @@ def load_training_data(config_manager: ConfigManager, loader_parameters):
         )
 
         # train_data = train_data[train_data[0] <= config_manager.config["max_len"]]
-        training_set = DiacritizationDataset(
-            config_manager, train_data.index, train_data
-        )
+        training_set = DiacritizationDataset(config_manager, train_data.index, train_data)
     else:
         with open(path, encoding="utf8") as file:
             train_data = file.readlines()
             train_data = [
-                text
-                for text in train_data
-                if len(text) <= config_manager.config["max_len"]
+                text for text in train_data if len(text) <= config_manager.config["max_len"]
             ]
         training_set = DiacritizationDataset(
             config_manager, [idx for idx in range(len(train_data))], train_data
         )
 
-    train_iterator = DataLoader(
-        training_set, collate_fn=collate_fn, **loader_parameters
-    )
+    train_iterator = DataLoader(training_set, collate_fn=collate_fn, **loader_parameters)
 
     print(f"Length of training iterator = {len(train_iterator)}")
     return train_iterator
@@ -138,15 +129,12 @@ def load_test_data(config_manager: ConfigManager, loader_parameters):
     else:
         with open(path, encoding="utf8") as file:
             test_data = file.readlines()
-        test_data = [
-            text for text in test_data if len(text) <= config_manager.config["max_len"]
-        ]
+        test_data = [text for text in test_data if len(text) <= config_manager.config["max_len"]]
         test_dataset = DiacritizationDataset(
             config_manager, [idx for idx in range(len(test_data))], test_data
         )
 
-    test_iterator = DataLoader(test_dataset, collate_fn=collate_fn,
-                               **loader_parameters)
+    test_iterator = DataLoader(test_dataset, collate_fn=collate_fn, **loader_parameters)
 
     print(f"Length of test iterator = {len(test_iterator)}")
     return test_iterator
@@ -170,23 +158,17 @@ def load_validation_data(config_manager: ConfigManager, loader_parameters):
         )
 
         # valid_data = valid_data[valid_data[0] <= config_manager.config["max_len"]]
-        valid_dataset = DiacritizationDataset(
-            config_manager, valid_data.index, valid_data
-        )
+        valid_dataset = DiacritizationDataset(config_manager, valid_data.index, valid_data)
     else:
         with open(path, encoding="utf8") as file:
             valid_data = file.readlines()
 
-        valid_data = [
-            text for text in valid_data if len(text) <= config_manager.config["max_len"]
-        ]
+        valid_data = [text for text in valid_data if len(text) <= config_manager.config["max_len"]]
         valid_dataset = DiacritizationDataset(
             config_manager, [idx for idx in range(len(valid_data))], valid_data
         )
 
-    valid_iterator = DataLoader(
-        valid_dataset, collate_fn=collate_fn, **loader_parameters
-    )
+    valid_iterator = DataLoader(valid_dataset, collate_fn=collate_fn, **loader_parameters)
 
     print(f"Length of valid iterator = {len(valid_iterator)}")
     return valid_iterator

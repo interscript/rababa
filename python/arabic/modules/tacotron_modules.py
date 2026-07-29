@@ -1,8 +1,8 @@
 """
 Some custom modules that are used by the TTS model
 """
+
 from copy import deepcopy
-from typing import List
 
 import torch
 from modules.layers import BatchNormConv1d
@@ -18,17 +18,12 @@ class Prenet(nn.Module):
     in_dim (int): the input dim
     """
 
-    def __init__(
-        self, in_dim: int, prenet_depth: List[int] = [256, 128], dropout: int = 0.5
-    ):
-        """ Initializing the prenet module """
+    def __init__(self, in_dim: int, prenet_depth: list[int] = [256, 128], dropout: int = 0.5):
+        """Initializing the prenet module"""
         super().__init__()
         in_sizes = [in_dim] + prenet_depth[:-1]
         self.layers = nn.ModuleList(
-            [
-                nn.Linear(in_size, out_size)
-                for (in_size, out_size) in zip(in_sizes, prenet_depth)
-            ]
+            [nn.Linear(in_size, out_size) for (in_size, out_size) in zip(in_sizes, prenet_depth)]
         )
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(dropout)
@@ -90,7 +85,7 @@ class CBHG(nn.Module):
         in_dim: int,
         out_dim: int,
         K: int,
-        projections: List[int],
+        projections: list[int],
         highway_layers: int = 4,
     ):
         """Initializing the CBHG module
@@ -108,25 +103,26 @@ class CBHG(nn.Module):
             [
                 deepcopy(
                     BatchNormConv1d(
-                    in_dim,
-                    in_dim,
-                    kernel_size=k,
-                    stride=1,
-                    padding=k // 2,
-                    activation=self.relu,
-                ))
+                        in_dim,
+                        in_dim,
+                        kernel_size=k,
+                        stride=1,
+                        padding=k // 2,
+                        activation=self.relu,
+                    )
+                )
                 for k in range(1, K + 1)
             ]
         )
         k = 2
         self.trafo_test = BatchNormConv1d(
-                    in_dim,
-                    in_dim,
-                    kernel_size=k,
-                    stride=1,
-                    padding=k // 2,
-                    activation=self.relu,
-                )
+            in_dim,
+            in_dim,
+            kernel_size=k,
+            stride=1,
+            padding=k // 2,
+            activation=self.relu,
+        )
 
         self.trafo = deepcopy(self.trafo_test)
 
@@ -136,9 +132,11 @@ class CBHG(nn.Module):
         activations = [self.relu] * (len(projections) - 1) + [None]
         self.conv1d_projections = nn.ModuleList(
             [
-                deepcopy(BatchNormConv1d(
-                    in_size, out_size, kernel_size=3, stride=1, padding=1, activation=ac
-                ))
+                deepcopy(
+                    BatchNormConv1d(
+                        in_size, out_size, kernel_size=3, stride=1, padding=1, activation=ac
+                    )
+                )
                 for (in_size, out_size, ac) in zip(in_sizes, projections, activations)
             ]
         )

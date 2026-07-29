@@ -6,6 +6,18 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    continue-on-error: true  # 36 pre-existing violations; see TODO.complete/08-ruff-rababa-python.md
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check python/
+      - run: ruff format --check python/
+
   infer:
     runs-on: ubuntu-latest
     strategy:

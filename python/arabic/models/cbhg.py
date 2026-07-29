@@ -1,7 +1,8 @@
 """
 The CBHG model implementation
 """
-from typing import List, Optional
+
+from typing import Optional
 
 import torch
 from modules.tacotron_modules import CBHG, Prenet
@@ -33,12 +34,12 @@ class CBHGModel(nn.Module):
         targ_vocab_size: int,
         embedding_dim: int = 512,
         use_prenet: bool = True,
-        prenet_sizes: List[int] = [512, 256],
+        prenet_sizes: list[int] = [512, 256],
         cbhg_gru_units: int = 512,
         cbhg_filters: int = 16,
-        cbhg_projections: List[int] = [128, 256],
-        post_cbhg_layers_units: List[int] = [256, 256],
-        post_cbhg_use_batch_norm: bool = True
+        cbhg_projections: list[int] = [128, 256],
+        post_cbhg_layers_units: list[int] = [256, 256],
+        post_cbhg_use_batch_norm: bool = True,
     ):
         super().__init__()
         self.use_prenet = use_prenet
@@ -73,12 +74,11 @@ class CBHGModel(nn.Module):
         self.post_cbhg_layers_units = post_cbhg_layers_units
         self.post_cbhg_use_batch_norm = post_cbhg_use_batch_norm
 
-
     def forward(
         self,
         src: torch.Tensor,
         lengths: Optional[torch.Tensor] = None,
-        target: Optional[torch.Tensor] = None  # not required in this model
+        target: Optional[torch.Tensor] = None,  # not required in this model
     ):
         """Compute forward propagation"""
 

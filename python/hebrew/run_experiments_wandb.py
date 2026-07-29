@@ -1,4 +1,3 @@
-
 import argparse
 import random
 
@@ -38,73 +37,55 @@ args = parser.parse_args()
 # Define Experiments using Wandb
 sweep_config = {
     # search method
-    'method': 'random', #grid, random
+    "method": "random",  # grid, random
     # metric and objective
-    'metric': {
-      'name': 'dec',
-      'goal': 'maximize' #'minimize'
+    "metric": {
+        "name": "dec",
+        "goal": "maximize",  #'minimize'
     },
     # define search parameters
-    'parameters': {
-        'max_steps': {
-            'values': [1000]
+    "parameters": {
+        "max_steps": {"values": [1000]},
+        "batch_size": {
+            "values": [32]  # [128, 64, 32]
         },
-        'batch_size': {
-            'values': [32] #[128, 64, 32]
+        "cbhg_filters": {"values": [16]},
+        "cbhg_gru_units": {"values": [256]},
+        "cbhg_projections": {
+            "values": [[128, 256]]  # , [256, 512]]
         },
-        'cbhg_filters': {
-            'values': [16]
-        },
-        'cbhg_gru_units': {
-            'values': [256]
-        },
-        'cbhg_projections': {
-            'values': [[128, 256]] #, [256, 512]]
-        },
-
-        'post_cbhg_layers_units': {
-            'values': [[256, 256]]
-        },
-
-        'optimizer': {
-            'values': ['Adam', 'SGD']
-        },
-        'use_prenet': {
-            'values': ['false']
-        },
-        'prenet_sizes': {
-            'values': [[512, 256]]
-        }
-    }
+        "post_cbhg_layers_units": {"values": [[256, 256]]},
+        "optimizer": {"values": ["Adam", "SGD"]},
+        "use_prenet": {"values": ["false"]},
+        "prenet_sizes": {"values": [[512, 256]]},
+    },
 }
 
 
 # train code, with the search preprocessing logic
 def train():
 
-    with open('config/train.yml', "rb") as model_yaml:
+    with open("config/train.yml", "rb") as model_yaml:
         config = yaml.load(model_yaml)
 
     # load default config
     config_defaults = config
-    wandb.init(config=config_defaults) # , magic=True)
+    wandb.init(config=config_defaults)  # , magic=True)
     config_wandb = wandb.config
 
     # overwrite initial config
-    config = { **config,
-               **config_wandb }
+    config = {**config, **config_wandb}
 
-    tmp_config_path = 'config/sweep_tmp.yml'
-    with open(tmp_config_path, 'w') as yaml_file:
+    tmp_config_path = "config/sweep_tmp.yml"
+    with open(tmp_config_path, "w") as yaml_file:
         yaml.dump(config, yaml_file, default_flow_style=False)
 
-    if args.model_kind in ['baseline',"cbhg"]:
+    if args.model_kind in ["baseline", "cbhg"]:
         trainer = CBHGTrainer(tmp_config_path, args.model_kind)
     else:
         raise ValueError("The model kind is not supported")
 
     trainer.run(config_wandb)
-
 
 
 ##################################

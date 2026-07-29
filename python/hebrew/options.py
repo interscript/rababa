@@ -1,6 +1,7 @@
 """
 Types of various choices used during training
 """
+
 from enum import Enum
 
 

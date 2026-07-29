@@ -10,14 +10,10 @@ from torch.utils.data import DataLoader
 
 
 class Diacritizer:
-    def __init__(
-        self, config_path: str, model_kind: str, load_model: bool = False
-    ) -> None:
+    def __init__(self, config_path: str, model_kind: str, load_model: bool = False) -> None:
         self.config_path = config_path
         self.model_kind = model_kind
-        self.config_manager = ConfigManager(
-            config_path=config_path, model_kind=model_kind
-        )
+        self.config_manager = ConfigManager(config_path=config_path, model_kind=model_kind)
         self.config = self.config_manager.config
         self.text_encoder = self.config_manager.text_encoder
 
@@ -37,40 +33,39 @@ class Diacritizer:
         text = text.strip()
         seq = self.text_encoder.input_to_sequence(text)
         # transform indices into "batch data"
-        batch_data = {'original': [text],
-                      'src': torch.Tensor([seq]).long(),
-                      'lengths': torch.Tensor([len(seq)]).long()}
+        batch_data = {
+            "original": [text],
+            "src": torch.Tensor([seq]).long(),
+            "lengths": torch.Tensor([len(seq)]).long(),
+        }
 
         return self.diacritize_batch(batch_data)[0]
 
     def get_data_from_file(self, path):
         """get data from relative path"""
-        loader_params = {"batch_size": self.config_manager.config["batch_size"],
-                         "shuffle": False,
-                         "num_workers": 2}
+        {"batch_size": self.config_manager.config["batch_size"], "shuffle": False, "num_workers": 2}
 
-        data_tmp = pd.read_csv(path,
-                           encoding="utf-8",
-                           sep=self.config_manager.config["data_separator"],
-                           header=None)
+        data_tmp = pd.read_csv(
+            path, encoding="utf-8", sep=self.config_manager.config["data_separator"], header=None
+        )
 
         data = []
         max_len = self.config_manager.config["max_len"]
         for txt in [d[0] for d in data_tmp.values.tolist()]:
             if len(txt) > max_len:
                 txt = txt[:max_len]
-                warnings.warn('Warning: text length cut for sentence: \n'+txt)
+                warnings.warn("Warning: text length cut for sentence: \n" + txt)
             data.append(txt)
 
         list_ids = [idx for idx in range(len(data))]
-        dataset = DiacritizationDataset(self.config_manager,
-                                        list_ids,
-                                        data)
+        dataset = DiacritizationDataset(self.config_manager, list_ids, data)
 
-        data_iterator = DataLoader(dataset,
-                                   collate_fn=collate_fn,
-                                   # **loader_params,
-                                   shuffle=False)
+        data_iterator = DataLoader(
+            dataset,
+            collate_fn=collate_fn,
+            # **loader_params,
+            shuffle=False,
+        )
 
         # print(f"Length of data iterator = {len(data_iterator)}")
         return data_iterator
@@ -80,10 +75,9 @@ class Diacritizer:
         data_iterator = self.get_data_from_file(path)
         diacritized_data = []
         for batch_inputs in tqdm.tqdm(data_iterator):
-
-            #batch_inputs["original"] = batch_inputs["original"].to(self.device)
+            # batch_inputs["original"] = batch_inputs["original"].to(self.device)
             batch_inputs["src"] = batch_inputs["src"].to(self.device)
-            batch_inputs["lengths"] = batch_inputs["lengths"].to('cpu')
+            batch_inputs["lengths"] = batch_inputs["lengths"].to("cpu")
             batch_inputs["target"] = batch_inputs["target"].to(self.device)
 
             for d in self.diacritize_batch(batch_inputs):
@@ -94,7 +88,7 @@ class Diacritizer:
     def diacritize_batch(self, batch):
         # print('batch: ',batch)
         self.model.eval()
-        originals = batch['original']
+        originals = batch["original"]
         inputs = batch["src"]
         lengths = batch["lengths"]
         outputs = self.model(inputs.to(self.device), lengths.to("cpu"))
@@ -104,12 +98,12 @@ class Diacritizer:
         sentences = []
         for src, prediction, original in zip(inputs, predictions, originals):
             sentence = self.text_encoder.combine_text_and_haraqat(
-                    list(src.detach().cpu().numpy()),
-                    list(prediction.detach().cpu().numpy()))
+                list(src.detach().cpu().numpy()), list(prediction.detach().cpu().numpy())
+            )
             # Diacritized strings, sentence have to be "reconciled"
             # with original strings, because the non arabic strings are removed
             # before being processed in nnet
-            if self.config['reconcile']:
+            if self.config["reconcile"]:
                 sentence = reconcile.reconcile_strings(original, sentence)
             sentences.append(sentence)
 

@@ -1,5 +1,3 @@
-from typing import List
-
 import torch
 from torch import nn
 
@@ -10,7 +8,7 @@ class BaseLineModel(nn.Module):
         inp_vocab_size: int,
         targ_vocab_size: int,
         embedding_dim: int = 512,
-        layers_units: List[int] = [256, 256, 256],
+        layers_units: list[int] = [256, 256, 256],
         use_batch_norm: bool = False,
     ):
         super().__init__()
