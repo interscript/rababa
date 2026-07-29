@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 import torch
 from modules.attention import AttentionWrapper
@@ -37,7 +37,7 @@ class Encoder(nn.Module):
         self,
         inp_vocab_size: int,
         embedding_dim: int = 512,
-        layers_units: List[int] = [256, 256, 256],
+        layers_units: list[int] = [256, 256, 256],
         use_batch_norm: bool = False,
     ):
         super().__init__()
@@ -81,6 +81,7 @@ class Encoder(nn.Module):
 
         return outputs
 
+
 class Decoder(nn.Module):
     """A seq2seq decoder that decode a diacritic at a time ,
     Args:
@@ -100,7 +101,7 @@ class Decoder(nn.Module):
         attention_units: int = 256,
         attention_type: AttentionType = AttentionType.LocationSensitive,
         is_attention_accumulative: bool = False,
-        prenet_depth: List[int] = [256, 128],
+        prenet_depth: list[int] = [256, 128],
         use_prenet: bool = True,
         teacher_forcing_probability: float = 0.0,
     ):
@@ -193,9 +194,7 @@ class Decoder(nn.Module):
         """Generate diacritics one at a time"""
         batch_size = self.encoder_outputs.size(0)
         trg_len = self.encoder_outputs.size(1)
-        diacritic = (
-            torch.full((batch_size,), self.start_symbol_id).to(self.device).long()
-        )
+        diacritic = torch.full((batch_size,), self.start_symbol_id).to(self.device).long()
         outputs, alignments = [], []
         self.initialize()
 
@@ -239,18 +238,16 @@ class Decoder(nn.Module):
 
         self.initialize()
 
-        diacritic = (
-            torch.full((batch_size,), self.start_symbol_id).to(self.device).long()
-        )
+        diacritic = torch.full((batch_size,), self.start_symbol_id).to(self.device).long()
 
         for time in range(trg_len):
             output, alignment = self.decode(diacritic=diacritic)
             outputs += [output]
             alignments += [alignment]
-            #if random.random() > self.teacher_forcing_probability:
+            # if random.random() > self.teacher_forcing_probability:
             diacritic = diacritics[:, time]  # use training input
-            #else:
-                #diacritic = torch.max(output, 1).indices  # use last output
+            # else:
+            # diacritic = torch.max(output, 1).indices  # use last output
 
         alignments = torch.stack(alignments).transpose(0, 1)
         outputs = torch.stack(outputs).transpose(0, 1).contiguous()
@@ -261,14 +258,12 @@ class Decoder(nn.Module):
         """Initialize the first step variables"""
         batch_size = self.encoder_outputs.size(0)
         src_len = self.encoder_outputs.size(1)
-        self.attention_hidden = Variable(
-            torch.zeros(batch_size, self.attention_units)
-        ).to(self.device)
+        self.attention_hidden = Variable(torch.zeros(batch_size, self.attention_units)).to(
+            self.device
+        )
         self.decoder_hiddens = [
             Variable(torch.zeros(batch_size, self.decoder_units)).to(self.device)
             for _ in range(len(self.decoder_rnns))
         ]
-        self.prev_attention = Variable(torch.zeros(batch_size, self.encoder_dim)).to(
-            self.device
-        )
+        self.prev_attention = Variable(torch.zeros(batch_size, self.encoder_dim)).to(self.device)
         self.prev_alignment = Variable(torch.zeros(batch_size, src_len)).to(self.device)

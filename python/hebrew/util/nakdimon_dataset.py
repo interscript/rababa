@@ -1,5 +1,4 @@
 import random
-from typing import List, Tuple
 
 import numpy as np
 import torch
@@ -60,15 +59,9 @@ def merge_unconditional(texts, tnss, nss, dss, sss):
             if tn == 0:
                 break
             sentence.append(t)
-            sentence.append(
-                dagesh_table.indices_char[d] if hebrew.can_dagesh(t) else "\uFEFF"
-            )
-            sentence.append(
-                sin_table.indices_char[s] if hebrew.can_sin(t) else "\uFEFF"
-            )
-            sentence.append(
-                niqqud_table.indices_char[n] if hebrew.can_niqqud(t) else "\uFEFF"
-            )
+            sentence.append(dagesh_table.indices_char[d] if hebrew.can_dagesh(t) else "\ufeff")
+            sentence.append(sin_table.indices_char[s] if hebrew.can_sin(t) else "\ufeff")
+            sentence.append(niqqud_table.indices_char[n] if hebrew.can_niqqud(t) else "\ufeff")
         res.append("".join(sentence))
     return res
 
@@ -103,12 +96,8 @@ class Data:
             sin = np.concatenate([x.sin for x in others])
             niqqud = np.concatenate([x.niqqud for x in others])
         else:
-            text = np.concatenate(
-                [x.text for x in others]
-            )  # torch.cat([x.text for x in others])
-            normalized = torch.cat(
-                [torch.tensor(x.normalized, device=device) for x in others]
-            )
+            text = np.concatenate([x.text for x in others])  # torch.cat([x.text for x in others])
+            normalized = torch.cat([torch.tensor(x.normalized, device=device) for x in others])
             dagesh = torch.cat([torch.tensor(x.dagesh, device=device) for x in others])
             sin = torch.cat([torch.tensor(x.sin, device=device) for x in others])
             niqqud = torch.cat([torch.tensor(x.niqqud, device=device) for x in others])
@@ -128,9 +117,7 @@ class Data:
         self.shapes()[0][0]
 
     def shuffle(self):
-        utils.shuffle_in_unison(
-            self.text, self.normalized, self.dagesh, self.niqqud, self.sin
-        )
+        utils.shuffle_in_unison(self.text, self.normalized, self.dagesh, self.niqqud, self.sin)
 
     def to_device(self, device):
         self.normalized = torch.tensor(self.normalized).to(device)
@@ -192,12 +179,9 @@ def read_corpora(base_paths):
 
 def load_data(
     corpora, validation_rate: float, maxlen: int, shuffle=True, subtraining_rate=1
-) -> Tuple[Data, Data]:
+) -> tuple[Data, Data]:
 
-    corpus = [
-        (filename, Data.from_text(heb_items, maxlen))
-        for (filename, heb_items) in corpora
-    ]
+    corpus = [(filename, Data.from_text(heb_items, maxlen)) for (filename, heb_items) in corpora]
 
     validation_data = None
     if validation_rate > 0:
@@ -205,7 +189,7 @@ def load_data(
         size = sum(len(x) for _, x in corpus)
         validation_size = size * validation_rate
         validation = []
-        validation_filenames: List[str] = []
+        validation_filenames: list[str] = []
         total_size = 0
         while total_size < validation_size:
             if abs(total_size - validation_size) < abs(

@@ -28,9 +28,7 @@ device = d_params["device"]
     we found that populating all the data, removing the zeros gives better results.
 """
 
-normalized = torch.Tensor(
-    [[1 for i in range(max_len)] for i in range(batch_size)]
-).long()
+normalized = torch.Tensor([[1 for i in range(max_len)] for i in range(batch_size)]).long()
 
 
 """
@@ -90,9 +88,7 @@ ort_session = onnxruntime.InferenceSession(onnx_model_filename)
 """
 
 # prepare onnx input
-ort_inputs = {
-    ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)
-}
+ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
 # run onnx model
 ort_outs = ort_session.run(None, ort_inputs)
@@ -116,9 +112,7 @@ print(
 vec = [[41, 12, 40] for i in range(batch_size)]
 normalized = torch.Tensor(vec).long()
 
-ort_inputs = {
-    ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)
-}
+ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
 
 """
@@ -131,15 +125,12 @@ print("***** Test MAX size :: Random Boolean vectors: *****")
 print(max_len)
 
 for test_run in range(3):
-
     vec = [[random.randint(0, 1) for i in range(max_len)] for i in range(batch_size)]
     normalized = torch.Tensor(vec).long()
 
     torch_outs = dia.model(normalized)
     # prepare onnx input
-    ort_inputs = {
-        ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)
-    }
+    ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
     # run onnx model
     ort_outs = ort_session.run(None, ort_inputs)
@@ -161,15 +152,12 @@ print("***** Test MAX size :: Random float, vectors within 0:16 *****")
 print(max_len)
 
 for test_run in range(3):
-
     vec = [[random.randint(0, 17) for i in range(max_len)] for i in range(batch_size)]
     normalized = torch.Tensor(vec).long()
     torch_out = dia.model(normalized)
 
     # prepare onnx input
-    ort_inputs = {
-        ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)
-    }
+    ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
     # run onnx model
     ort_outs = ort_session.run(None, ort_inputs)
@@ -187,7 +175,6 @@ for test_run in range(3):
 print("***** Test Dynamical sizes :: Random Boolean vectors: *****")
 
 for l in [2, 10, 40, 100, 150]:
-
     print("length:: ", l)
 
     vec = [[1 for i in range(l)] for i in range(batch_size)]  # random.randint(0,1)
@@ -196,9 +183,7 @@ for l in [2, 10, 40, 100, 150]:
     torch_out = dia.model(normalized)
 
     # prepare onnx input
-    ort_inputs = {
-        ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)
-    }
+    ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
     # run onnx model
     ort_outs = ort_session.run(None, ort_inputs)
@@ -219,16 +204,13 @@ for l in [2, 10, 40, 100, 150]:
 print("***** Test Dynamical sizes :: Random float, vectors within 0:16 *****")
 
 for l in [2, 10, 40, 100, 150]:
-
     vec = [[random.randint(0, 17) for i in range(l)] for i in range(batch_size)]
     normalized = torch.Tensor(vec).long()
 
     torch_out = dia.model(normalized)
 
     # prepare onnx input
-    ort_inputs = {
-        ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)
-    }
+    ort_inputs = {ort_session.get_inputs()[0].name: normalized.detach().numpy().astype(np.int64)}
 
     # run onnx model
     ort_outs = ort_session.run(None, ort_inputs)

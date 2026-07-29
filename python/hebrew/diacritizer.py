@@ -10,14 +10,10 @@ from util import nakdimon_utils as utils
 
 
 class Diacritizer:
-    def __init__(
-        self, config_path: str, model_kind: str, load_model: bool = False
-    ) -> None:
+    def __init__(self, config_path: str, model_kind: str, load_model: bool = False) -> None:
         self.config_path = config_path
         self.model_kind = model_kind
-        self.config_manager = ConfigManager(
-            config_path=config_path, model_kind=model_kind
-        )
+        self.config_manager = ConfigManager(config_path=config_path, model_kind=model_kind)
         self.config = self.config_manager.config
         self.text_encoder = self.config_manager.text_encoder
         self.device = self.config_manager.device
@@ -44,12 +40,7 @@ class Diacritizer:
             dia_data.sin,
         )
 
-        text = (
-            " ".join(dia_total)
-            .replace("\ufeff", "")
-            .replace("  ", " ")
-            .replace(hebrew.RAFE, "")
-        )
+        text = " ".join(dia_total).replace("\ufeff", "").replace("  ", " ").replace(hebrew.RAFE, "")
         return text
 
     def get_data_from_file(self, path):
@@ -68,7 +59,7 @@ class Diacritizer:
 
     def diacritize_file(self, path: str, path_out: str):
         """
-            download data from relative path and diacritize it batch by batch
+        download data from relative path and diacritize it batch by batch
         """
 
         data_iterator = self.get_data_from_file(path)
@@ -86,12 +77,7 @@ class Diacritizer:
             postprocess_data(dia_data.sin),
         )
 
-        text = (
-            " ".join(dia_total)
-            .replace("\ufeff", "")
-            .replace("  ", " ")
-            .replace(hebrew.RAFE, "")
-        )
+        text = " ".join(dia_total).replace("\ufeff", "").replace("  ", " ").replace(hebrew.RAFE, "")
 
         with utils.smart_open(path_out, "w", encoding="utf-8") as f:
             f.write(text)
@@ -132,7 +118,6 @@ class Diacritizer:
 
         losses = None
         if criterion is not None:
-
             losses = [
                 criterion(process_dim(niqqud), data_batch.niqqud.long()),
                 criterion(process_dim(dagesh), data_batch.dagesh.long()),
