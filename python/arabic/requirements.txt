@@ -6,6 +6,6 @@ ruamel.yaml==0.16.12
 tensorboard==2.4.0
 diacritization-evaluation==0.5
 tqdm==4.56.0
-onnx==1.9.0
+onnx==1.22.0
 onnxruntime==1.8.1
 pyyaml==5.4.1
