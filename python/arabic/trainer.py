@@ -1,25 +1,21 @@
 import os
 from typing import Dict
 
-from diacritization_evaluation import der, wer
 import torch
-from torch import nn
-from torch import optim
-from torch.cuda.amp import autocast
-from torch.utils.tensorboard.writer import SummaryWriter
-from tqdm import tqdm
-from tqdm import trange
-
 from config_manager import ConfigManager
 from dataset import load_iterators
+from diacritization_evaluation import der, wer
 from diacritizer import Diacritizer
-from util.learning_rates import LearningRateDecay
 from options import OptimizerType
+from torch import nn, optim
+from torch.cuda.amp import autocast
+from torch.utils.tensorboard.writer import SummaryWriter
+from tqdm import trange
+from util.learning_rates import LearningRateDecay
 from util.utils import (
     categorical_accuracy,
     count_parameters,
     initialize_weights,
-    plot_alignment,
     repeater,
 )
 
@@ -163,9 +159,9 @@ class GeneralTrainer(Trainer):
             tqdm.update()
 
         summary_texts = []
-        orig_path = os.path.join(self.config_manager.prediction_dir, f"original.txt")
+        orig_path = os.path.join(self.config_manager.prediction_dir, "original.txt")
         predicted_path = os.path.join(
-            self.config_manager.prediction_dir, f"predicted.txt"
+            self.config_manager.prediction_dir, "predicted.txt"
         )
 
         with open(orig_path, "w", encoding="utf8") as file:

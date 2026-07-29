@@ -1,15 +1,10 @@
-import torch
-import pickle
 import random
 
-import torch
+import numpy as np
 import onnx
 import onnxruntime
-
-import numpy as np
-
+import torch
 from diacritizer import Diacritizer
-
 
 """
     Key Params:

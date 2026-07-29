@@ -1,35 +1,24 @@
 import os
-from typing import Dict
 
 import torch
-from torch import nn
-from torch import optim
-from torch.cuda.amp import autocast
-from torch.utils.tensorboard.writer import SummaryWriter
-from tqdm import tqdm
-from tqdm import trange
-import numpy as np
-
+import wandb
 from config_manager import ConfigManager
 from dataset import load_iterators
 from diacritizer import Diacritizer
-from util.learning_rates import LearningRateDecay
 from options import OptimizerType
-
+from torch import nn, optim
+from torch.cuda.amp import autocast
+from torch.utils.tensorboard.writer import SummaryWriter
+from tqdm import trange
+from util.learning_rates import LearningRateDecay
 from util.utils import (
-    categorical_accuracy,
     count_parameters,
     # initialize_weights,
     # plot_alignment,
     repeater,
 )
 
-from util import nakdimon_dataset
-from util import nakdimon_utils as utils
-from util import nakdimon_hebrew_model as hebrew
-from util import nakdimon_metrics
-
-import wandb
+from util import nakdimon_dataset, nakdimon_metrics
 
 
 class Trainer:
@@ -144,12 +133,12 @@ class GeneralTrainer(Trainer):
             self.config_manager.config["test_file_name"],
         )
 
-        orig_path = os.path.join(self.config_manager.prediction_dir, f"original.txt")
+        orig_path = os.path.join(self.config_manager.prediction_dir, "original.txt")
         predicts_path = os.path.join(
-            self.config_manager.prediction_dir, f"predicted.txt"
+            self.config_manager.prediction_dir, "predicted.txt"
         )
 
-        f = open(test_path, "r")
+        f = open(test_path)
         all_orig = f.readlines()
         f.close()
 
@@ -249,7 +238,7 @@ class GeneralTrainer(Trainer):
                     validation_iterator, tqdm_error_rates
                 )
 
-                if not config_wandb is None:
+                if config_wandb is not None:
 
                     wandb.log({**d_scores, **scores})
                     print("scores:: ", scores)
@@ -332,10 +321,10 @@ class GeneralTrainer(Trainer):
         ) = self.config_manager.load_model(model_path, load_optimizer)
 
         self.model = saved_model
-        if not optimizer_states_dict is None:
+        if optimizer_states_dict is not None:
             self.optimizer.load_state_dict(optimizer_states_dict)
 
-        self.global_step = global_step if not global_step is None else 0
+        self.global_step = global_step if global_step is not None else 0
 
     def get_optimizer(self):
         if self.config["optimizer"] == OptimizerType.Adam:

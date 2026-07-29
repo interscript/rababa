@@ -1,15 +1,14 @@
 from typing import Optional
 
 import torch
-from torch import nn
 import torch.nn.functional as F
-
 from options import AttentionType
+from torch import nn
 
 
 class BahdanauAttention(nn.Module):
     def __init__(self, dim):
-        super(BahdanauAttention, self).__init__()
+        super().__init__()
         self.query_layer = nn.Linear(dim, dim, bias=False)
         self.tanh = nn.Tanh()
         self.v = nn.Linear(dim, 1, bias=False)
@@ -35,7 +34,7 @@ class BahdanauAttention(nn.Module):
 
 class LocationSensitive(nn.Module):
     def __init__(self, dim):
-        super(LocationSensitive, self).__init__()
+        super().__init__()
         self.query_layer = nn.Linear(dim, dim, bias=False)
         self.v = nn.Linear(dim, 1, bias=True)
         self.location_layer = nn.Linear(32, dim, bias=False)

@@ -1,14 +1,11 @@
-from typing import List
 from typing import List, Optional
 
 import torch
+from modules.attention import AttentionWrapper
+from modules.tacotron_modules import Prenet
+from options import AttentionType
 from torch import nn
 from torch.autograd import Variable
-
-from modules.attention import AttentionWrapper
-from modules.layers import ConvNorm
-from modules.tacotron_modules import CBHG, Prenet
-from options import AttentionType
 from util.utils import get_mask_from_lengths
 
 

@@ -3,19 +3,13 @@ Loading the diacritization dataset
 """
 
 import os
-import numpy as np
-import pandas as pd
-import torch
-import random
-import warnings
-
-from torch.utils.data import DataLoader, Dataset
 
 from config_manager import ConfigManager
+from torch.utils.data import DataLoader, Dataset
 
 from util import nakdimon_dataset
-from util import nakdimon_utils as utils
 from util import nakdimon_hebrew_model as hebrew
+from util import nakdimon_utils as utils
 
 
 class DiacritizationDataset(Dataset):

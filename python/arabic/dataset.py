@@ -4,16 +4,11 @@ Loading the diacritization dataset
 
 import os
 
-import util.text_cleaners as cleaners
 import pandas as pd
 import torch
-import random
-import warnings
-from diacritization_evaluation import util
-
-from torch.utils.data import DataLoader, Dataset
-
+import util.text_cleaners as cleaners
 from config_manager import ConfigManager
+from torch.utils.data import DataLoader, Dataset
 
 
 class DiacritizationDataset(Dataset):

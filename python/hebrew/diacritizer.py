@@ -1,17 +1,11 @@
-from typing import Dict
 import torch
-import warnings
 import tqdm
-import pandas as pd
-import numpy as np
-
 from config_manager import ConfigManager
 from dataset import DiacritizationDataset, collate_fn
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 
 from util import nakdimon_dataset  # as dataset
 from util import nakdimon_hebrew_model as hebrew
-from util import nakdimon_metrics
 from util import nakdimon_utils as utils
 
 
@@ -112,13 +106,13 @@ class Diacritizer:
             raw_data.append(data_batch)
             preds, loss = self.predict_batch(data_batch, criterion)
             dia_data.append(preds)
-            if not criterion is None:
+            if criterion is not None:
                 losses.append(loss)
 
         raw_data = nakdimon_dataset.Data.concatenate(raw_data)
         dia_data = nakdimon_dataset.Data.concatenate(dia_data)
 
-        if not criterion is None:
+        if criterion is not None:
             losses = (
                 [l[0] for l in losses],
                 [l[1] for l in losses],
@@ -137,7 +131,7 @@ class Diacritizer:
         niqqud, dagesh, sin = self.model(data_batch.normalized)
 
         losses = None
-        if not criterion is None:
+        if criterion is not None:
 
             losses = [
                 criterion(process_dim(niqqud), data_batch.niqqud.long()),

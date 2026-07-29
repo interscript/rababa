@@ -1,12 +1,7 @@
 
-import itertools
-from collections import defaultdict, Counter
-from typing import NamedTuple, Iterator, Iterable, List, Tuple
+from collections.abc import Iterable, Iterator
 from functools import lru_cache
-import re
-
-from util import nakdimon_utils as utils
-
+from typing import List, NamedTuple
 
 # "rafe" denotes a letter to which it would have been valid to add a diacritic of some category
 # but instead it is decided not to. This makes the metrics less biased.
@@ -236,7 +231,7 @@ class Token:
     def __eq__(self, other):
         return self.items == other.items
 
-    @lru_cache()
+    @lru_cache
     def to_undotted(self):
         return ''.join(str(c.letter) for c in self.items)
 

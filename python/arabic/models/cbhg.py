@@ -3,10 +3,9 @@ The CBHG model implementation
 """
 from typing import List, Optional
 
-from torch import nn
 import torch
-
 from modules.tacotron_modules import CBHG, Prenet
+from torch import nn
 
 
 class CBHGModel(nn.Module):
@@ -41,7 +40,7 @@ class CBHGModel(nn.Module):
         post_cbhg_layers_units: List[int] = [256, 256],
         post_cbhg_use_batch_norm: bool = True
     ):
-        super(CBHGModel, self).__init__()
+        super().__init__()
         self.use_prenet = use_prenet
         self.embedding = nn.Embedding(inp_vocab_size, embedding_dim)
         if self.use_prenet:

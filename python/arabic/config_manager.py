@@ -1,17 +1,14 @@
-from enum import Enum
 import os
-from pathlib import Path
 import shutil
 import subprocess
+from enum import Enum
+from pathlib import Path
 from typing import Any, Dict
 
 import ruamel.yaml
 import torch
-
 from models.baseline import BaseLineModel
 from models.cbhg import CBHGModel
-
-
 from options import AttentionType, LossType, OptimizerType
 from util.text_encoders import (
     ArabicEncoderWithStartSymbol,
@@ -188,9 +185,9 @@ class ConfigManager:
                 return model, 1
         else:
             last_model_path = model_path
-        
+
         saved_model = torch.load(last_model_path) if torch.cuda.is_available() else torch.load(last_model_path, map_location=torch.device('cpu'))
-            
+
         out = model.load_state_dict(saved_model["model_state_dict"])
         # print(out) check...
         global_step = saved_model["global_step"] + 1

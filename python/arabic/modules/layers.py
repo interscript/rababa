@@ -1,8 +1,8 @@
+from copy import deepcopy
+from typing import Any
+
 import torch
 from torch import nn
-from copy import deepcopy
-
-from typing import Any
 
 
 class BatchNormConv1d(nn.Module):
@@ -19,7 +19,7 @@ class BatchNormConv1d(nn.Module):
         padding: int,
         activation: Any = None,
     ):
-        super(BatchNormConv1d,  self).__init__()
+        super().__init__()
         self.conv1d = nn.Conv1d(
             in_dim,
             out_dim,
@@ -39,7 +39,7 @@ class BatchNormConv1d(nn.Module):
         #x = self.activation(x)
         x = self.bn(x)
 
-        return x 
+        return x
 
 
 class LinearNorm(torch.nn.Module):

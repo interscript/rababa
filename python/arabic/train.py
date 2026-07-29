@@ -4,10 +4,7 @@ import random
 
 import numpy as np
 import torch
-
-from trainer import (
-    CBHGTrainer
-)
+from trainer import CBHGTrainer
 
 SEED = 1234
 random.seed(SEED)

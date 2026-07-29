@@ -1,13 +1,12 @@
 """
 Some custom modules that are used by the TTS model
 """
-from typing import List
 from copy import deepcopy
+from typing import List
 
 import torch
-from torch import nn
-
 from modules.layers import BatchNormConv1d
+from torch import nn
 
 
 class Prenet(nn.Module):
@@ -100,7 +99,7 @@ class CBHG(nn.Module):
         out_dim (int): the output size
         k (int): number of filters
         """
-        super(CBHG, self).__init__()
+        super().__init__()
 
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -128,9 +127,9 @@ class CBHG(nn.Module):
                     padding=k // 2,
                     activation=self.relu,
                 )
-        
+
         self.trafo = deepcopy(self.trafo_test)
-        
+
         self.max_pool1d = nn.MaxPool1d(kernel_size=2, stride=1, padding=1)
 
         in_sizes = [K * in_dim] + projections[:-1]
@@ -167,7 +166,7 @@ class CBHG(nn.Module):
         # (B, T_in, in_dim)
         # Back to the original shape
         x = x.transpose(1, 2)
-        
+
         if x.size(-1) != self.in_dim:
             x = self.pre_highway(x)
 
@@ -175,7 +174,7 @@ class CBHG(nn.Module):
         x += inputs
         for highway in self.highways:
             x = highway(x)
-            
+
         if input_lengths is not None:
             x = nn.utils.rnn.pack_padded_sequence(x, input_lengths, batch_first=True)
 
@@ -185,5 +184,5 @@ class CBHG(nn.Module):
 
         if input_lengths is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs, batch_first=True)
-        
+
         return outputs
