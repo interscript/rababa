@@ -1,3 +1,4 @@
+image:https://github.com/interscript/rababa/actions/workflows/ruby.yml/badge.svg["CI status", link="https://github.com/interscript/rababa/actions/workflows/ruby.yml"]
 = رُبابَة RABABA the Middle-Eastern Language Diacritization Library
 
 Middle-Eastern Language diacritization is useful for several practical business
