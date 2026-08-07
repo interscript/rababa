@@ -1,0 +1,48 @@
+# rababa_hebrew — Tier 1 student config (multi-head).
+#
+# Three independent softmax heads per character position: niqqud, dagesh, sin.
+# Output I/O contract matches the legacy 2021 Nakdimon ONNX so the
+# Ruby/TS runtime needs no change when swapping in this model.
+
+name: rababa_hebrew
+description: Hebrew diacritization — adds nikud to undiacritized Hebrew text.
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 200
+
+model:
+  arch: modern_multi_head
+  dim: 384
+  layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.1
+  max_len: 512
+  batch_size: 32
+  head_sizes: [16, 3, 4]   # niqqud, dagesh, sin (matches legacy ONNX)
+
+train:
+  epochs: 15
+  batch_size: 32
+  # Muon optimizer (K3/DS4 stack) — 2D weights use Newton-Schulz,
+  # 1D params + embeddings use AdamW.
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  fp16: true
+  label_smoothing: 0.1
+  init_from_pretrain: null
+  optimizer: muon
+  muon_lr: 0.02
+  muon_momentum: 0.95
+  ns_steps: 5
+
+eval:
+  v0.1.0_max_der: 0.12
+  v0.5.0_max_der: 0.08
+  v1.0.0_max_der: 0.06

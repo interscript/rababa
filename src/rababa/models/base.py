@@ -34,13 +34,15 @@ class Diacritizer(Protocol):
 
 def build_model(cfg: dict) -> nn.Module:
     """Dispatch on cfg.model.arch. Returns a Diacritizer-conforming module."""
-    from .modern import build_modern_student
+    from .modern import build_modern_multi_head_student, build_modern_student
     from .multi_head import build_multi_head_student
     from .student import build_student
 
     arch = cfg.get("model", {}).get("arch", "single")
     if arch == "modern":
         return build_modern_student(cfg)
+    if arch == "modern_multi_head":
+        return build_modern_multi_head_student(cfg)
     if arch == "multi_head":
         return build_multi_head_student(cfg)
     if arch in ("single", None):

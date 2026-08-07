@@ -1,0 +1,42 @@
+# rababa_hebrew_pretrain — MLM pretraining config.
+#
+# Char-level masked-LM on undiacritized Modern Hebrew (Nakdimon corpus).
+# Uses the modern DS4/K3 encoder stack.
+
+name: rababa_hebrew_pretrain
+description: Hebrew char-level MLM pretraining (modern stack).
+kind: rababa_hebrew_mlm
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  mask_prob: 0.15
+  max_len: 512
+
+model:
+  arch: modern_multi_head
+  dim: 384
+  layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.1
+  max_len: 512
+  batch_size: 64
+  head_sizes: [16, 3, 4]
+
+train:
+  epochs: 15
+  batch_size: 64
+  learning_rate: 5.0e-4
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  fp16: true
+  optimizer: muon
+  muon_lr: 0.02
+  muon_momentum: 0.95
+  ns_steps: 5
+  scheduler: cosine
+
+eval:
+  v0.1.0_max_val_loss: 2.5

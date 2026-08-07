@@ -307,3 +307,102 @@ def build_modern_student(cfg: dict[str, Any]) -> ModernCharTransformer:
         sk_iters=m.get("sk_iters", 20),
         with_seg_head=m.get("with_seg_head", False),
     )
+
+
+# ---- Modern multi-head (Hebrew) --------------------------------------
+
+
+class ModernMultiHeadCharTransformer(nn.Module):
+    """Modern encoder + multiple linear heads (Hebrew: niqqud, dagesh, sin).
+
+    Same encoder body as `ModernCharTransformer` (RoPE + SDPA + mHC +
+    AttnRes + RMSNorm + SwiGLU). Only the head differs: a `ModuleList`
+    of linear projections, one per output category.
+
+    Encoder weights are key-compatible with `ModernCharTransformer` so a
+    single MLM-pretrained encoder can fine-tune into either the
+    single-head Arabic student or this multi-head Hebrew student.
+    """
+
+    def __init__(
+        self,
+        input_vocab_size: int,
+        head_sizes: list[int],
+        dim: int = 384,
+        layers: int = 6,
+        heads: int = 6,
+        ff_dim: int = 1536,
+        dropout: float = 0.1,
+        max_len: int = 512,
+        pad_id: int = 0,
+        rope_base: float = 10000.0,
+        sk_iters: int = 20,
+    ) -> None:
+        super().__init__()
+        from .multi_head import OUTPUT_ORDER
+        if len(head_sizes) != len(OUTPUT_ORDER):
+            raise ValueError(
+                f"head_sizes must have {len(OUTPUT_ORDER)} entries "
+                f"({', '.join(OUTPUT_ORDER)}); got {len(head_sizes)}"
+            )
+        self.pad_id = pad_id
+        self.dim = dim
+        self.max_len = max_len
+        self.head_dim = dim // heads
+        self.head_sizes = head_sizes
+
+        self.embedding = nn.Embedding(input_vocab_size, dim, padding_idx=pad_id)
+        self.rotary = RotaryEmbedding(self.head_dim, max_len=max_len, base=rope_base)
+        self.layers = nn.ModuleList([
+            ModernEncoderLayer(dim, heads, ff_dim, dropout=dropout, sk_iters=sk_iters)
+            for _ in range(layers)
+        ])
+        self.final_norm = RMSNorm(dim)
+        self.heads = nn.ModuleList([nn.Linear(dim, n) for n in head_sizes])
+
+    def forward_encoder(self, src: torch.Tensor) -> torch.Tensor:
+        batch_size, seq_len = src.shape
+        if seq_len > self.max_len:
+            raise ValueError(f"Sequence length {seq_len} exceeds max_len {self.max_len}")
+        key_padding_mask = src == self.pad_id
+        x = self.embedding(src)
+        cos, sin = self.rotary(seq_len)
+        prev_attn: torch.Tensor | None = None
+        for layer in self.layers:
+            x, prev_attn = layer(x, cos, sin, key_padding_mask, prev_attn)
+        return self.final_norm(x)
+
+    def forward(self, src: torch.Tensor, lengths: torch.Tensor) -> list[torch.Tensor]:
+        """Return [head_0_logits, head_1_logits, ...] in canonical order."""
+        hidden = self.forward_encoder(src)
+        return [head(hidden) for head in self.heads]
+
+    def forward_heads(self, src: torch.Tensor, lengths: torch.Tensor) -> list[torch.Tensor]:
+        return self.forward(src, lengths)
+
+    def head_names(self) -> list[str]:
+        from .multi_head import OUTPUT_ORDER
+        return list(OUTPUT_ORDER)
+
+
+def build_modern_multi_head_student(cfg: dict[str, Any]) -> ModernMultiHeadCharTransformer:
+    """Factory: build ModernMultiHeadCharTransformer from a config dict."""
+    from ..constants_hebrew import (
+        DAGESH_VOCAB_SIZE,
+        INPUT_VOCAB_SIZE as HEBREW_INPUT_VOCAB_SIZE,
+        NIQQUD_VOCAB_SIZE,
+        SIN_VOCAB_SIZE,
+    )
+    m = cfg.get("model", {})
+    return ModernMultiHeadCharTransformer(
+        input_vocab_size=m.get("input_vocab_size", HEBREW_INPUT_VOCAB_SIZE),
+        head_sizes=m.get("head_sizes", [NIQQUD_VOCAB_SIZE, DAGESH_VOCAB_SIZE, SIN_VOCAB_SIZE]),
+        dim=m.get("dim", 384),
+        layers=m.get("layers", 6),
+        heads=m.get("heads", 6),
+        ff_dim=m.get("ff_dim", 1536),
+        dropout=m.get("dropout", 0.1),
+        max_len=m.get("max_len", 512),
+        rope_base=m.get("rope_base", 10000.0),
+        sk_iters=m.get("sk_iters", 20),
+    )
