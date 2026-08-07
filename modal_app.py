@@ -94,6 +94,7 @@ app = modal.App(name=APP_NAME, image=image)
     gpu="A10G",
     timeout=60 * 60,
     volumes={"/datasets": datasets_volume},
+    secrets=[modal.Secret.from_name("huggingface")],
 )
 def fetch_data(task: str) -> dict[str, object]:
     """Verify data is present and assemble combined Hebrew corpus if needed.
