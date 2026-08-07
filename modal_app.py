@@ -958,6 +958,8 @@ def run_sota_pipeline(
             if pretrain_run.exists():
                 shutil.rmtree(pretrain_run)
                 log.log(f"[{stage}] force: wiped {pretrain_run}")
+            # Commit wipe so the pretrain container sees an empty dir.
+            checkpoints_volume.commit()
         log.log(f"[{stage}] starting pretrain({pretrain_task})")
         try:
             result = pretrain.remote(pretrain_task)
@@ -984,6 +986,7 @@ def run_sota_pipeline(
             if train_run.exists():
                 shutil.rmtree(train_run)
                 log.log(f"[{stage}] force: wiped {train_run}")
+            checkpoints_volume.commit()
         if not pretrain_best.is_file():
             raise FileNotFoundError(
                 f"pretrain checkpoint missing at {pretrain_best} — cannot fine-tune"
@@ -1017,6 +1020,7 @@ def run_sota_pipeline(
             if models_dir.exists():
                 shutil.rmtree(models_dir)
                 log.log(f"[{stage}] force: wiped {models_dir}")
+            models_volume.commit()
         if not train_best.is_file():
             raise FileNotFoundError(
                 f"train checkpoint missing at {train_best} — cannot export"
