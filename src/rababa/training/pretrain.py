@@ -98,7 +98,9 @@ def pretrain_mlm(
     optimizer = build_optimizer(model, cfg_train)
     scheduler = build_scheduler(optimizer, cfg_train, total_steps)
 
-    scaler = torch.amp.GradScaler("cuda", enabled=fp16 and device.type == "cuda")
+    from .optim import MuonAdamWHybrid
+    use_scaler = fp16 and device.type == "cuda" and not isinstance(optimizer, MuonAdamWHybrid)
+    scaler = torch.amp.GradScaler("cuda", enabled=use_scaler)
     best_val = float("inf")
     start_epoch = 0
     ckpt_root.mkdir(parents=True, exist_ok=True)
@@ -133,11 +135,16 @@ def pretrain_mlm(
             with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=fp16):
                 logits = model(src, lengths)
                 loss = masked_cross_entropy(logits, target)
-            scaler.scale(loss).backward()
-            scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
-            scaler.step(optimizer)
-            scaler.update()
+            if use_scaler:
+                scaler.scale(loss).backward()
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+                optimizer.step()
             scheduler.step()
             running_loss += loss.item() * src.size(0)
 

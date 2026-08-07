@@ -167,8 +167,12 @@ def _iter_lines(path: Path):
 def _iter_corpus_files(root: Path, split: str) -> list[Path]:
     """Find files for a split under root, handling sharded + legacy layouts.
 
-    Looks for: {split}-*.txt (sharded), {split}.txt (legacy), and any
-    *.txt under a subdir named like the split.
+    Looks for:
+      - {split}-*.txt at root (sharded)
+      - {split}.txt at root (legacy)
+      - root/{split}/*.txt (subdir)
+      - root/tashkeela_full_{split}/{split}-*.txt (our full-corpus layout)
+      - root/*_{split}/{split}-*.txt (generic subdir prefix)
     """
     shards = sorted(root.glob(f"{split}-*.txt"))
     if shards:
@@ -176,10 +180,22 @@ def _iter_corpus_files(root: Path, split: str) -> list[Path]:
     legacy = root / f"{split}.txt"
     if legacy.is_file():
         return [legacy]
-    # Subdir layout: root/train/whatever.txt
-    subdir = root / split
-    if subdir.is_dir():
-        return sorted(subdir.glob("*.txt"))
+    # Our tashkeela-full layout: tashkeela_full_train/train-001.txt
+    for sub in (
+        root / f"tashkeela_full_{split}",
+        root / f"tashkeela_{split}",
+        root / split,
+    ):
+        if sub.is_dir():
+            found = sorted(sub.glob(f"{split}-*.txt")) or sorted(sub.glob("*.txt"))
+            if found:
+                return found
+    # Any subdir whose name contains the split keyword.
+    for sub in sorted(root.iterdir()) if root.is_dir() else []:
+        if sub.is_dir() and split in sub.name.lower():
+            found = sorted(sub.glob(f"{split}-*.txt")) or sorted(sub.glob("*.txt"))
+            if found:
+                return found
     return []
 
 
@@ -828,3 +844,214 @@ def distill_hebrew_entrypoint(
         n_parallel=n_parallel,
         commit_to_repo=commit_to_repo,
     )
+
+
+# ---- Full SOTA pipeline (server-side chain, survives disconnect) --------
+
+
+@app.function(
+    # Orchestrator itself is CPU-only; each stage spawns its own GPU job
+    # via .remote(). Long timeout covers the whole chain wall-clock.
+    timeout=36 * 60 * 60,
+    volumes={
+        "/checkpoints": checkpoints_volume,
+        "/datasets": datasets_volume,
+        "/models": models_volume,
+    },
+    secrets=[modal.Secret.from_name("huggingface")],
+)
+def run_sota_pipeline(
+    task: str = "rababa_arabic_pro",
+    version: str = "v0.1.0",
+    skip_fetch: bool = False,
+    skip_pretrain: bool = False,
+    skip_train: bool = False,
+    skip_export: bool = False,
+    force: bool = False,
+) -> dict[str, object]:
+    """Server-side chain: fetch → pretrain → train → export ONNX + TFLite.
+
+    Runs entirely on Modal. Launch with:
+
+        modal run --detach modal_app.py::sota_pipeline
+
+    Then disconnect. The orchestrator keeps calling stage functions via
+    .remote() until done. Each stage is idempotent:
+
+      - skip if best.pt / onnx already exists (unless force=True)
+      - training loops resume from latest epoch checkpoint on retry
+
+    Status is written to /checkpoints/_status.json after every stage.
+    """
+    from pathlib import Path as _Path
+
+    from rababa.training.resume import (
+        is_stage_done,
+        mark_stage_done,
+        mark_stage_failed,
+        VolumeLogger,
+    )
+
+    status_root = _Path("/checkpoints")
+    log = VolumeLogger(status_root / "logs" / f"sota_pipeline-{task}.log")
+    summary: dict[str, object] = {"task": task, "version": version, "stages": {}}
+
+    pretrain_task = f"{task}_pretrain"
+    pretrain_best = _Path("/checkpoints") / pretrain_task / "run-001" / "best.pt"
+    train_best = _Path("/checkpoints") / task / "run-001" / "best.pt"
+    onnx_q8 = _Path("/models") / task / f"{task}-{version}-q8.onnx"
+    tflite_path = _Path("/models") / task / f"{task}-{version}-fp32.tflite"
+
+    def _done(name: str) -> bool:
+        if force:
+            return False
+        return is_stage_done(status_root, name)
+
+    # ---- 1. fetch_data -------------------------------------------------
+    stage = "fetch"
+    if skip_fetch or _done(stage):
+        log.log(f"[{stage}] skipped")
+        summary["stages"][stage] = {"skipped": True}
+    else:
+        if force:
+            # Rebuild combined corpus from scratch (picks up Tashkeela layout fixes).
+            import shutil
+            combined = _Path("/datasets/arabic-combined")
+            if combined.exists():
+                shutil.rmtree(combined)
+                log.log(f"[{stage}] force: wiped {combined}")
+        log.log(f"[{stage}] starting fetch_data({task})")
+        try:
+            result = fetch_data.remote(task)
+            mark_stage_done(status_root, stage, extra=result if isinstance(result, dict) else {})
+            checkpoints_volume.commit()
+            datasets_volume.commit()
+            summary["stages"][stage] = result
+            log.log(f"[{stage}] done: {result}")
+        except Exception as e:
+            mark_stage_failed(status_root, stage, str(e))
+            checkpoints_volume.commit()
+            log.log(f"[{stage}] FAILED: {e}")
+            raise
+
+    # ---- 2. pretrain ---------------------------------------------------
+    stage = "pretrain"
+    if skip_pretrain or _done(stage) or (pretrain_best.is_file() and not force):
+        log.log(f"[{stage}] skipped (best exists={pretrain_best.is_file()})")
+        summary["stages"][stage] = {"skipped": True, "best": str(pretrain_best)}
+    else:
+        log.log(f"[{stage}] starting pretrain({pretrain_task})")
+        try:
+            result = pretrain.remote(pretrain_task)
+            mark_stage_done(status_root, stage, extra=result if isinstance(result, dict) else {})
+            checkpoints_volume.commit()
+            summary["stages"][stage] = result
+            log.log(f"[{stage}] done: {result}")
+        except Exception as e:
+            mark_stage_failed(status_root, stage, str(e))
+            checkpoints_volume.commit()
+            log.log(f"[{stage}] FAILED: {e}")
+            raise
+
+    # ---- 3. supervised train -------------------------------------------
+    stage = "train"
+    init_from = str(pretrain_best)
+    if skip_train or _done(stage) or (train_best.is_file() and not force):
+        log.log(f"[{stage}] skipped (best exists={train_best.is_file()})")
+        summary["stages"][stage] = {"skipped": True, "best": str(train_best)}
+    else:
+        if not pretrain_best.is_file():
+            raise FileNotFoundError(
+                f"pretrain checkpoint missing at {pretrain_best} — cannot fine-tune"
+            )
+        log.log(f"[{stage}] starting train({task}) init_from={init_from}")
+        try:
+            result = train.remote(task, init_from_pretrain=init_from)
+            mark_stage_done(status_root, stage, extra=result if isinstance(result, dict) else {})
+            checkpoints_volume.commit()
+            summary["stages"][stage] = result
+            log.log(f"[{stage}] done: {result}")
+        except Exception as e:
+            mark_stage_failed(status_root, stage, str(e))
+            checkpoints_volume.commit()
+            log.log(f"[{stage}] FAILED: {e}")
+            raise
+
+    # ---- 4. export ONNX + TFLite ---------------------------------------
+    stage = "export"
+    if skip_export or _done(stage) or (onnx_q8.is_file() and tflite_path.is_file() and not force):
+        log.log(f"[{stage}] skipped (artifacts exist)")
+        summary["stages"][stage] = {
+            "skipped": True,
+            "onnx": str(onnx_q8),
+            "tflite": str(tflite_path),
+        }
+    else:
+        if not train_best.is_file():
+            raise FileNotFoundError(
+                f"train checkpoint missing at {train_best} — cannot export"
+            )
+        log.log(f"[{stage}] starting export_onnx + export_tflite")
+        try:
+            onnx_result = export_onnx.remote(task, version, checkpoint=str(train_best))
+            tflite_result = export_tflite.remote(task, version, checkpoint=str(train_best))
+            result = {"onnx": onnx_result, "tflite": tflite_result}
+            mark_stage_done(status_root, stage, extra=result)
+            checkpoints_volume.commit()
+            models_volume.commit()
+            summary["stages"][stage] = result
+            log.log(f"[{stage}] done: {result}")
+        except Exception as e:
+            mark_stage_failed(status_root, stage, str(e))
+            checkpoints_volume.commit()
+            log.log(f"[{stage}] FAILED: {e}")
+            raise
+
+    log.log(f"PIPELINE COMPLETE: {summary}")
+    log.close()
+    checkpoints_volume.commit()
+    return summary
+
+
+@app.local_entrypoint()
+def sota_pipeline(
+    task: str = "rababa_arabic_pro",
+    version: str = "v0.1.0",
+    skip_fetch: bool = False,
+    skip_pretrain: bool = False,
+    skip_train: bool = False,
+    skip_export: bool = False,
+    force: bool = False,
+):
+    """Fire-and-forget full Arabic SOTA pipeline.
+
+    Usage (disconnect-safe):
+
+        modal run --detach modal_app.py::sota_pipeline
+
+    Optional flags:
+
+        modal run --detach modal_app.py::sota_pipeline --skip-fetch
+        modal run --detach modal_app.py::sota_pipeline --force
+
+    After disconnect, monitor via:
+
+        modal app list
+        python scripts/status.py
+        modal volume ls rababa-checkpoints /checkpoints
+        modal volume ls rababa-models /models
+    """
+    print(f"Submitting SOTA pipeline: task={task} version={version}")
+    print("  (orchestrator runs fully on Modal — safe to disconnect after submit)")
+    result = run_sota_pipeline.remote(
+        task=task,
+        version=version,
+        skip_fetch=skip_fetch,
+        skip_pretrain=skip_pretrain,
+        skip_train=skip_train,
+        skip_export=skip_export,
+        force=force,
+    )
+    print(f"Pipeline result: {result}")
+    return result
+
