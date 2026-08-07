@@ -952,6 +952,12 @@ def run_sota_pipeline(
         log.log(f"[{stage}] skipped (best exists={pretrain_best.is_file()})")
         summary["stages"][stage] = {"skipped": True, "best": str(pretrain_best)}
     else:
+        if force:
+            import shutil
+            pretrain_run = _Path("/checkpoints") / pretrain_task / "run-001"
+            if pretrain_run.exists():
+                shutil.rmtree(pretrain_run)
+                log.log(f"[{stage}] force: wiped {pretrain_run}")
         log.log(f"[{stage}] starting pretrain({pretrain_task})")
         try:
             result = pretrain.remote(pretrain_task)
@@ -972,6 +978,12 @@ def run_sota_pipeline(
         log.log(f"[{stage}] skipped (best exists={train_best.is_file()})")
         summary["stages"][stage] = {"skipped": True, "best": str(train_best)}
     else:
+        if force:
+            import shutil
+            train_run = _Path("/checkpoints") / task / "run-001"
+            if train_run.exists():
+                shutil.rmtree(train_run)
+                log.log(f"[{stage}] force: wiped {train_run}")
         if not pretrain_best.is_file():
             raise FileNotFoundError(
                 f"pretrain checkpoint missing at {pretrain_best} — cannot fine-tune"
@@ -999,6 +1011,12 @@ def run_sota_pipeline(
             "tflite": str(tflite_path),
         }
     else:
+        if force:
+            import shutil
+            models_dir = _Path("/models") / task
+            if models_dir.exists():
+                shutil.rmtree(models_dir)
+                log.log(f"[{stage}] force: wiped {models_dir}")
         if not train_best.is_file():
             raise FileNotFoundError(
                 f"train checkpoint missing at {train_best} — cannot export"
