@@ -908,16 +908,21 @@ def run_sota_pipeline(
     log = VolumeLogger(status_root / "logs" / f"sota_pipeline-{task}.log")
     summary: dict[str, object] = {"task": task, "version": version, "stages": {}}
 
+    # Stage keys include task so Hebrew "pretrain" done doesn't make Arabic
+    # skip pretrain in non-force mode.
+    def _stage_key(stage_name: str) -> str:
+        return f"{task}:{stage_name}"
+
+    def _done(stage_name: str) -> bool:
+        if force:
+            return False
+        return is_stage_done(status_root, _stage_key(stage_name))
+
     pretrain_task = f"{task}_pretrain"
     pretrain_best = _Path("/checkpoints") / pretrain_task / "run-001" / "best.pt"
     train_best = _Path("/checkpoints") / task / "run-001" / "best.pt"
     onnx_q8 = _Path("/models") / task / f"{task}-{version}-q8.onnx"
     tflite_path = _Path("/models") / task / f"{task}-{version}-fp32.tflite"
-
-    def _done(name: str) -> bool:
-        if force:
-            return False
-        return is_stage_done(status_root, name)
 
     # ---- 1. fetch_data -------------------------------------------------
     stage = "fetch"
@@ -937,13 +942,13 @@ def run_sota_pipeline(
         log.log(f"[{stage}] starting fetch_data({task})")
         try:
             result = fetch_data.remote(task)
-            mark_stage_done(status_root, stage, extra=result if isinstance(result, dict) else {})
+            mark_stage_done(status_root, _stage_key(stage), extra=result if isinstance(result, dict) else {})
             checkpoints_volume.commit()
             datasets_volume.commit()
             summary["stages"][stage] = result
             log.log(f"[{stage}] done: {result}")
         except Exception as e:
-            mark_stage_failed(status_root, stage, str(e))
+            mark_stage_failed(status_root, _stage_key(stage), str(e))
             checkpoints_volume.commit()
             log.log(f"[{stage}] FAILED: {e}")
             raise
@@ -965,12 +970,12 @@ def run_sota_pipeline(
         log.log(f"[{stage}] starting pretrain({pretrain_task})")
         try:
             result = pretrain.remote(pretrain_task)
-            mark_stage_done(status_root, stage, extra=result if isinstance(result, dict) else {})
+            mark_stage_done(status_root, _stage_key(stage), extra=result if isinstance(result, dict) else {})
             checkpoints_volume.commit()
             summary["stages"][stage] = result
             log.log(f"[{stage}] done: {result}")
         except Exception as e:
-            mark_stage_failed(status_root, stage, str(e))
+            mark_stage_failed(status_root, _stage_key(stage), str(e))
             checkpoints_volume.commit()
             log.log(f"[{stage}] FAILED: {e}")
             raise
@@ -996,12 +1001,12 @@ def run_sota_pipeline(
         log.log(f"[{stage}] starting train({task}) init_from={init_from}")
         try:
             result = train.remote(task, init_from_pretrain=init_from)
-            mark_stage_done(status_root, stage, extra=result if isinstance(result, dict) else {})
+            mark_stage_done(status_root, _stage_key(stage), extra=result if isinstance(result, dict) else {})
             checkpoints_volume.commit()
             summary["stages"][stage] = result
             log.log(f"[{stage}] done: {result}")
         except Exception as e:
-            mark_stage_failed(status_root, stage, str(e))
+            mark_stage_failed(status_root, _stage_key(stage), str(e))
             checkpoints_volume.commit()
             log.log(f"[{stage}] FAILED: {e}")
             raise
@@ -1032,13 +1037,13 @@ def run_sota_pipeline(
             onnx_result = export_onnx.remote(task, version, checkpoint=str(train_best))
             tflite_result = export_tflite.remote(task, version, checkpoint=str(train_best))
             result = {"onnx": onnx_result, "tflite": tflite_result}
-            mark_stage_done(status_root, stage, extra=result)
+            mark_stage_done(status_root, _stage_key(stage), extra=result)
             checkpoints_volume.commit()
             models_volume.commit()
             summary["stages"][stage] = result
             log.log(f"[{stage}] done: {result}")
         except Exception as e:
-            mark_stage_failed(status_root, stage, str(e))
+            mark_stage_failed(status_root, _stage_key(stage), str(e))
             checkpoints_volume.commit()
             log.log(f"[{stage}] FAILED: {e}")
             raise
