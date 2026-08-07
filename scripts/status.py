@@ -150,23 +150,26 @@ def parse_app_states(stdout: str) -> list[dict[str, str]]:
     Columns (Modal CLI format): App ID | Description | State | Tasks | Created
     """
     rows: list[dict[str, str]] = []
-    in_table = False
+    seen_header = False
     for ln in stdout.splitlines():
-        if ln.startswith("┃") or ln.startswith("│"):
-            cells = [c.strip() for c in ln.strip("┃│ ").split("┃")]
-            if not in_table:
-                in_table = True
-                continue  # header
-            if len(cells) >= 5:
-                rows.append({
-                    "app_id": cells[0],
-                    "description": cells[1],
-                    "state": cells[2],
-                    "tasks": cells[3],
-                    "created": cells[4],
-                })
-        elif ln.startswith("┡") or ln.startswith("╞"):
-            in_table = True
+        if "┃" not in ln and "│" not in ln:
+            continue
+        # Split on the vertical bar character regardless of which one.
+        sep = "┃" if "┃" in ln else "│"
+        cells = [c.strip() for c in ln.split(sep)]
+        # First/last cells are typically empty (from leading/trailing bars).
+        cells = [c for c in cells if c != ""]
+        if not seen_header:
+            seen_header = True
+            continue  # skip header row
+        if len(cells) >= 5 and not cells[0].startswith("─") and not cells[0].startswith("═"):
+            rows.append({
+                "app_id": cells[0],
+                "description": cells[1],
+                "state": cells[2],
+                "tasks": cells[3],
+                "created": cells[4],
+            })
     return rows
 
 
