@@ -20,13 +20,13 @@ data:
 
 model:
   arch: modern
-  dim: 768
-  layers: 12
-  heads: 12
-  ff_dim: 3072
+  dim: 512
+  layers: 6
+  heads: 8
+  ff_dim: 2048
   dropout: 0.1
-  max_len: 512
-  batch_size: 16
+  max_len: 256
+  batch_size: 32
 
 train:
   epochs: 6
