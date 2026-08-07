@@ -925,8 +925,10 @@ def run_sota_pipeline(
         log.log(f"[{stage}] skipped")
         summary["stages"][stage] = {"skipped": True}
     else:
-        if force:
-            # Rebuild combined corpus from scratch (picks up Tashkeela layout fixes).
+        if force and "arabic" in task:
+            # Only wipe the Arabic combined corpus for Arabic tasks.
+            # Hebrew pipeline must NOT delete Arabic data — both pipelines
+            # can run in parallel against the same volumes.
             import shutil
             combined = _Path("/datasets/arabic-combined")
             if combined.exists():

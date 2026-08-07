@@ -22,13 +22,17 @@ data:
 
 model:
   arch: modern
-  dim: 768
-  layers: 12
-  heads: 12
-  ff_dim: 3072
+  # Trimmed from 12L/768d (113M params) to 6L/512d (40M params) so single-A100
+  # pretrain completes in hours not days. Modern stack (RoPE+SDPA+mHC+AttnRes+
+  # RMSNorm+SwiGLU) compensates for depth loss. Still >2x larger than the
+  # original rababa_arabic 6L/384d (5M).
+  dim: 512
+  layers: 6
+  heads: 8
+  ff_dim: 2048
   dropout: 0.1
-  max_len: 512
-  batch_size: 16
+  max_len: 256
+  batch_size: 32
   with_seg_head: true
 
 train:
