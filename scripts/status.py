@@ -1,146 +1,324 @@
 #!/usr/bin/env python3
-"""Query Modal volumes for sprint progress. Safe to run from anywhere.
+"""One-shot SOTA sprint progress report.
 
-Use this to reconnect after a disconnect:
-    python scripts/status.py
+Pulls every available signal from Modal into a single readable report:
 
-Shows:
-  - Stage status index (which stages marked done)
-  - Latest checkpoint per task (epoch / best_val_loss)
-  - Volume log files (newest first)
+  1. App state         — modal app list (what's running right now)
+  2. Stage status      — /checkpoints/_status.json (what's done / failed)
+  3. Pipeline log      — /checkpoints/logs/sota_pipeline-*.log (timestamps)
+  4. Checkpoints       — /checkpoints/<task>/run-001/checkpoint-epoch-N.pt
+                         (latest epoch written per task)
+  5. Models            — /models/<task>/*.onnx / *.tflite (final artifacts)
 
-This script NEVER modifies the volume — it only reads. Pair with
-`python scripts/train_all.py` to skip completed stages on re-run.
+Caches pulled files under /tmp/rababa-status/ so re-runs are fast.
+
+Usage:
+    python scripts/status.py                  # all signals
+    python scripts/status.py --task rababa_arabic_pro
+    python scripts/status.py --watch          # refresh every 60s
+    python scripts/status.py --json           # machine-readable
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
+import tempfile
+import time
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 APP_NAME = "rababa"
+CACHE_DIR = Path(tempfile.gettempdir()) / "rababa-status"
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# ---- Modal wrappers ---------------------------------------------------
 
 
 def modal_volume_ls(volume: str, path: str = "/") -> list[str]:
-    """Return stdout lines of `modal volume ls <volume> <path>`."""
+    """Return non-empty stdout lines of `modal volume ls <volume> <path>`."""
     try:
-        result = subprocess.run(
+        r = subprocess.run(
             ["modal", "volume", "ls", volume, path],
-            capture_output=True, text=True, check=False, timeout=30,
+            capture_output=True, text=True, check=False, timeout=20,
         )
-        if result.returncode != 0:
-            return []
-        return result.stdout.splitlines()
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return []
+    if r.returncode != 0:
+        return []
+    return [ln for ln in r.stdout.splitlines() if ln.strip()]
 
 
-def modal_volume_get(volume: str, remote_path: str, local_path: str) -> bool:
-    """`modal volume get`. Returns True on success."""
-    result = subprocess.run(
-        ["modal", "volume", "get", volume, remote_path, local_path],
+def modal_volume_get(volume: str, remote: str, local: Path) -> bool:
+    """`modal volume get` to a local path. Returns True on success."""
+    if local.exists():
+        local.unlink()
+    local.parent.mkdir(parents=True, exist_ok=True)
+    r = subprocess.run(
+        ["modal", "volume", "get", volume, remote, str(local.parent) + "/"],
         capture_output=True, text=True, check=False, timeout=60,
     )
-    return result.returncode == 0
+    return r.returncode == 0 and local.is_file()
 
 
-def fetch_status_json() -> dict:
-    """Fetch /checkpoints/_status.json to a temp file and parse it."""
-    tmp = Path("/tmp/rababa-status.json")
-    if tmp.exists():
-        tmp.unlink()
-    modal_volume_get(f"{APP_NAME}-checkpoints", "/checkpoints/_status.json", str(tmp))
-    if not tmp.is_file():
+def modal_app_list_raw() -> str:
+    try:
+        r = subprocess.run(
+            ["modal", "app", "list"], capture_output=True, text=True,
+            check=False, timeout=20,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return ""
+    return r.stdout if r.returncode == 0 else ""
+
+
+# ---- Pullers ----------------------------------------------------------
+
+
+def pull_status_json() -> dict:
+    """Pull /checkpoints/_status.json → parsed dict."""
+    local = CACHE_DIR / "_status.json"
+    if not modal_volume_get(f"{APP_NAME}-checkpoints", "/_status.json", local):
         return {}
     try:
-        return json.loads(tmp.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+        return json.loads(local.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
         return {}
 
 
-def fetch_dir_listing(volume: str, path: str) -> list[str]:
-    """Return listing of a volume path. Returns [] on error."""
-    return modal_volume_ls(volume, path)
+def pull_pipeline_log(task: str, tail_n: int = 30) -> str:
+    """Pull pipeline log → last N lines as string."""
+    remote = f"/logs/sota_pipeline-{task}.log"
+    local = CACHE_DIR / f"sota_pipeline-{task}.log"
+    if not modal_volume_get(f"{APP_NAME}-checkpoints", remote, local):
+        return ""
+    try:
+        lines = local.read_text(encoding="utf-8").splitlines()
+        return "\n".join(lines[-tail_n:])
+    except OSError:
+        return ""
 
 
-def format_status(status: dict) -> str:
-    if not status:
-        return "(no stage status index yet — no stages have completed)"
+def list_checkpoints(task: str) -> list[str]:
+    """List checkpoint files for a task's run-001 directory."""
+    listing = modal_volume_ls(
+        f"{APP_NAME}-checkpoints", f"/{task}/run-001"
+    )
+    # Filter to checkpoint-epoch-N.pt and best.pt; sort by epoch
+    epochs: list[tuple[int, str]] = []
+    best = None
+    for ln in listing:
+        parts = ln.split()
+        if not parts:
+            continue
+        name = parts[-1].split("/")[-1]
+        if name.startswith("checkpoint-epoch-") and name.endswith(".pt"):
+            try:
+                n = int(name.removeprefix("checkpoint-epoch-").removesuffix(".pt"))
+                epochs.append((n, name))
+            except ValueError:
+                pass
+        elif name == "best.pt":
+            best = name
+    epochs.sort()
+    out = [name for _, name in epochs]
+    if best:
+        out.append("★ " + best)
+    return out
+
+
+def list_models(task: str) -> list[str]:
+    """List exported artifacts for a task under /models."""
+    listing = modal_volume_ls(f"{APP_NAME}-models", f"/{task}")
+    out: list[str] = []
+    for ln in listing:
+        parts = ln.split()
+        if not parts:
+            continue
+        out.append(parts[-1].split("/")[-1])
+    return out
+
+
+def parse_app_states(stdout: str) -> list[dict[str, str]]:
+    """Parse `modal app list` table output into list of dicts.
+
+    Columns (Modal CLI format): App ID | Description | State | Tasks | Created
+    """
+    rows: list[dict[str, str]] = []
+    in_table = False
+    for ln in stdout.splitlines():
+        if ln.startswith("┃") or ln.startswith("│"):
+            cells = [c.strip() for c in ln.strip("┃│ ").split("┃")]
+            if not in_table:
+                in_table = True
+                continue  # header
+            if len(cells) >= 5:
+                rows.append({
+                    "app_id": cells[0],
+                    "description": cells[1],
+                    "state": cells[2],
+                    "tasks": cells[3],
+                    "created": cells[4],
+                })
+        elif ln.startswith("┡") or ln.startswith("╞"):
+            in_table = True
+    return rows
+
+
+# ---- Report -----------------------------------------------------------
+
+
+def _fmt_ts(ts: float | None) -> str:
+    if not ts:
+        return "?"
+    return datetime.fromtimestamp(ts).strftime("%H:%M:%S")
+
+
+def _stage_label(stage: dict) -> tuple[str, str]:
+    if stage.get("done"):
+        return "✓ DONE", "\033[32m"
+    if stage.get("error"):
+        return "✗ FAIL", "\033[31m"
+    return "⏳ RUN", "\033[33m"
+
+
+def report(task: str, tail_n: int = 30) -> dict[str, object]:
+    """Print full report. Returns dict for --json mode."""
+    # 1. apps
+    apps_raw = modal_app_list_raw()
+    apps = [a for a in parse_app_states(apps_raw) if a.get("description") == APP_NAME]
+    live = [a for a in apps if "ephemeral" in a.get("state", "") or "running" in a.get("state", "")]
+
+    # 2. status JSON
+    status = pull_status_json()
     stages = status.get("stages", {})
+
+    # 3. log tail
+    log_tail = pull_pipeline_log(task, tail_n=tail_n)
+
+    # 4. checkpoints
+    pretrain_ckpts = list_checkpoints(f"{task}_pretrain")
+    train_ckpts = list_checkpoints(task)
+
+    # 5. models
+    artifacts = list_models(task)
+
+    out = {
+        "task": task,
+        "apps": apps,
+        "stages": stages,
+        "log_tail": log_tail,
+        "pretrain_checkpoints": pretrain_ckpts,
+        "train_checkpoints": train_ckpts,
+        "artifacts": artifacts,
+    }
+
+    # Print human report
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"\n=== rababa SOTA sprint status  @ {now} ===")
+    print(f"task: {task}\n")
+
+    print("--- Apps ---")
+    if not apps:
+        print("  (none — nothing is running)")
+    for a in apps[:5]:
+        print(f"  {a['app_id']}  state={a['state']:<25} tasks={a['tasks']}  {a['created']}")
+    if live:
+        print(f"  → LIVE: https://modal.com/apps/ronaldtse/main/{live[0]['app_id']}")
+    print()
+
+    print("--- Stages ---")
     if not stages:
-        return "(no stages recorded)"
-    out = []
+        print("  (no stage index yet — orchestrator hasn't started or no stages done)")
     for name in sorted(stages.keys()):
-        entry = stages[name]
-        done = "✓" if entry.get("done") else "✗"
-        ts = entry.get("ts", 0)
-        from datetime import datetime
-        when = datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S") if ts else "?"
-        err = f"  ERROR: {entry['error'][:80]}" if entry.get("error") else ""
-        out.append(f"  [{done}] {name:30s}  {when}{err}")
-    return "\n".join(out)
+        s = stages[name]
+        label, color = _stage_label(s)
+        reset = "\033[0m" if color else ""
+        ts = _fmt_ts(s.get("ts"))
+        err = f"  err: {s['error'][:100]}" if s.get("error") else ""
+        lines = ""
+        if s.get("files"):
+            parts = []
+            for split, info in s["files"].items():
+                parts.append(f"{split}={info.get('lines', '?'):,}")
+            lines = "  (" + " ".join(parts) + ")"
+        print(f"  {color}[{label}]{reset} {name:<10} {ts}{lines}{err}")
+    print()
 
+    print(f"--- Pretrain checkpoints  ({task}_pretrain/run-001) ---")
+    if pretrain_ckpts:
+        for c in pretrain_ckpts[-6:]:
+            print(f"  {c}")
+    else:
+        print("  (none yet)")
+    print()
 
-def format_checkpoints(volume: str, task: str) -> str:
-    listing = fetch_dir_listing(volume, f"/checkpoints/{task}/run-001")
-    if not listing:
-        return f"  (no checkpoints at /checkpoints/{task}/run-001)"
-    ckpts = [l for l in listing if "checkpoint-epoch" in l or "best.pt" in l]
-    if not ckpts:
-        return f"  (no checkpoints yet at /checkpoints/{task}/run-001)"
-    head = sorted(ckpts)[:8]
-    tail = sorted(ckpts)[-3:] if len(ckpts) > 8 else []
-    out = ["  " + l for l in head]
-    if tail:
-        out.append("  ...")
-        out.extend("  " + l for l in tail)
-    return "\n".join(out)
+    print(f"--- Supervised checkpoints  ({task}/run-001) ---")
+    if train_ckpts:
+        for c in train_ckpts[-6:]:
+            print(f"  {c}")
+    else:
+        print("  (none yet)")
+    print()
+
+    print(f"--- Exported artifacts  (/models/{task}) ---")
+    if artifacts:
+        for a in artifacts:
+            print(f"  {a}")
+    else:
+        print("  (none yet)")
+    print()
+
+    print("--- Pipeline log tail ---")
+    if log_tail:
+        for ln in log_tail.splitlines()[-tail_n:]:
+            print(f"  {ln}")
+    else:
+        print("  (log file not yet on volume)")
+    print()
+
+    print("--- Reconnect commands ---")
+    print(f"  python scripts/status.py                       # this report")
+    print(f"  python scripts/status.py --watch               # refresh every 60s")
+    print(f"  modal volume get {APP_NAME}-models /{task}/ ./models/  # pull artifacts when ready")
+    return out
 
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    p.add_argument("--task", default=None,
-                   help="Show checkpoints for a specific task (e.g., rababa_arabic_pro)")
+    p.add_argument("--task", default="rababa_arabic_pro")
+    p.add_argument("--watch", action="store_true",
+                   help="Refresh every 60s until Ctrl-C")
+    p.add_argument("--interval", type=int, default=60,
+                   help="Refresh interval (seconds, default 60)")
+    p.add_argument("--tail", type=int, default=30,
+                   help="Number of log lines to show (default 30)")
+    p.add_argument("--json", action="store_true",
+                   help="Print machine-readable JSON instead of human report")
     args = p.parse_args(argv)
 
-    print(f"=== {APP_NAME} sprint status ===\n")
+    if args.json:
+        result = report(args.task, tail_n=0)
+        print(json.dumps(result, indent=2, default=str))
+        return 0
 
-    print("--- Stage status index (/checkpoints/_status.json) ---")
-    print(format_status(fetch_status_json()))
-    print()
+    if args.watch:
+        try:
+            while True:
+                os.system("clear" if os.name == "posix" else "cls")
+                report(args.task, tail_n=args.tail)
+                print(f"\n  (refreshing in {args.interval}s — Ctrl-C to quit)")
+                time.sleep(args.interval)
+        except KeyboardInterrupt:
+            print("\n  stopped.")
+        return 0
 
-    print("--- Checkpoints per task ---")
-    tasks = [args.task] if args.task else [
-        "rababa_arabic_pro_pretrain",
-        "rababa_arabic_pro",
-        "rababa_arabic_pretrain",
-        "rababa_arabic",
-        "rababa_hebrew_pretrain",
-        "rababa_hebrew",
-    ]
-    for task in tasks:
-        print(f"  {task}:")
-        print(format_checkpoints(f"{APP_NAME}-checkpoints", task))
-        print()
-
-    print("--- Models volume (/models) ---")
-    listing = fetch_dir_listing(f"{APP_NAME}-models", "/models")
-    for line in listing[:20]:
-        print(f"  {line}")
-    if len(listing) > 20:
-        print(f"  ... ({len(listing) - 20} more)")
-    print()
-
-    print("--- Tips ---")
-    print("  To skip completed stages:   python scripts/train_all.py")
-    print("  To pull a checkpoint:       modal volume get rababa-checkpoints \\")
-    print("                                 /checkpoints/<task>/run-001/best.pt ./")
-    print("  To pull the latest logs:    modal volume get rababa-checkpoints \\")
-    print("                                 /logs/<task>.log ./")
+    report(args.task, tail_n=args.tail)
     return 0
 
 
