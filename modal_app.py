@@ -852,7 +852,7 @@ def distill_hebrew_entrypoint(
 @app.function(
     # Orchestrator itself is CPU-only; each stage spawns its own GPU job
     # via .remote(). Long timeout covers the whole chain wall-clock.
-    timeout=36 * 60 * 60,
+    timeout=24 * 60 * 60,  # Modal max is 86400s
     volumes={
         "/checkpoints": checkpoints_volume,
         "/datasets": datasets_volume,
