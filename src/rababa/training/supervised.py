@@ -74,32 +74,58 @@ def _lookup_space_id() -> int:
 
 
 def build_scheduler(
-    optimizer: torch.optim.Optimizer,
+    optimizer: Any,
     cfg: dict[str, Any],
     total_steps: int,
-) -> torch.optim.lr_scheduler.LRScheduler:
+) -> Any:
+    """Build LR scheduler. Accepts torch.optim.Optimizer OR MuonAdamWHybrid.
+
+    WarmupCosine is a plain object (not LRScheduler subclass) so it works
+    with MuonAdamWHybrid, which is not a torch.optim.Optimizer.
+    """
     name = cfg.get("scheduler", "cosine")
     warmup_steps = cfg.get("warmup_steps", 200)
     if name == "cosine":
 
-        class WarmupCosine(torch.optim.lr_scheduler.LRScheduler):
+        class WarmupCosine:
+            """Cosine decay with linear warmup. Duck-types LRScheduler."""
+
             def __init__(self, optimizer, warmup, total):
+                self.optimizer = optimizer
                 self.warmup = warmup
                 self.total = total
-                super().__init__(optimizer)
+                self.last_epoch = 0
+                self.base_lrs = [float(g["lr"]) for g in optimizer.param_groups]
 
-            def get_lr(self):
+            def get_lr(self) -> list[float]:
                 step = self.last_epoch
                 if step < self.warmup:
-                    return [base_lr * step / max(1, self.warmup) for base_lr in self.base_lrs]
+                    return [base * step / max(1, self.warmup) for base in self.base_lrs]
                 progress = (step - self.warmup) / max(1, self.total - self.warmup)
-                return [
-                    base_lr * 0.5 * (1 + math.cos(math.pi * progress))
-                    for base_lr in self.base_lrs
-                ]
+                return [base * 0.5 * (1 + math.cos(math.pi * progress)) for base in self.base_lrs]
+
+            def step(self) -> None:
+                self.last_epoch += 1
+                for g, lr in zip(self.optimizer.param_groups, self.get_lr()):
+                    g["lr"] = lr
+
+            def state_dict(self) -> dict[str, Any]:
+                return {"last_epoch": self.last_epoch, "base_lrs": list(self.base_lrs)}
+
+            def load_state_dict(self, state: dict[str, Any]) -> None:
+                self.last_epoch = int(state.get("last_epoch", 0))
+                if "base_lrs" in state:
+                    self.base_lrs = list(state["base_lrs"])
 
         return WarmupCosine(optimizer, warmup_steps, total_steps)
     if name == "constant":
+        if not isinstance(optimizer, torch.optim.Optimizer):
+            # No-op scheduler for hybrid optimizers under constant schedule.
+            class _NoOp:
+                def step(self): pass
+                def state_dict(self): return {}
+                def load_state_dict(self, s): pass
+            return _NoOp()
         return torch.optim.lr_scheduler.ConstantLR(optimizer, factor=1.0, total_iters=total_steps)
     raise ValueError(f"unknown scheduler: {name}")
 
@@ -205,7 +231,11 @@ def train_supervised(
     optimizer = build_optimizer(model, cfg_train)
     scheduler = build_scheduler(optimizer, cfg_train, total_steps)
 
-    scaler = torch.amp.GradScaler("cuda", enabled=fp16 and device.type == "cuda")
+    # Muon hybrid is not a torch.optim.Optimizer — GradScaler can't step it.
+    # bf16 autocast has enough dynamic range that GradScaler is unnecessary.
+    from .optim import MuonAdamWHybrid
+    use_scaler = fp16 and device.type == "cuda" and not isinstance(optimizer, MuonAdamWHybrid)
+    scaler = torch.amp.GradScaler("cuda", enabled=use_scaler)
     best_val = float("inf")
     start_epoch = 0
     ckpt_root.mkdir(parents=True, exist_ok=True)
@@ -251,11 +281,16 @@ def train_supervised(
             with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=fp16):
                 outputs = model.forward_heads(src, lengths)
                 loss = multi_head_loss(outputs, targets, _loss_fn, label_smoothing)
-            scaler.scale(loss).backward()
-            scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
-            scaler.step(optimizer)
-            scaler.update()
+            if use_scaler:
+                scaler.scale(loss).backward()
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+                optimizer.step()
             scheduler.step()
             running_loss += loss.item() * src.size(0)
 
