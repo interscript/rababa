@@ -238,8 +238,20 @@ def report(task: str, tail_n: int = 30) -> dict[str, object]:
     print("--- Stages ---")
     if not stages:
         print("  (no stage index yet — orchestrator hasn't started or no stages done)")
-    for name in sorted(stages.keys()):
-        s = stages[name]
+    # Filter to stages for THIS task (new keyed format: "task:stage").
+    # Fall back to legacy un-keyed format for back-compat.
+    task_prefix = f"{task}:"
+    relevant: dict[str, dict] = {}
+    for k, v in stages.items():
+        if k.startswith(task_prefix):
+            relevant[k.removeprefix(task_prefix)] = v
+        elif ":" not in k:
+            # Legacy un-keyed entry — only show if no keyed variant exists.
+            relevant.setdefault(k, v)
+    if not relevant:
+        print(f"  (no stages recorded for task={task})")
+    for name in sorted(relevant.keys()):
+        s = relevant[name]
         label, color = _stage_label(s)
         reset = "\033[0m" if color else ""
         ts = _fmt_ts(s.get("ts"))
