@@ -1,0 +1,53 @@
+# rababa_arabic_pro — larger encoder (~50M params) for SOTA-chasing Arabic.
+#
+# Same architectural family as rababa_arabic (char-level Transformer encoder
+# + single haraqat head), but scaled up: 12 layers, 768 dim, 12 heads.
+# Intended to be trained on the Sadeed-style cleaned Tashkeela corpus.
+#
+# Browser-deployment story: at fp32 this is ~200MB ONNX, ~50MB int8.
+# LiteRT.js handles both — see export_tflite and export_onnx.
+
+name: rababa_arabic_pro
+description: Arabic diacritization (Pro) — larger encoder, ~50M params.
+kind: rababa
+tier: 1
+
+data:
+  module: tashkeela
+  cleaner: arabic
+  # Combined Arabic corpus — GPLv2 Tashkeela-full + Sadeed HF + QCRI EMNLP 2025.
+  # Assembled by modal_app.py::fetch_data(task="rababa_arabic_pro") on the
+  # /datasets volume. ~80M words when all three sources are present.
+  root: /datasets/arabic-combined
+
+model:
+  arch: modern
+  dim: 768
+  layers: 12
+  heads: 12
+  ff_dim: 3072
+  dropout: 0.1
+  max_len: 512
+  batch_size: 16
+  with_seg_head: true
+
+train:
+  epochs: 20
+  batch_size: 16
+  # Muon optimizer for 2D weights (K3/DS4 stack). AdamW handles 1D params.
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 1000
+  grad_clip: 1.0
+  fp16: true
+  label_smoothing: 0.1
+  init_from_pretrain: null
+  optimizer: muon
+  muon_lr: 0.02
+  muon_momentum: 0.95
+  ns_steps: 5
+
+eval:
+  v0.5.0_max_der: 0.04
+  v1.0.0_max_der: 0.025
+  v1.5.0_max_der: 0.018   # Sadeed-corrected territory
