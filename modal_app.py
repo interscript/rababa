@@ -149,10 +149,22 @@ def fetch_data(task: str) -> dict[str, object]:
     for split in ("train", "val", "test"):
         path = root / f"{split}.txt"
         if not path.is_file():
-            raise FileNotFoundError(f"missing {split}: {path}")
-        sha = hashlib.sha256(path.read_bytes()).hexdigest()
-        line_count = sum(1 for _ in path.open(encoding="utf-8"))
+            # Also accept sharded layout for verification.
+            shards = sorted(root.glob(f"{split}-*.txt"))
+            if not shards:
+                raise FileNotFoundError(f"missing {split}: {path}")
+            path = shards[0]
+            line_count = sum(
+                sum(1 for _ in p.open(encoding="utf-8")) for p in shards
+            )
+            sha = "sharded"
+        else:
+            sha = hashlib.sha256(path.read_bytes()).hexdigest()
+            line_count = sum(1 for _ in path.open(encoding="utf-8"))
         summary["files"][split] = {"path": str(path), "sha256": sha, "lines": line_count}
+
+    # Persist any volume writes (sadeed-hf download, arabic-combined merge).
+    datasets_volume.commit()
     return summary
 
 
