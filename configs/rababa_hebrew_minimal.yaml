@@ -1,0 +1,66 @@
+# rababa_hebrew_minimal — simplest possible Hebrew diacritization.
+#
+# PURPOSE: our fancy v0.6.0 stack (MoE, mHC, Muon optimizer, QK-Norm, etc.)
+# achieved DER=66% — barely better than random on niqqud (16 classes).
+# This config strips EVERYTHING to basics to check if the architecture
+# additions are the problem.
+#
+# Changes from baseline:
+#   - optimizer: muon → adamw (plain AdamW, no Newton-Schulz)
+#   - ffn_type: moe → swiglu (standard SwiGLU, no experts)
+#   - NO mHC (standard residual x + sublayer(x))
+#   - NO QK-Norm
+#   - NO KDA
+#   - Plain RMSNorm
+#
+# If this beats baseline's 66% DER, we know the fancy stack is hurting.
+# If this also gets ~66% DER, the problem is fundamental (data/arch).
+
+name: rababa_hebrew_minimal
+description: Hebrew minimal — plain AdamW + SwiGLU (no MoE, no mHC, no Muon).
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 200
+
+model:
+  arch: modern_multi_head
+  dim: 384
+  layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.1
+  max_len: 512
+  batch_size: 32
+  head_sizes: [16, 3, 4]
+  # ---- STRIPPED: no QK-Norm, no GQA, no MoE ----
+  kv_heads: 6  # full MHA (no GQA)
+  qk_norm: false
+  norm_type: rmsnorm
+  rope_base: 10000.0  # standard RoPE base (not ABF)
+  ffn_type: swiglu  # plain SwiGLU (no MoE)
+  # NO moe config
+
+train:
+  epochs: 15
+  batch_size: 32
+  learning_rate: 1.0e-3  # standard AdamW LR (not Muon's 0.02)
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  fp16: true
+  label_smoothing: 0.1
+  init_from_pretrain: null
+  # ---- PLAIN AdamW (no Muon) ----
+  optimizer: adamw
+  # NO muon_lr, no ns_steps, no qk_clip
+  # NO early_stopping, NO class_weights, NO focal, NO ema
+  # Just plain training.
+
+eval:
+  v0.1.0_max_der: 0.12
+  v0.5.0_max_der: 0.08
+  v1.0.0_max_der: 0.06

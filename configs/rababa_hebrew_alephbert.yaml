@@ -1,0 +1,49 @@
+# rababa_hebrew_alephbert — Hebrew diacritization with pretrained AlephBERT.
+#
+# ROOT CAUSE of 66% DER: char-level from-scratch encoder can't learn Hebrew
+# niqqud patterns. SOTA systems (Nakdimon 92%, Dicta 98%) all use pretrained
+# language models.
+#
+# FIX: Fine-tune AlephBERT (Hebrew BERT, 10GB pretraining) for niqqud/dagesh/sin
+# classification. AlephBERT already understands Hebrew morphology.
+#
+# Architecture:
+#   - AlephBERT base encoder (~110M params, pretrained on Hebrew text)
+#   - 3 linear classification heads (niqqud=16, dagesh=3, sin=4)
+#   - Standard AdamW fine-tuning (no Muon — pretrained model)
+#
+# Expected: DER 10-20% (massive improvement from 66%).
+
+name: rababa_hebrew_alephbert
+description: Hebrew diacritization with fine-tuned AlephBERT.
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 200
+
+model:
+  arch: alephbert
+  dropout: 0.3  # higher dropout to prevent overfitting (110M params, 29K examples)
+  head_sizes: [16, 3, 4]
+  freeze_layers: 8  # freeze 8/12 BERT layers — only fine-tune top 4
+
+train:
+  epochs: 10
+  batch_size: 16  # smaller batch (AlephBERT is larger)
+  learning_rate: 5.0e-5  # standard BERT fine-tuning LR
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  fp16: true
+  label_smoothing: 0.1
+  init_from_pretrain: null
+  optimizer: adamw  # standard fine-tuning optimizer
+  # NO early stopping — let all 10 epochs run.
+
+eval:
+  v0.1.0_max_der: 0.12
+  v0.5.0_max_der: 0.08
+  v1.0.0_max_der: 0.06

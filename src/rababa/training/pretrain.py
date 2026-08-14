@@ -80,6 +80,7 @@ def pretrain_mlm(
     device: torch.device,
     ckpt_root: Path,
     log_fn: Callable[[TrainMetrics], None] | None = None,
+    metrics_path: Path | None = None,
 ) -> tuple[MLMModel, Path]:
     """Run MLM pretraining. Returns (model, path to encoder checkpoint).
 
@@ -90,13 +91,23 @@ def pretrain_mlm(
     epochs = cfg_train.get("epochs", 3)
     fp16 = cfg_train.get("fp16", True)
     grad_clip = cfg_train.get("grad_clip", 1.0)
+    moe_lb_weight = cfg_train.get("moe_lb_weight", 0.01)
 
     from .resume import latest_resume_checkpoint
+    from .metrics import MetricsLogger
+    metrics_logger = MetricsLogger(metrics_path) if metrics_path is not None else None
 
     model = build_pretrain_model(cfg).to(device)
     total_steps = epochs * len(train_loader)
     optimizer = build_optimizer(model, cfg_train)
     scheduler = build_scheduler(optimizer, cfg_train, total_steps)
+
+    def _collect_moe_lb() -> torch.Tensor:
+        total = torch.tensor(0.0, device=device)
+        for mod in model.modules():
+            if hasattr(mod, "moe_load_balance_loss"):
+                total = total + mod.moe_load_balance_loss()
+        return total
 
     from .optim import MuonAdamWHybrid
     use_scaler = fp16 and device.type == "cuda" and not isinstance(optimizer, MuonAdamWHybrid)
@@ -135,6 +146,13 @@ def pretrain_mlm(
             with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=fp16):
                 logits = model(src, lengths)
                 loss = masked_cross_entropy(logits, target)
+                lb = _collect_moe_lb()
+                if lb.requires_grad:
+                    loss = loss + moe_lb_weight * lb
+            # Skip NaN/Inf loss — protects weights from poisoning.
+            if not torch.isfinite(loss):
+                optimizer.zero_grad(set_to_none=True)
+                continue
             if use_scaler:
                 scaler.scale(loss).backward()
                 scaler.unscale_(optimizer)
@@ -143,6 +161,13 @@ def pretrain_mlm(
                 scaler.update()
             else:
                 loss.backward()
+                all_finite = all(
+                    p.grad is None or torch.isfinite(p.grad).all().item()
+                    for p in model.parameters()
+                )
+                if not all_finite:
+                    optimizer.zero_grad(set_to_none=True)
+                    continue
                 torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
                 optimizer.step()
             scheduler.step()
@@ -158,6 +183,8 @@ def pretrain_mlm(
         )
         if log_fn is not None:
             log_fn(metrics)
+        if metrics_logger is not None:
+            metrics_logger.log(metrics)
 
         # Save encoder checkpoint with full resume state.
         full_ckpt_path = ckpt_root / f"checkpoint-epoch-{epoch}.pt"
@@ -172,8 +199,13 @@ def pretrain_mlm(
             },
             full_ckpt_path,
         )
-        if val_loss < best_val:
-            best_val = val_loss
+        # Update best.pt. Skip NaN val_loss; always save on first epoch
+        # if best doesn't exist yet so downstream can find a checkpoint.
+        import math as _math
+        val_is_better = (not _math.isnan(val_loss)) and (val_loss < best_val)
+        if val_is_better or (epoch == start_epoch and not best_path.is_file()):
+            if val_is_better:
+                best_val = val_loss
             torch.save(
                 {
                     "epoch": epoch,
@@ -183,6 +215,8 @@ def pretrain_mlm(
                 best_path,
             )
 
+    if metrics_logger is not None:
+        metrics_logger.close()
     return model, best_path
 
 

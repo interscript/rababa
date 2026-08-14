@@ -1,0 +1,24 @@
+# Shared defaults — every task inherits + overrides.
+# Locked-down stability for reproducibility.
+
+# Optimizer + schedule
+optimizer: adamw
+scheduler: cosine
+warmup_steps: 200
+weight_decay: 0.01
+grad_clip: 1.0
+
+# Precision
+fp16: true
+
+# Reproducibility
+seed: 42
+
+# Logging
+log_every: 50
+save_every: 500
+
+# Distillation (Tier 2 — only enabled per-task when needed)
+distillation:
+  alpha: 0.5
+  temperature: 4.0

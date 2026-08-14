@@ -43,6 +43,12 @@ def build_model(cfg: dict) -> nn.Module:
         return build_modern_student(cfg)
     if arch == "modern_multi_head":
         return build_modern_multi_head_student(cfg)
+    if arch == "alephbert":
+        from .alephbert import build_alephbert_diacritizer
+        return build_alephbert_diacritizer(cfg)
+    if arch == "hebrew_seq2seq":
+        from .hebrew_seq2seq import build_hebrew_seq2seq
+        return build_hebrew_seq2seq(cfg)
     if arch == "multi_head":
         return build_multi_head_student(cfg)
     if arch in ("single", None):

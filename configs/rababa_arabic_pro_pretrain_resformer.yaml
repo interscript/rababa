@@ -1,0 +1,85 @@
+# rababa_arabic_pro_pretrain_resformer — MLM pretrain + ResFormer + DS-V4 + Muon variants.
+#
+# Hypothesis: ResFormer + DS-V4 + Muon variants hurt supervised (small data
+# 29K Hebrew pairs) but should HELP pretraining (75M Arabic words).
+# This is the realistic test case for the 2026 techniques.
+#
+# Built on rababa_arabic_pro_pretrain (baseline) + adds:
+#   - DS-V4 Tier 1: SwiGLU clamp, attention sink, sqrt_softplus MoE, hybrid NS.
+#   - ResFormer (arXiv:2410.17897): value residual V_n = λ_1·V_1 + λ_2·V_n.
+#   - Spectral Cap Muon (2026): NaN explosion prevention.
+#   - HTMuon (arXiv:2603.10067): heavy-tail correction.
+#   - AdaMuon (arXiv:2507.11005): 2nd-moment estimator.
+#   - NorMuon (arXiv:2510.05491): neuron-wise scaling.
+#
+# Compare MLM val_loss against rababa_arabic_pro_pretrain baseline.
+
+name: rababa_arabic_pro_pretrain_resformer
+description: Arabic MLM pretrain + 2026 techniques (ResFormer + DS-V4 + Muon variants).
+kind: rababa_mlm
+
+data:
+  module: tashkeela
+  cleaner: arabic
+  root: /datasets/arabic-combined
+  mask_prob: 0.15
+  max_len: 512
+
+model:
+  arch: modern
+  dim: 512
+  layers: 6
+  heads: 8
+  ff_dim: 2048
+  dropout: 0.1
+  max_len: 256
+  batch_size: 32
+  # ---- v0.6.0 Qwen3 stack ----
+  kv_heads: 2
+  qk_norm: true
+  norm_type: rmsnorm
+  rope_base: 1000000.0
+  ffn_type: moe
+  moe:
+    n_experts: 16
+    expert_dim: 512
+    top_k: 2
+    shared_experts: 0
+    # ---- DS-V4-Flash §2.1: Sqrt(Softplus) MoE affinity ----
+    affinity_type: sqrt_softplus
+  # ---- DS-V4-Flash §4.2.3: SwiGLU Clamping ----
+  swiglu_clamp_max: 10.0
+  # ---- DS-V4-Flash §2.3.3, Eq. 27: Attention Sink ----
+  use_sink: true
+  # ---- ResFormer (arXiv:2410.17897, ACL 2025) ----
+  # All-mode: every layer ≥1 gets V_1. Pretrain has lots of data, so capacity
+  # helps (unlike supervised where it overfits).
+  resformer:
+    mode: all
+    lambda1: 0.5
+    lambda2: 0.5
+
+train:
+  epochs: 6
+  batch_size: 16
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 1000
+  grad_clip: 1.0
+  fp16: true
+  optimizer: muon
+  muon_lr: 0.02
+  muon_momentum: 0.95
+  # ---- DS-V4-Flash §2.4: Hybrid Newton-Schulz ----
+  ns_steps: 10
+  scheduler: cosine
+  pretrain_method: mtp
+  mtp_n_predict: 2
+  # ---- 2026 Muon variants ----
+  spectral_cap: 1.2
+  heavy_tail_alpha: 0.08
+  adamuon_beta: 0.99
+  normuon_enabled: true
+
+eval:
+  v0.1.0_max_val_loss: 2.3

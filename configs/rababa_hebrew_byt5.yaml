@@ -1,0 +1,37 @@
+# rababa_hebrew_byt5 — Hebrew diacritization via ByT5-small fine-tuning.
+#
+# ByT5-small (300M) is pretrained on mC4 at the UTF-8 byte level, giving it
+# knowledge of Hebrew character patterns from pretraining. Fine-tuning on
+# the Nakdimon + distilled corpus should reach ~10-15% DER.
+#
+# This is the same approach as Nakdimon (T5-based, ~8% DER) and should
+# dramatically outperform the from-scratch seq2seq (41% DER).
+
+name: rababa_hebrew_byt5
+description: Hebrew diacritization via ByT5-small fine-tuning
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 512
+
+model:
+  arch: byt5_hebrew
+  model_name: google/byt5-small
+  max_len: 512
+
+train:
+  epochs: 15
+  batch_size: 8
+  learning_rate: 5.0e-4
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  label_smoothing: 0.1
+
+eval:
+  v0.1.0_max_der: 0.15
+  v0.5.0_max_der: 0.10
+  v1.0.0_max_der: 0.08

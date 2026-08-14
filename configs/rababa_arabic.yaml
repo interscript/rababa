@@ -1,0 +1,45 @@
+# rababa_arabic — Tier 1 student config.
+#
+# Direct supervised training on Tashkeela++ gold labels. No teacher.
+# Tier 2 distillation (with teacher-as-noisy-oracle on unlabeled data)
+# is enabled by setting `tier: 2` and supplying an unlabeled corpus path.
+#
+# Optional pretrain init: set `init_from_pretrain:` to the path of an
+# MLM encoder checkpoint (output of `pretrain` stage). The encoder is
+# loaded with strict=False; the haraqat head stays at fresh init.
+
+name: rababa_arabic
+description: Arabic diacritization — adds harakat to undiacritized Arabic text.
+kind: rababa
+tier: 1
+
+data:
+  module: tashkeela
+  cleaner: arabic
+
+model:
+  dim: 384
+  layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.1
+  max_len: 200
+  batch_size: 32
+
+train:
+  epochs: 15
+  batch_size: 32
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  fp16: true
+  label_smoothing: 0.1
+  # Optional: path to MLM encoder checkpoint. Omit → train from scratch.
+  init_from_pretrain: null
+
+eval:
+  # DER threshold per version milestone.
+  v0.1.0_max_der: 0.10
+  v0.5.0_max_der: 0.06
+  v1.0.0_max_der: 0.04
