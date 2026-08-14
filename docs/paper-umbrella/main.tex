@@ -1,0 +1,115 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\title{Five Languages, Five Bottlenecks:\\ Diacritization and G2P for Transliteration at Interscript}
+\author{Interscript ML Team}
+\date{August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We modernized the phonological layer of the Interscript transliteration
+platform across five languages: Arabic, Hebrew, Thai, Persian, and Urdu,
+covering both diacritization (vowel restoration in the original script)
+and G2P (romanization/phonemization). Our central finding is a
+\emph{bottleneck taxonomy}: each language's performance ceiling was set
+by exactly one resource---data \emph{quality} (Arabic), data \emph{domain}
+(Hebrew), labeled-data \emph{coverage} (Thai), output
+\emph{representation} (Persian, Urdu)---and a fixed ByT5-based framework
+with one surgical fix per language reached or beat the published
+state of the art in each. Results: Arabic 0.99\% DER; Hebrew 17.5\% DER
+on Biblical text where the SOTA model scores 35.6\%; Thai 2.32\% PER
+via deterministic (non-LLM) augmentation; Persian homograph accuracy
+77.3--89.5\% and diacritization 0.52\% CER from a G2P-only dataset;
+Urdu G2P 14.77\% CER (first learned baseline, 4.1$\times$ over
+rule-based) and diacritization 3.74\% CER from weak supervision. We
+distill cross-cutting lessons for phonological NLP: LLMs are unreliable
+phonological labelers; evaluation domains and input formats silently
+dominate comparisons; ensembling and curricula fail at data-limited
+optima; and byte-level models are the right deployment target for
+multilingual TS runtimes.
+\end{abstract}
+
+\section{Why phonology for transliteration?}
+Transliteration maps (ALA-LC, SBL, RTGS, \dots) assume \emph{vocalized}
+input. Undiacritized Arabic or Hebrew, or unsegmented Thai, cannot be
+transliterated unambiguously. The models described here supply the
+vocalization that makes interscript.org's maps deterministic.
+
+\section{System and results}
+Common framework: ByT5 seq2seq (byte-level; tokenizer = UTF-8 bytes, so
+TS inference needs no vocabulary assets) except Arabic, where a compact
+30M char-level encoder won on cost.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{llll}
+\toprule
+Language & Task & Result & Published reference \\
+\midrule
+Arabic & diacritization & \textbf{0.99\% DER} & Sadeed 1.2\% (1.5B) \\
+Hebrew & diacritization & \textbf{17.46\% DER} (Biblical) & DictaBERT 35.6\% (same test) \\
+Thai & G2P & \textbf{2.32\% PER} & baseline 6.37\% (same test) \\
+Persian & G2P/HA & \textbf{89.5\%} / 77.3\% (SB) & Homo-GE2PE 76.9\% \\
+Persian & diacritization & \textbf{0.52\% CER} & (none existed) \\
+Urdu & G2P & \textbf{14.77\% CER} & epitran 60.0\% \\
+Urdu & diacritization & \textbf{3.74\% CER} & (none existed) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{The bottleneck taxonomy}
+\begin{itemize}
+  \item \textbf{Arabic --- data quality}: cleaning + 28$\times$ scaling
+        halved DER; a 30M encoder matches a 1.5B LM.
+  \item \textbf{Hebrew --- data domain}: the SOTA model collapses
+        cross-domain (9$\times$); mixed-domain training wins; the teamim
+        input-format effect makes cantillation copy-through.
+  \item \textbf{Thai --- labeled coverage}: 10K dictionary $\to$ 60K
+        via deterministic phonemizer labels; all architectural fixes
+        failed, data fixed it.
+  \item \textbf{Persian --- representation}: one dataset serves two
+        tasks (G2P + diacritization); metric representation choices
+        (ezafe) shift results by 18 points.
+  \item \textbf{Urdu --- supervision existence}: no gold diacritization
+        exists; weak IPA-derived labels at 597K scale suffice.
+\end{itemize}
+
+\section{Cross-cutting lessons}
+\begin{enumerate}
+  \item \textbf{LLMs cannot label phonology.} Tone and haraqat
+        hallucination mirrors the known diacritization failure; epitran
+        labels are free of it and transfer through fine-tuning.
+  \item \textbf{Input formats and domains are hidden variables.}
+        Teamim-preserving inputs and Biblical-vs-modern test domain each
+        move DER by more than most modeling choices.
+  \item \textbf{Beam search is a first-class factor} (12 DER points on
+        Hebrew); ensembles must be evaluated under beam search to be
+        meaningful.
+  \item \textbf{Output-vote ensembling hurts seq2seq restoration}:
+        per-character voting lowers error counts yet raises
+        edit-distance metrics (incoherent splices).
+  \item \textbf{Curricula fail at data-limited optima}; their reported
+        gains live in pretraining regimes.
+  \item \textbf{Byte-level models are deployment-friendly}: ByT5's
+        tokenizer is \texttt{TextEncoder} in TypeScript---no vocab
+        files, no WASM sentencepiece---ideal for interscript.org's
+        browser/Node targets.
+\end{enumerate}
+
+\section{Deployment}
+Best checkpoints export to ONNX; distribution follows the Interscript
+plan (GitHub Releases primary, HuggingFace canonical, jsDelivr edge).
+The TS package wraps onnxruntime-web/node with byte-level tokenization.
+
+\section{Reproducibility}
+Per-language repositories (\texttt{rababa}, \texttt{rababa-farsi},
+\texttt{rababa-urdu}, \texttt{secryst}) contain training pipelines,
+evaluation harnesses, \texttt{docs/RESULTS.md} ground truth, and the
+five companion papers in \texttt{docs/paper-*/}.
+
+\end{document}

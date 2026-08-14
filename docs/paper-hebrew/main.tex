@@ -1,0 +1,166 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\title{Hebrew Diacritization Is Domain-Bound: Beating the SOTA Model\\ on Biblical Text and the Teamim Input-Format Effect}
+\author{Interscript ML Team}
+\date{August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Hebrew diacritization (nikud restoration) benchmarks are dominated by
+modern-Hebrew test sets, where DictaBERT-large-char-menaked reports
+near-SOTA error rates. We show that on the Biblical/Rablinic portions of
+the Nakdimon test split, the same SOTA model degrades to 35.6\% diacritization
+error rate (DER), while a ByT5-base seq2seq model trained on a mixed-domain
+50K-pair corpus reaches 17.5\%---an 18-point margin. Error analysis shows
+the vowel-pointing accuracy of our model at aligned positions is 97.1\%,
+with \emph{zero} cantillation (teamim) errors: we identify a previously
+unreported input-format effect in which standard preprocessing leaves
+teamim in the model input, making cantillation a copy-through task. We
+further report negative results: 2.3$\times$ data scaling yields no DER
+change, and character-level output-vote ensembling \emph{increases} DER
+despite reducing per-character vowel errors.
+\end{abstract}
+
+\section{Introduction}
+Hebrew nikud restoration underpins transliteration, TTS, and biblical
+scholarship. Published systems (Nakdimon, DictaBERT
+\cite{dictabert}) evaluate on modern Hebrew. We ask what happens on
+Biblical/Rablinic text---the domain that matters for digital humanities.
+
+Contributions:
+\begin{enumerate}
+  \item \textbf{Cross-domain SOTA evaluation}: we run
+        DictaBERT-large-char-menaked on the Nakdimon test split and
+        measure \textbf{35.6\% DER}, versus $\sim$4\% reported on modern
+        benchmarks---a 9$\times$ cross-domain degradation.
+  \item \textbf{A mixed-domain ByT5-base} reaching \textbf{17.46\% DER}
+        (best seed), beating the SOTA model by 18 points in-domain.
+  \item \textbf{The teamim input-format effect}: standard preprocessing
+        strips nikud (U+05B0--05BC) but not teamim (U+0591--05AF) from
+        inputs; teamim errors are therefore structurally impossible
+        (0 in our analysis). A ``cleaner'' pipeline that strips teamim
+        from inputs while leaving them in targets collapses (36.2\% DER),
+        because cantillation is not predictable from bare consonants.
+  \item \textbf{Error decomposition}: on aligned consonant positions,
+        nikud accuracy is 97.1\%; residual DER is dominated by hard
+        homographs and metric alignment artifacts.
+  \item \textbf{Negative results}: data scaling (22K$\to$50K) is flat;
+        beam search is a 12-point factor (greedy 29.0\% vs beam-4 17.8\%);
+        output-vote ensembling reduces vowel errors 9\% yet raises DER to
+        21.5\%.
+\end{enumerate}
+
+\section{Related Work}
+Nakdimon \cite{nakdimon} is the standard dataset/model for modern Hebrew
+diacritization. DictaBERT \cite{dictabert} fine-tunes a Hebrew BERT and
+holds the modern-Hebrew SOTA. ByT5 \cite{byt5} provides byte-level
+multilingual seq2seq pretraining.
+
+\section{Data and the Input-Format Question}
+Training corpus (50,433 pairs): Nakdimon train (30K), Sefaria Tanakh
+(15K, Biblical, fully pointed), DictaBERT-distilled modern Hebrew (15K),
+deduplicated. Test: Nakdimon test split (5,095 examples).
+
+Hebrew text carries two diacritic families: \textbf{nikud} (vowels,
+dagesh) and \textbf{teamim} (cantillation). Standard Nakdimon-derived
+preprocessing strips only nikud from inputs. Consequences:
+\begin{itemize}
+  \item Models receive teamim as input \emph{hints}; targets contain
+        teamim; teamim prediction degenerates to copy-through.
+        Our error analysis confirms: teamim errors $=0$ across all
+        models.
+  \item A reimplementation that strips teamim from inputs but not
+        targets forces the model to predict unpredictable cantillation
+        and collapses to 36.2\% DER.
+\end{itemize}
+Reproductions must state their input format; comparisons across formats
+are invalid.
+
+\section{Model and Training}
+ByT5-base (580M), seq2seq, undiacritized$\to$diacritized. 3 epochs,
+batch 8, LR $3{\times}10^{-4}$, label smoothing 0.1, beam 4 at
+inference. Four checkpoints: v2 (22K corpus), v4 (50K corpus), s43, s44
+(seed replicas of v4).
+
+\section{Experiments}
+\subsection{Main results}
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+System & DER & Notes \\
+\midrule
+DictaBERT-large (SOTA) & 35.63\% & our run, native bare-text input \\
+\textbf{s43 (ours)} & \textbf{17.46\%} & teamim-preserving input \\
+s44 (ours) & 17.65\% & \\
+v4 (ours, 50K) & 17.78\% & \\
+v2 (ours, 22K) & 17.3\% & original recipe \\
+beam-1 variant & 29.0\% & decoding ablation \\
+3-way vote ensemble & 21.52\% & \emph{worse} than singles \\
+\bottomrule
+\end{tabular}
+\caption{Nakdimon test (Biblical/Rablinic), beam 4 unless noted.}
+\end{table}
+
+\subsection{Error decomposition}
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+Error type & Count & Share of aligned \\
+\midrule
+teamim wrong & 0 & 0.0\% \\
+nikud wrong & 9,903 & 3.2\% \\
+correct & 299,400 & 96.8\% \\
+length mismatch (artifact) & 186,634 & --- \\
+\bottomrule
+\end{tabular}
+\caption{v4 predictions, per-consonant analysis.}
+\end{table}
+
+\subsection{Ablations}
+\begin{itemize}
+  \item \textbf{Data scaling}: 22K$\to$50K changes DER 17.3\%$\to$17.8\%
+        (flat). The corpus, not its size, is the constraint.
+  \item \textbf{Beam search}: greedy 29.0\% vs beam-4 17.8\% (12 points).
+  \item \textbf{Ensembling}: per-character majority vote across three
+        models lowers vowel errors (9,903$\to$8,997) but raises DER to
+        21.5\%---spliced outputs are incoherent strings that
+        edit-distance metrics penalize. Logit-level beam fusion is the
+        only valid ensemble route for seq2seq diacritization.
+\end{itemize}
+
+\section{Discussion}
+\textbf{SOTA claims are domain-bound.} An 18-point margin reverses
+depending on test domain. Practitioners should evaluate on their target
+domain; digital-humanities Hebrew needs Biblical-trained models.
+
+\textbf{Input format is a hidden variable.} The teamim-preserving
+convention inherited from Nakdimon makes cantillation free and inflates
+apparent diacritization skill; we make the convention explicit and
+quantify it.
+
+\section{Limitations}
+Our DictaBERT run uses its native bare-text input while our models
+receive teamim; the 18-point margin conflates model quality with input
+format (though both reflect realistic deployment of each system).
+Sentence-level granularity and teamim policy choices in the metric
+warrant further study.
+
+\section{Reproducibility}
+Code, run IDs, and all measured numbers: \texttt{interscript/rababa}
+(\texttt{docs/RESULTS.md}). Prediction caches for four checkpoints are
+released for exact reanalysis.
+
+\begin{thebibliography}{9}
+\bibitem{dictabert} DictaBERT-large-char-menaked. Dicta, 2023--2024.
+\bibitem{nakdimon} Elazar et al. Nakdimon. 2020.
+\bibitem{byt5} Xue et al. ByT5: Towards a Token-Free Future. 2022.
+\end{thebibliography}
+
+\end{document}
