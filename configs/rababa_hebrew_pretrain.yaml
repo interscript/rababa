@@ -23,6 +23,18 @@ model:
   max_len: 512
   batch_size: 64
   head_sizes: [16, 3, 4]
+  # ---- v0.6.0 Qwen3 stack (matches supervised config) ----
+  kv_heads: 2
+  qk_norm: true
+  # Zero-centered RMSNorm disabled — unstable in our setup (NaN after few epochs).
+  norm_type: rmsnorm
+  rope_base: 1000000.0
+  ffn_type: moe
+  moe:
+    n_experts: 8
+    expert_dim: 384
+    top_k: 2
+    shared_experts: 0
 
 train:
   epochs: 15
@@ -37,6 +49,9 @@ train:
   muon_momentum: 0.95
   ns_steps: 5
   scheduler: cosine
+  # MTP pretrain objective (DS4).
+  pretrain_method: mtp
+  mtp_n_predict: 2
 
 eval:
   v0.1.0_max_val_loss: 2.5

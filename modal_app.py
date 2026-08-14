@@ -61,6 +61,7 @@ image = (
         "pyyaml>=6.0",
         "wandb>=0.18",
         "transformers>=4.46",
+        "accelerate>=1.1",
         "datasets>=3.0",
         "litert-torch>=0.9",
         "ai-edge-quantizer>=0.8",
@@ -114,7 +115,7 @@ def fetch_data(task: str) -> dict[str, object]:
     if task in {"rababa_arabic", "rababa_arabic_pretrain"}:
         # Tashkeela is shipped with the repo at /opt/rababa/test-datasets/tashkeela.
         root = Path("/opt/rababa/test-datasets/tashkeela")
-    elif task in {"rababa_arabic_pro", "rababa_arabic_pro_pretrain"}:
+    elif task in {"rababa_arabic_pro", "rababa_arabic_pro_pretrain", "rababa_arabic_v2"}:
         # Merged corpus: GPLv2 Tashkeela-full + Sadeed HF + QCRI EMNLP 2025.
         # Built on first call, cached on the /datasets volume for re-use.
         root = Path("/datasets/arabic-combined")
@@ -123,7 +124,7 @@ def fetch_data(task: str) -> dict[str, object]:
             _build_arabic_combined_corpus(root)
         else:
             print(f"[fetch_data] combined Arabic corpus already present at {root}")
-    elif task in {"rababa_hebrew", "rababa_hebrew_pretrain"}:
+    elif task in {"rababa_hebrew", "rababa_hebrew_pretrain", "rababa_hebrew_seq2seq", "rababa_hebrew_byt5", "rababa_hebrew_byt5_base", "rababa_hebrew_byt5_freeze", "rababa_hebrew_byt5_ft", "rababa_hebrew_byt5_v2"}:
         # Assemble combined Hebrew corpus from Sefaria (Biblical) + distilled (Modern).
         sefaria = Path("/opt/rababa/data/sefaria")
         distilled = Path("/opt/rababa/data/hebrew-distilled")
@@ -142,6 +143,17 @@ def fetch_data(task: str) -> dict[str, object]:
                         parts.append(p.read_text(encoding="utf-8"))
                         break
             (combined / f"{split}.txt").write_text("".join(parts), encoding="utf-8")
+
+        # For v2: also add DictaBERT-distilled Wikipedia data (10K modern Hebrew lines)
+        if task == "rababa_hebrew_byt5_v2":
+            datasets_volume.reload()
+            dictabert_distilled = Path("/datasets/hebrew-dictabert-distilled/train.txt")
+            if dictabert_distilled.is_file():
+                extra = dictabert_distilled.read_text(encoding="utf-8")
+                with (combined / "train.txt").open("a", encoding="utf-8") as f:
+                    f.write(extra)
+                print(f"[fetch] added {len(extra.splitlines())} DictaBERT-distilled lines", flush=True)
+
         root = combined
     else:
         raise ValueError(f"fetch_data for {task!r} not implemented")
@@ -415,13 +427,14 @@ def _fetch_nakdimon_corpus(dest: Path) -> None:
 
 @app.function(
     gpu="A100",
-    timeout=6 * 60 * 60,
+    timeout=24 * 60 * 60,
     volumes={"/checkpoints": checkpoints_volume, "/datasets": datasets_volume},
 )
 def train(
     task: str,
     epochs: int | None = None,
     init_from_pretrain: str | None = None,
+    fresh: bool = False,
 ) -> dict[str, object]:
     """Run Tier 1 supervised training. Returns path to best checkpoint.
 
@@ -429,6 +442,8 @@ def train(
     Works for rababa_arabic (single-head) and rababa_hebrew (multi-head).
     """
     import torch
+
+    datasets_volume.reload()
 
     from rababa.config import load_task_config, to_dict
     from rababa.tasks import build_supervised_loaders
@@ -440,33 +455,80 @@ def train(
     if init_from_pretrain is not None:
         cfg.train.init_from_pretrain = init_from_pretrain
 
-    train_loader, val_loader = build_supervised_loaders(cfg)
-
     device = torch.device("cuda")
     ckpt_root = Path("/checkpoints") / task / "run-001"
+    metrics_path = Path("/checkpoints") / "metrics" / f"metrics-{task}-train.jsonl"
+    metrics_path.parent.mkdir(parents=True, exist_ok=True)
+    if fresh:
+        import shutil
+        if ckpt_root.is_dir():
+            shutil.rmtree(ckpt_root)
+            print(f"[fresh] removed existing {ckpt_root}")
+        if metrics_path.is_file():
+            metrics_path.unlink()
+            print(f"[fresh] removed existing {metrics_path}")
+        ckpt_root.mkdir(parents=True, exist_ok=True)
+
+    arch = to_dict(cfg).get("model", {}).get("arch", "")
+
+    # ByT5 path: use HuggingFace Seq2SeqTrainer (pretrained backbone).
+    if arch == "byt5_hebrew":
+        from rababa.models.byt5_hebrew import train_byt5
+        from rababa.datasets import _find_nakdimon_root
+        from pathlib import Path as _P
+        data_root = _find_nakdimon_root()
+
+        # For v2: append DictaBERT-distilled data to train corpus
+        if task == "rababa_hebrew_byt5_v2":
+            datasets_volume.reload()
+            extra = _P("/datasets/hebrew-dictabert-distilled/train.txt")
+            if extra.is_file():
+                train_path = _P(data_root) / "train.txt"
+                with train_path.open("a", encoding="utf-8") as f:
+                    f.write(extra.read_text(encoding="utf-8"))
+                print(f"[v2] appended DictaBERT-distilled data to train corpus", flush=True)
+
+        best_path = train_byt5(
+            cfg=to_dict(cfg),
+            train_path=_P(data_root) / "train.txt",
+            val_path=_P(data_root) / "val.txt",
+            ckpt_root=ckpt_root,
+            metrics_path=metrics_path,
+        )
+        checkpoints_volume.commit()
+        datasets_volume.commit()
+        return {"checkpoint_root": str(ckpt_root), "best": best_path}
+
+    train_loader, val_loader = build_supervised_loaders(cfg)
     train_supervised(
         train_loader=train_loader,
         val_loader=val_loader,
         cfg=to_dict(cfg),
         device=device,
         ckpt_root=ckpt_root,
+        metrics_path=metrics_path,
     )
     checkpoints_volume.commit()
+    datasets_volume.commit()
     return {"checkpoint_root": str(ckpt_root), "best": str(ckpt_root / "best.pt")}
 
 
 @app.function(
     gpu="A100",
-    timeout=6 * 60 * 60,
+    timeout=24 * 60 * 60,
     volumes={"/checkpoints": checkpoints_volume, "/datasets": datasets_volume},
 )
 def pretrain(task: str, epochs: int | None = None) -> dict[str, object]:
     """Run MLM pretraining. Returns path to best encoder checkpoint."""
     import torch
 
+    # Explicit reload: ensure we see files written by fetch_data's volume commit.
+    # Without this, the container's snapshot may be stale relative to the
+    # orchestrator's commit, leading to "corpus not found" failures.
+    datasets_volume.reload()
+
     from rababa.config import load_task_config, to_dict
     from rababa.tasks import build_mlm_loaders
-    from rababa.training import pretrain_mlm
 
     cfg = load_task_config(task)
     if epochs is not None:
@@ -474,17 +536,48 @@ def pretrain(task: str, epochs: int | None = None) -> dict[str, object]:
 
     train_loader, val_loader = build_mlm_loaders(cfg)
 
+    # Dispatch on cfg.train.pretrain_method (default: mlm).
+    method = cfg.train.get("pretrain_method", "mlm") if hasattr(cfg.train, "get") else "mlm"
     device = torch.device("cuda")
     ckpt_root = Path("/checkpoints") / task / "run-001"
-    pretrain_mlm(
-        train_loader=train_loader,
-        val_loader=val_loader,
-        cfg=to_dict(cfg),
-        device=device,
-        ckpt_root=ckpt_root,
-    )
+    metrics_path = Path("/checkpoints") / "metrics" / f"metrics-{task}-pretrain.jsonl"
+    metrics_path.parent.mkdir(parents=True, exist_ok=True)
+    if method == "electra":
+        from rababa.training.electra import pretrain_electra
+        pretrain_electra(
+            train_loader=train_loader,
+            val_loader=val_loader,
+            cfg=to_dict(cfg),
+            device=device,
+            ckpt_root=ckpt_root,
+            metrics_path=metrics_path,
+        )
+    elif method == "mtp":
+        from rababa.training.pretrain_mtp import pretrain_mtp
+        pretrain_mtp(
+            train_loader=train_loader,
+            val_loader=val_loader,
+            cfg=to_dict(cfg),
+            device=device,
+            ckpt_root=ckpt_root,
+            metrics_path=metrics_path,
+        )
+    else:
+        from rababa.training import pretrain_mlm
+        pretrain_mlm(
+            train_loader=train_loader,
+            val_loader=val_loader,
+            cfg=to_dict(cfg),
+            device=device,
+            ckpt_root=ckpt_root,
+            metrics_path=metrics_path,
+        )
     checkpoints_volume.commit()
-    return {"checkpoint_root": str(ckpt_root), "best": str(ckpt_root / "best.pt")}
+    return {
+        "checkpoint_root": str(ckpt_root),
+        "best": str(ckpt_root / "best.pt"),
+        "pretrain_method": method,
+    }
 
 
 @app.function(
@@ -550,6 +643,43 @@ def export_tflite(task: str, version: str, checkpoint: str | None = None) -> dic
 
 
 @app.function(
+    gpu="A100",
+    timeout=6 * 60 * 60,
+    volumes={"/checkpoints": checkpoints_volume, "/datasets": datasets_volume},
+)
+def _train_seed(task: str, seed: int) -> str:
+    """Train one model with a specific seed. Used by the multi_seed stage.
+
+    Returns the path to the trained checkpoint's best.pt.
+    """
+    from pathlib import Path
+    from rababa.config import load_task_config, to_dict
+    from rababa.tasks import build_supervised_loaders
+    from rababa.training import train_supervised
+    from rababa.training.multi_seed import _set_seed
+    import torch
+
+    datasets_volume.reload()
+    _set_seed(seed)
+    cfg = load_task_config(task)
+    train_loader, val_loader = build_supervised_loaders(cfg)
+    device = torch.device("cuda")
+    seed_root = Path("/checkpoints") / task / f"seed-{seed:03d}" / "run-001"
+    seed_root.mkdir(parents=True, exist_ok=True)
+    metrics_path = Path("/checkpoints") / "metrics" / f"metrics-{task}-seed-{seed:03d}.jsonl"
+    train_supervised(
+        train_loader=train_loader,
+        val_loader=val_loader,
+        cfg=to_dict(cfg),
+        device=device,
+        ckpt_root=seed_root,
+        metrics_path=metrics_path,
+    )
+    checkpoints_volume.commit()
+    return str(seed_root / "best.pt")
+
+
+@app.function(
     gpu="A10G",
     timeout=30 * 60,
     volumes={"/checkpoints": checkpoints_volume, "/datasets": datasets_volume},
@@ -574,13 +704,96 @@ def evaluate(task: str, checkpoint: str | None = None) -> dict[str, object]:
     if checkpoint is None:
         checkpoint = str(Path("/checkpoints") / task / "run-001" / "best.pt")
 
+    arch = cfg_dict.get("model", {}).get("arch", "")
+
+    # ByT5 path: load from HuggingFace checkpoint, use generate() + DER.
+    if arch == "byt5_hebrew":
+        from transformers import T5ForConditionalGeneration, ByT5Tokenizer
+        from rababa.models.byt5_hebrew import evaluate_byt5
+        from rababa.datasets import _find_nakdimon_root
+        from pathlib import Path as _P
+
+        ckpt_dir = checkpoint
+        if not _P(ckpt_dir).is_dir():
+            ckpt_dir = str(_P(checkpoint).parent / "best")
+        model = T5ForConditionalGeneration.from_pretrained(ckpt_dir).to(device)
+        tokenizer = ByT5Tokenizer.from_pretrained(ckpt_dir)
+        data_root = _find_nakdimon_root()
+        result = evaluate_byt5(model, tokenizer, _P(data_root) / "test.txt", device)
+        result["task"] = task
+        result["checkpoint"] = checkpoint
+        result["head_names"] = ["diacritized"]
+        import json
+        print("=== evaluate result (byt5) ===")
+        print(json.dumps(result, indent=2, default=str))
+        return result
+
     model = build_model(cfg_dict).to(device)
-    state = torch.load(checkpoint, map_location=device, weights_only=True)
+    state = torch.load(checkpoint, map_location=device, weights_only=False)
+    if isinstance(state, dict) and "model" in state:
+        state = state["model"]
     model.load_state_dict(state)
     model.eval()
 
     head_names = model.head_names()
-    loader = build_test_loader(task=task, batch_size=32)
+    if arch == "hebrew_seq2seq":
+        from rababa.models.hebrew_seq2seq import (
+            HebrewSeq2SeqDataset, hebrew_seq2seq_collate, build_hebrew_vocab,
+        )
+        from rababa.tasks import _get_data_root
+        from rababa.datasets import _find_nakdimon_root
+        from pathlib import Path as _P
+        from torch.utils.data import DataLoader as _DL
+        root = _get_data_root(cfg)
+        nakdimon_root = root if root else str(_find_nakdimon_root())
+        data_max_len = int(cfg.data.get("max_len", 200)) if hasattr(cfg.data, "get") else 200
+        vocab = build_hebrew_vocab(_P(nakdimon_root) / "train.txt")
+        test_ds = HebrewSeq2SeqDataset(_P(nakdimon_root) / "test.txt", vocab, max_len=data_max_len)
+        loader = _DL(test_ds, batch_size=32, shuffle=False, collate_fn=hebrew_seq2seq_collate)
+
+        total_wrong = 0
+        total_positions = 0
+        total_n = 0
+        with torch.no_grad():
+            for batch in loader:
+                src = batch.src.to(device)
+                src_kpm = src == model.pad_id
+                from rababa.evaluate import seq2seq_batch_der
+                der, n = seq2seq_batch_der(
+                    model, src, src_kpm, model.vocab, batch.raw, device,
+                )
+                total_wrong += int(der * n)
+                total_positions += n
+                total_n += src.size(0)
+
+        agg_der = total_wrong / max(1, total_positions)
+        result = {
+            "task": task,
+            "checkpoint": checkpoint,
+            "head_names": head_names,
+            "n_examples": total_n,
+            "per_head_der": [agg_der],
+            "per_head_per_example_accuracy": [1.0 - agg_der],
+            "der_aggregate": agg_der,
+            "der": agg_der,
+            "per_example_accuracy": 1.0 - agg_der,
+        }
+        import json
+        print("=== evaluate result (seq2seq) ===")
+        print(json.dumps(result, indent=2, default=str))
+        return result
+
+    if arch == "alephbert":
+        from rababa.models.alephbert import AlephBERTHebrewDataset
+        from rababa.tasks import _get_data_root, _get_max_len
+        root = _get_data_root(cfg)
+        max_len = _get_max_len(cfg)
+        test_ds = AlephBERTHebrewDataset("test", root=root, max_len=max_len)
+        from torch.utils.data import DataLoader
+        from rababa.training.collate import multi_head_collate_batch
+        loader = DataLoader(test_ds, batch_size=32, shuffle=False, collate_fn=multi_head_collate_batch)
+    else:
+        loader = build_test_loader(task=task, batch_size=32)
 
     head_der = [0.0] * len(head_names)
     head_acc = [0.0] * len(head_names)
@@ -623,6 +836,22 @@ def evaluate(task: str, checkpoint: str | None = None) -> dict[str, object]:
     print("=== evaluate result ===")
     print(json.dumps(result, indent=2, default=str))
     return result
+
+
+@app.function(
+    gpu="A100",
+    timeout=30 * 60,
+    volumes={"/checkpoints": checkpoints_volume, "/datasets": datasets_volume},
+)
+def ensemble_evaluate(
+    task: str,
+    n_seeds: int = 3,
+) -> dict[str, object]:
+    """Evaluate ensemble of N seed checkpoints on test split. Averages softmax
+    predictions across models for better DER.
+    """
+    from rababa.evaluate_ensemble import ensemble_evaluate as _ens_eval
+    return _ens_eval(task=task, n_seeds=n_seeds)
 
 
 # ---- Distillation: auto-label unpointed Hebrew via Dicta Nakdan API ----
@@ -902,11 +1131,21 @@ def run_sota_pipeline(
         mark_stage_done,
         mark_stage_failed,
         VolumeLogger,
+        MetricsLogger,
     )
 
     status_root = _Path("/checkpoints")
     log = VolumeLogger(status_root / "logs" / f"sota_pipeline-{task}.log")
+    metrics_log = MetricsLogger(status_root / "metrics" / f"metrics-{task}.jsonl")
     summary: dict[str, object] = {"task": task, "version": version, "stages": {}}
+
+    # Pull the latest committed volume state into our container's view.
+    # Without this, file-existence checks (`pretrain_best.is_file()`)
+    # use a snapshot from when our container started and miss files
+    # written by other containers (or earlier orchestrator runs).
+    checkpoints_volume.reload()
+    datasets_volume.reload()
+    models_volume.reload()
 
     # Stage keys include task so Hebrew "pretrain" done doesn't make Arabic
     # skip pretrain in non-force mode.
@@ -920,9 +1159,27 @@ def run_sota_pipeline(
 
     pretrain_task = f"{task}_pretrain"
     pretrain_best = _Path("/checkpoints") / pretrain_task / "run-001" / "best.pt"
+    # Fallback: if best.pt was never written (e.g. val_loss NaN), use the
+    # latest checkpoint-epoch-N.pt. Pretrain always writes those.
+    pretrain_latest = _Path("/checkpoints") / pretrain_task / "run-001"
     train_best = _Path("/checkpoints") / task / "run-001" / "best.pt"
     onnx_q8 = _Path("/models") / task / f"{task}-{version}-q8.onnx"
     tflite_path = _Path("/models") / task / f"{task}-{version}-fp32.tflite"
+
+    def _resolve_pretrain_ckpt() -> _Path | None:
+        """Return best.pt if present, else the highest-epoch checkpoint."""
+        if pretrain_best.is_file():
+            return pretrain_best
+        if pretrain_latest.is_dir():
+            # Sort by EPOCH NUMBER not lexicographically (so epoch-19 > epoch-9).
+            import re as _re
+            def _epoch_num(p: _Path) -> int:
+                m = _re.search(r"checkpoint-epoch-(\d+)\.pt$", p.name)
+                return int(m.group(1)) if m else -1
+            epoch_ckpts = [p for p in pretrain_latest.glob("checkpoint-epoch-*.pt") if _epoch_num(p) >= 0]
+            if epoch_ckpts:
+                return sorted(epoch_ckpts, key=_epoch_num)[-1]
+        return None
 
     # ---- 1. fetch_data -------------------------------------------------
     stage = "fetch"
@@ -970,6 +1227,11 @@ def run_sota_pipeline(
         log.log(f"[{stage}] starting pretrain({pretrain_task})")
         try:
             result = pretrain.remote(pretrain_task)
+            # Pull the pretrain container's writes into our view before
+            # checking best.pt existence on the next stage. Without reload,
+            # the orchestrator's volume view is from when it started and
+            # doesn't see best.pt → FileNotFoundError.
+            checkpoints_volume.reload()
             mark_stage_done(status_root, _stage_key(stage), extra=result if isinstance(result, dict) else {})
             checkpoints_volume.commit()
             summary["stages"][stage] = result
@@ -982,7 +1244,8 @@ def run_sota_pipeline(
 
     # ---- 3. supervised train -------------------------------------------
     stage = "train"
-    init_from = str(pretrain_best)
+    pretrain_ckpt = _resolve_pretrain_ckpt()
+    init_from = str(pretrain_ckpt) if pretrain_ckpt else None
     if skip_train or _done(stage) or (train_best.is_file() and not force):
         log.log(f"[{stage}] skipped (best exists={train_best.is_file()})")
         summary["stages"][stage] = {"skipped": True, "best": str(train_best)}
@@ -994,13 +1257,15 @@ def run_sota_pipeline(
                 shutil.rmtree(train_run)
                 log.log(f"[{stage}] force: wiped {train_run}")
             checkpoints_volume.commit()
-        if not pretrain_best.is_file():
-            raise FileNotFoundError(
-                f"pretrain checkpoint missing at {pretrain_best} — cannot fine-tune"
-            )
+        if pretrain_ckpt is None:
+            log.log(f"[{stage}] WARNING: no pretrain checkpoint — training from scratch")
+            init_from = None
+        else:
+            log.log(f"[{stage}] using pretrain checkpoint: {pretrain_ckpt}")
         log.log(f"[{stage}] starting train({task}) init_from={init_from}")
         try:
             result = train.remote(task, init_from_pretrain=init_from)
+            checkpoints_volume.reload()
             mark_stage_done(status_root, _stage_key(stage), extra=result if isinstance(result, dict) else {})
             checkpoints_volume.commit()
             summary["stages"][stage] = result
@@ -1013,6 +1278,19 @@ def run_sota_pipeline(
 
     # ---- 4. export ONNX + TFLite ---------------------------------------
     stage = "export"
+    # Fallback to latest checkpoint if best.pt missing.
+    train_ckpt = train_best
+    if not train_ckpt.is_file():
+        train_run_dir = _Path("/checkpoints") / task / "run-001"
+        if train_run_dir.is_dir():
+            import re as _re
+            def _epoch_num(p: _Path) -> int:
+                m = _re.search(r"checkpoint-epoch-(\d+)\.pt$", p.name)
+                return int(m.group(1)) if m else -1
+            epoch_ckpts = [p for p in train_run_dir.glob("checkpoint-epoch-*.pt") if _epoch_num(p) >= 0]
+            if epoch_ckpts:
+                train_ckpt = sorted(epoch_ckpts, key=_epoch_num)[-1]
+                log.log(f"[{stage}] best.pt missing — using {train_ckpt.name}")
     if skip_export or _done(stage) or (onnx_q8.is_file() and tflite_path.is_file() and not force):
         log.log(f"[{stage}] skipped (artifacts exist)")
         summary["stages"][stage] = {
@@ -1028,14 +1306,14 @@ def run_sota_pipeline(
                 shutil.rmtree(models_dir)
                 log.log(f"[{stage}] force: wiped {models_dir}")
             models_volume.commit()
-        if not train_best.is_file():
+        if not train_ckpt.is_file():
             raise FileNotFoundError(
-                f"train checkpoint missing at {train_best} — cannot export"
+                f"train checkpoint missing at {train_ckpt} — cannot export"
             )
-        log.log(f"[{stage}] starting export_onnx + export_tflite")
+        log.log(f"[{stage}] starting export_onnx + export_tflite from {train_ckpt}")
         try:
-            onnx_result = export_onnx.remote(task, version, checkpoint=str(train_best))
-            tflite_result = export_tflite.remote(task, version, checkpoint=str(train_best))
+            onnx_result = export_onnx.remote(task, version, checkpoint=str(train_ckpt))
+            tflite_result = export_tflite.remote(task, version, checkpoint=str(train_ckpt))
             result = {"onnx": onnx_result, "tflite": tflite_result}
             mark_stage_done(status_root, _stage_key(stage), extra=result)
             checkpoints_volume.commit()
@@ -1048,8 +1326,81 @@ def run_sota_pipeline(
             log.log(f"[{stage}] FAILED: {e}")
             raise
 
+    # ---- 6. multi_seed (optional) --------------------------------------
+    # Trains N additional seeds, then distills their ensemble into a single
+    # student. Skipped unless cfg.ensemble.enabled = true.
+    stage = "multi_seed"
+    from rababa.config import load_task_config as _load_cfg
+    _full_cfg = to_dict(_load_cfg(task))
+    _ens = _full_cfg.get("ensemble", {}) or {}
+    if not _ens.get("enabled", False):
+        summary["stages"][stage] = {"skipped": True, "reason": "ensemble not enabled"}
+    elif skip_train or _done(stage):
+        log.log(f"[{stage}] skipped")
+        summary["stages"][stage] = {"skipped": True}
+    else:
+        n_seeds = int(_ens.get("n_seeds", 3))
+        log.log(f"[{stage}] training {n_seeds} seeds")
+        try:
+            # Run N trainings as parallel Modal function calls.
+            seed_inputs = list(range(n_seeds))
+            teacher_paths = list(_train_seed.map(
+                [{"task": task, "seed": s} for s in seed_inputs]
+            ))
+            result = {"n_seeds": n_seeds, "teachers": teacher_paths}
+            mark_stage_done(status_root, _stage_key(stage), extra=result)
+            checkpoints_volume.commit()
+            summary["stages"][stage] = result
+            log.log(f"[{stage}] done: {result}")
+        except Exception as e:
+            mark_stage_failed(status_root, _stage_key(stage), str(e))
+            checkpoints_volume.commit()
+            log.log(f"[{stage}] FAILED: {e}")
+            # Non-fatal — pipeline continues with single-seed model.
+
+    # ---- 7. ensemble_distill (optional) --------------------------------
+    stage = "ensemble_distill"
+    if summary["stages"].get("multi_seed", {}).get("skipped"):
+        summary["stages"][stage] = {"skipped": True, "reason": "multi_seed skipped"}
+    elif _done(stage):
+        log.log(f"[{stage}] skipped")
+        summary["stages"][stage] = {"skipped": True}
+    else:
+        log.log(f"[{stage}] distilling ensemble into single student")
+        try:
+            import torch as _torch
+            from rababa.training.distill import distill_from_checkpoints
+            from rababa.tasks import build_supervised_loaders
+            teacher_paths_list = [Path(p) for p in summary["stages"]["multi_seed"]["teachers"]]
+            distilled_root = _Path("/checkpoints") / task / "run-002"
+            distilled_root.mkdir(parents=True, exist_ok=True)
+            train_loader, val_loader = build_supervised_loaders(load_task_config(task))
+            distill_from_checkpoints(
+                teacher_paths=teacher_paths_list,
+                train_loader=train_loader,
+                val_loader=val_loader,
+                cfg=to_dict(load_task_config(task)),
+                device=_torch.device("cuda"),
+                ckpt_root=distilled_root,
+            )
+            result = {
+                "checkpoint_root": str(distilled_root),
+                "best": str(distilled_root / "best.pt"),
+                "teachers": [str(p) for p in teacher_paths_list],
+            }
+            mark_stage_done(status_root, _stage_key(stage), extra=result)
+            checkpoints_volume.commit()
+            summary["stages"][stage] = result
+            log.log(f"[{stage}] done: {result}")
+        except Exception as e:
+            mark_stage_failed(status_root, _stage_key(stage), str(e))
+            checkpoints_volume.commit()
+            log.log(f"[{stage}] FAILED: {e}")
+            # Non-fatal.
+
     log.log(f"PIPELINE COMPLETE: {summary}")
     log.close()
+    metrics_log.close()
     checkpoints_volume.commit()
     return summary
 
@@ -1095,4 +1446,36 @@ def sota_pipeline(
     )
     print(f"Pipeline result: {result}")
     return result
+
+
+@app.local_entrypoint()
+def multi_seed(
+    task: str = "rababa_hebrew_sota",
+    n_seeds: int = 3,
+):
+    """Fire-and-forget multi-seed training for ensembling.
+
+    Trains `n_seeds` models in parallel, each with a different seed.
+    Resulting checkpoints land at /checkpoints/{task}/seed-{N:03d}/run-001/best.pt
+    for downstream ensemble + distillation.
+
+    Usage:
+        modal run --detach modal_app.py::multi_seed --task rababa_hebrew_sota
+    """
+    import concurrent.futures
+    print(f"Launching {n_seeds} seeds for task={task}")
+    seed_ids = list(range(n_seeds))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=n_seeds) as pool:
+        futures = {pool.submit(_train_seed.remote, task, s): s for s in seed_ids}
+        results = {}
+        for fut in concurrent.futures.as_completed(futures):
+            seed = futures[fut]
+            try:
+                results[seed] = fut.result()
+                print(f"  seed {seed} done: {results[seed]}")
+            except Exception as e:
+                print(f"  seed {seed} failed: {e}", flush=True)
+                results[seed] = None
+    print(f"All seeds complete: {results}")
+    return results
 

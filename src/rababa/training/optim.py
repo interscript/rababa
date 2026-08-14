@@ -34,19 +34,30 @@ from torch import nn
 # ---- Newton-Schulz orthogonalization ----------------------------------
 
 
+# DS-V4-Flash §2.4 hybrid NS: two-stage coefficients.
+# Stage 1 (aggressive, drives singular values close to 1).
+_NS_COEFFS_AGGRESSIVE = (3.4445, -4.7750, 2.0315)
+# Stage 2 (stable, lands singular values precisely at 1).
+_NS_COEFFS_STABLE = (2.0, -1.5, 0.5)
+
+
 @torch.no_grad()
 def zeropower_via_newtonschulz5(G: torch.Tensor, steps: int = 5, eps: float = 1e-7) -> torch.Tensor:
     """Newton-Schulz iteration: compute approx-orthogonal factor of G.
 
-    Standard Muon helper from KellerJordan/muon. Coefficients (a, b, c)
-    are the optimal values for 5-iteration NS on the matrix sign function.
+    DS-V4-Flash §2.4 hybrid Newton-Schulz: first ~80% of iterations use
+    aggressive coefficients (3.4445, -4.7750, 2.0315) for rapid convergence,
+    last ~20% use stable coefficients (2, -1.5, 0.5) to land singular values
+    precisely at 1. For 5 steps: 4+1 split. For 10 steps: 8+2 (paper recipe).
+
     Operates in bfloat16 for speed; result is cast back to G's dtype.
     """
     assert G.ndim == 2
-    a, b, c = (3.4445, -4.7750, 2.0315)
+    aggressive_steps = max(1, int(0.8 * steps))
     X = G.to(torch.bfloat16)
     X = X / (X.norm() + eps)
-    for _ in range(steps):
+    for i in range(steps):
+        a, b, c = _NS_COEFFS_AGGRESSIVE if i < aggressive_steps else _NS_COEFFS_STABLE
         A = X @ X.T
         B = b * A + c * (A @ A)
         X = a * X + B @ X
@@ -76,8 +87,18 @@ class Muon(torch.optim.Optimizer):
         momentum: float = 0.95,
         ns_steps: int = 5,
         weight_decay: float = 0.0,
+        update_rms_rescale: float | None = None,
+        spectral_cap: float | None = None,
+        heavy_tail_alpha: float | None = None,
+        adamuon_beta: float | None = None,
+        normuon_enabled: bool = False,
     ) -> None:
-        defaults = dict(lr=lr, momentum=momentum, ns_steps=ns_steps, weight_decay=weight_decay)
+        defaults = dict(
+            lr=lr, momentum=momentum, ns_steps=ns_steps,
+            weight_decay=weight_decay, update_rms_rescale=update_rms_rescale,
+            spectral_cap=spectral_cap, heavy_tail_alpha=heavy_tail_alpha,
+            adamuon_beta=adamuon_beta, normuon_enabled=normuon_enabled,
+        )
         super().__init__(params, defaults)
 
     @torch.no_grad()
@@ -88,10 +109,18 @@ class Muon(torch.optim.Optimizer):
             mom = group["momentum"]
             ns_steps = group["ns_steps"]
             wd = group["weight_decay"]
+            rms_rescale = group.get("update_rms_rescale")
+            spectral_cap = group.get("spectral_cap")
+            heavy_tail_alpha = group.get("heavy_tail_alpha")
+            adamuon_beta = group.get("adamuon_beta")
+            normuon_enabled = group.get("normuon_enabled", False)
             for p in group["params"]:
                 if p.grad is None:
                     continue
                 g = p.grad
+                # Skip bad grads (NaN/Inf from numerical instability).
+                if not torch.isfinite(g).all():
+                    continue
                 state = self.state[p]
                 if "momentum_buffer" not in state:
                     state["momentum_buffer"] = torch.zeros_like(g)
@@ -101,7 +130,59 @@ class Muon(torch.optim.Optimizer):
                     buf.add_(p, alpha=wd)
                 if g.ndim == 2 and min(g.shape) >= 2:
                     update = zeropower_via_newtonschulz5(buf, steps=ns_steps)
-                    scale = max(1.0, math.sqrt(max(g.shape) / min(g.shape)))
+                    # NS can diverge in bf16 → skip if update not finite.
+                    if not torch.isfinite(update).all():
+                        continue
+                    # Spectral Cap (2026): cap the spectral radius of orthogonalized
+                    # updates to prevent optimizer instability in long training runs.
+                    # The orthogonalized update has singular values near 1; the cap
+                    # ensures none exceeds `spectral_cap` (default off → None).
+                    if spectral_cap is not None:
+                        # Cheap proxy: clip Frobenius norm to spectral_cap * sqrt(min_dim).
+                        # Full SVD-based cap is too expensive per step.
+                        max_frob = spectral_cap * math.sqrt(min(g.shape))
+                        frob = update.norm() + 1e-8
+                        scale = torch.clamp(max_frob / frob, max=1.0)
+                        update = update * scale
+                    # HTMuon heavy-tail correction (arXiv:2603.10067, ACL 2026):
+                    # re-inject heavy tails suppressed by orthogonalization.
+                    # α-blend the orthogonalized update with raw momentum to
+                    # restore heavier-tailed weight spectra (HT-SR theory).
+                    if heavy_tail_alpha is not None and heavy_tail_alpha > 0:
+                        update = (1 - heavy_tail_alpha) * update + heavy_tail_alpha * buf
+                    # AdaMuon (arXiv:2507.11005): element-wise second-moment
+                    # estimator on the orthogonalized update direction. Adam-style
+                    # adaptivity on the orthogonal projection. Sign-stabilized
+                    # by construction (NS output signs track momentum signs).
+                    if adamuon_beta is not None:
+                        if "v_buffer" not in state:
+                            state["v_buffer"] = torch.zeros_like(update)
+                            state["step"] = 0
+                        state["step"] += 1
+                        v_buf = state["v_buffer"]
+                        v_buf.mul_(adamuon_beta).addcmul_(update, update, value=1 - adamuon_beta)
+                        # Bias correction (like Adam): v_buf is biased toward 0
+                        # at startup, dividing by it amplifies updates ~10x.
+                        # Correct: v_hat = v / (1 - beta^t).
+                        bias_corr = 1.0 - adamuon_beta ** state["step"]
+                        v_hat = v_buf / bias_corr
+                        denom = v_hat.sqrt().add_(1e-8)
+                        update = update / denom
+                    # NorMuon (arXiv:2510.05491): neuron-wise adaptive scaling.
+                    # Normalizes each neuron's (row's) update to uniform magnitude,
+                    # fixing Muon's per-neuron non-uniformity problem.
+                    if normuon_enabled:
+                        # Treat each row as a neuron (PyTorch Linear convention).
+                        row_norms = update.norm(dim=-1, keepdim=True) + 1e-8
+                        # Rescale so every row has the mean row norm.
+                        mean_norm = row_norms.mean().clamp_min(1e-8)
+                        update = update * (mean_norm / row_norms)
+                    if rms_rescale is not None:
+                        # DS-V4-Flash §2.4: scale = sqrt(max(n,m)) * γ where
+                        # γ=0.18 lets us reuse AdamW LR for Muon params.
+                        scale = math.sqrt(max(g.shape)) * rms_rescale
+                    else:
+                        scale = max(1.0, math.sqrt(max(g.shape) / min(g.shape)))
                     p.add_(update, alpha=-lr * scale)
                 else:
                     # 1D / non-matrix: SGD with momentum.
@@ -114,6 +195,14 @@ class Muon(torch.optim.Optimizer):
 
 class MuonAdamWHybrid:
     """K3/DS4 hybrid optimizer: Muon for 2D weights, AdamW for everything else.
+
+    Optional `cross_attn_lr_mult` lets specific param groups (matched by
+    name substring) get a different LR. Useful when one component (e.g.
+    cross-attention in seq2seq) needs a higher LR to escape mode collapse.
+
+    When `use_per_head_muon=True`, the inner Muon is replaced with
+    `PerHeadMuon` (K3 SOTA) which orthogonalizes per-head slices of
+    attention weights instead of the whole matrix.
 
     Wrapper that exposes the standard optimizer API (step, zero_grad,
     state_dict, load_state_dict) so it's a drop-in replacement for
@@ -138,25 +227,83 @@ class MuonAdamWHybrid:
         muon_momentum: float = 0.95,
         adam_weight_decay: float = 0.01,
         ns_steps: int = 5,
+        cross_attn_lr_mult: float = 1.0,
+        use_per_head_muon: bool = False,
+        heads_hint: int | None = None,
+        spectral_cap: float | None = None,
+        heavy_tail_alpha: float | None = None,
+        adamuon_beta: float | None = None,
+        normuon_enabled: bool = False,
     ) -> None:
         muon_params: list[nn.Parameter] = []
         adam_params: list[nn.Parameter] = []
+        cross_attn_params: list[nn.Parameter] = []
+        param_name_map: dict[int, str] = {}
         for name, p in model.named_parameters():
+            param_name_map[id(p)] = name
             if not p.requires_grad:
                 continue
-            if p.ndim == 2 and "embedding" not in name and "norm" not in name:
+            is_cross_attn = (
+                cross_attn_lr_mult != 1.0
+                and ("q_cross" in name or "kv_cross" in name or "out_cross" in name)
+            )
+            if is_cross_attn:
+                cross_attn_params.append(p)
+            elif (
+                p.ndim == 2
+                and "embedding" not in name
+                and "norm" not in name
+                and "router" not in name
+                and ".moe." not in name
+                # Output heads (heads.0.weight, seg_head.weight) are small
+                # rectangular matrices (e.g. 384×16) where Muon's NS
+                # orthogonalization over-scales updates by sqrt(max/min) ≈ 5×,
+                # destroying the head's gradient signal. Route to AdamW.
+                and ".heads." not in name
+                and "head." not in name
+                and "seg_head" not in name
+                and "out_proj" not in name  # small attention output projections
+            ):
                 muon_params.append(p)
             else:
                 adam_params.append(p)
-        self.muon = Muon(
-            muon_params,
-            lr=muon_lr,
-            momentum=muon_momentum,
-            ns_steps=ns_steps,
-        )
-        self.adam = torch.optim.AdamW(adam_params, lr=adam_lr, weight_decay=adam_weight_decay)
+        if use_per_head_muon:
+            from .per_head_muon import PerHeadMuon
+            self.muon = PerHeadMuon(
+                muon_params,
+                lr=muon_lr,
+                momentum=muon_momentum,
+                ns_steps=ns_steps,
+                heads_hint=heads_hint,
+            )
+        else:
+            self.muon = Muon(
+                muon_params,
+                lr=muon_lr,
+                momentum=muon_momentum,
+                ns_steps=ns_steps,
+                spectral_cap=spectral_cap,
+                heavy_tail_alpha=heavy_tail_alpha,
+                adamuon_beta=adamuon_beta,
+                normuon_enabled=normuon_enabled,
+            )
+        # Expose param names to the Muon optimizer for per-head detection.
+        self.muon._param_names = param_name_map  # type: ignore[attr-defined]
+        adam_groups = [
+            {"params": adam_params, "lr": adam_lr, "weight_decay": adam_weight_decay},
+        ]
+        if cross_attn_params:
+            adam_groups.append({
+                "params": cross_attn_params,
+                "lr": adam_lr * cross_attn_lr_mult,
+                "weight_decay": adam_weight_decay,
+            })
+        self.adam = torch.optim.AdamW(adam_groups)
         self._muon_param_ids = {id(p) for p in muon_params}
         self._adam_param_ids = {id(p) for p in adam_params}
+        self._cross_attn_param_ids = {id(p) for p in cross_attn_params}
+        self.cross_attn_lr_mult = cross_attn_lr_mult
+        self.use_per_head_muon = use_per_head_muon
 
     @property
     def param_groups(self) -> list[dict]:

@@ -65,17 +65,27 @@ def load_resume_state(
 
     Returns the checkpoint dict (contains 'epoch', 'best_val_loss', etc.).
     Optimizer and scheduler are optional — pass None to skip restoring them.
+
+    Tolerates two checkpoint formats:
+      - Resumable dict: `{"model": ..., "optimizer": ..., ...}` (current)
+      - Raw state_dict: `{param_name: tensor, ...}` (legacy best.pt saves)
+    The legacy format only restores model weights — no optimizer/scheduler.
     """
     state = torch.load(path, map_location=device, weights_only=False) if device else torch.load(path, weights_only=False)
-    model.load_state_dict(state["model"])
-    if optimizer is not None and "optimizer" in state:
-        optimizer.load_state_dict(state["optimizer"])
-    if scheduler is not None and "scheduler" in state:
-        try:
-            scheduler.load_state_dict(state["scheduler"])
-        except Exception:
-            pass  # scheduler state may not round-trip cleanly across versions
-    return state
+    # Detect legacy raw state_dict (no "model" key, has parameter-tensor values).
+    if "model" in state:
+        model.load_state_dict(state["model"])
+        if optimizer is not None and "optimizer" in state:
+            optimizer.load_state_dict(state["optimizer"])
+        if scheduler is not None and "scheduler" in state:
+            try:
+                scheduler.load_state_dict(state["scheduler"])
+            except Exception:
+                pass
+        return state
+    # Legacy: state IS the state_dict.
+    model.load_state_dict(state)
+    return {"model": state, "epoch": -1, "best_val_loss": None}
 
 
 def save_resumable_checkpoint(
@@ -166,29 +176,51 @@ def mark_stage_failed(
 
 
 class VolumeLogger:
-    """Tee writes to both stdout and a log file on the volume.
+    """Tee writes to stdout + a local file.
+
+    Writes go to `/tmp/...` (container-local, NOT on a volume) so that
+    Modal's `volume.reload()` works without "open files" errors. The
+    `sync_to_volume(dst_path)` method copies the local log to a volume
+    path at safe points (between stages, never during a reload).
 
     Used inside Modal functions so that even if the local session is
     disconnected, the log file persists on the volume for later retrieval.
     """
 
     def __init__(self, log_path: Path) -> None:
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        self._fh = log_path.open("a", encoding="utf-8")
+        """Args:
+            log_path: INTENDED volume path (used by sync_to_volume and as
+                the canonical location). Day-to-day writes go to a /tmp
+                mirror to avoid blocking volume.reload().
+        """
+        self.volume_path = log_path
+        # Mirror path: same filename under /tmp.
+        self.local_path = Path("/tmp") / log_path.name
+        self.local_path.parent.mkdir(parents=True, exist_ok=True)
+        if not self.local_path.is_file():
+            self.local_path.touch()
 
     def log(self, msg: str) -> None:
         ts = time.strftime("%Y-%m-%d %H:%M:%S")
         line = f"[{ts}] {msg}"
         print(line, flush=True)
-        self._fh.write(line + "\n")
-        self._fh.flush()
+        with self.local_path.open("a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+
+    def sync_to_volume(self) -> None:
+        """Copy local log to the volume path. Call between stages."""
+        self.volume_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            self.volume_path.write_text(self.local_path.read_text(encoding="utf-8"), encoding="utf-8")
+        except OSError:
+            pass  # best-effort
 
     def close(self) -> None:
-        try:
-            self._fh.close()
-        except Exception:
-            pass
+        self.sync_to_volume()
 
 
 # Late import to keep this module dependency-light for non-PyTorch callers.
 import torch  # noqa: E402  (intentional late import)
+
+# Re-export MetricsLogger so callers can do `from .resume import VolumeLogger, MetricsLogger`.
+from .metrics import MetricsLogger  # noqa: E402  (intentional late import)

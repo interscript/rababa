@@ -1,0 +1,43 @@
+# rababa_arabic_v2 — proven 5M architecture on the full 2.1M combined corpus.
+#
+# The 40M MoE model was too slow (7+ hours/epoch). This config uses the
+# proven 6L/384d architecture (5M params, no MoE) on the combined corpus
+# (Tashkeela + Sadeed, 2.1M examples). Should complete in ~2-3 hours.
+#
+# The 5M model already gets 2.42% DER on ~75K Tashkeela examples.
+# With 28x more data (2.1M combined), expect DER ~1.5-2.0%.
+
+name: rababa_arabic_v2
+description: Arabic 5M on combined 2.1M corpus (Tashkeela + Sadeed)
+kind: rababa
+tier: 1
+
+data:
+  module: tashkeela
+  cleaner: arabic
+  root: /datasets/arabic-combined
+
+model:
+  dim: 384
+  layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.1
+  max_len: 200
+  batch_size: 64
+
+train:
+  epochs: 15
+  batch_size: 64
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 1000
+  grad_clip: 1.0
+  fp16: true
+  label_smoothing: 0.1
+  init_from_pretrain: null
+  early_stopping_patience: 3
+
+eval:
+  v0.5.0_max_der: 0.02
+  v1.0.0_max_der: 0.015

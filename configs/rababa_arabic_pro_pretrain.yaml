@@ -27,6 +27,17 @@ model:
   dropout: 0.1
   max_len: 256
   batch_size: 32
+  # ---- v0.6.0 Qwen3 stack (matches supervised config) ----
+  kv_heads: 2
+  qk_norm: true
+  norm_type: rmsnorm
+  rope_base: 1000000.0
+  ffn_type: moe
+  moe:
+    n_experts: 16
+    expert_dim: 512
+    top_k: 2
+    shared_experts: 0
 
 train:
   epochs: 6
@@ -41,6 +52,10 @@ train:
   muon_momentum: 0.95
   ns_steps: 5
   scheduler: cosine
+  # Pretrain objective: MTP (DeepSeek V4) — predicts N tokens per position.
+  # ~1.5x more sample-efficient than MLM at the cost of an extra head.
+  pretrain_method: mtp
+  mtp_n_predict: 2
 
 eval:
   v0.1.0_max_val_loss: 2.3

@@ -1,0 +1,66 @@
+{
+  "onnx_path": "models/rababa_hebrew/rababa_hebrew-v0.1.0-q8.onnx",
+  "onnx_size_bytes": 10975259,
+  "task": "rababa_hebrew",
+  "split": "test",
+  "cleaner": "hebrew",
+  "n_examples": 96,
+  "n_batches": 3,
+  "head_names": [
+    "niqqud",
+    "dagesh",
+    "sin"
+  ],
+  "per_head_der": [
+    0.5819132676427672,
+    0.1361058714372957,
+    0.09641474535091556
+  ],
+  "per_head_per_example_accuracy": [
+    0.0,
+    0.07291666666666667,
+    0.7291666666666666
+  ],
+  "der_aggregate": 0.6076416760314657,
+  "der": 0.6076416760314657,
+  "per_example_accuracy": 0.0,
+  "io_contract": {
+    "input_names": [
+      "src",
+      "lengths"
+    ],
+    "input_shapes": [
+      [
+        32,
+        200
+      ],
+      [
+        32
+      ]
+    ],
+    "output_names": [
+      "niqqud",
+      "dagesh",
+      "sin"
+    ],
+    "output_shapes": [
+      [
+        32,
+        200,
+        16
+      ],
+      [
+        32,
+        200,
+        3
+      ],
+      [
+        32,
+        200,
+        4
+      ]
+    ],
+    "has_lengths_input": true,
+    "fixed_batch_size": 32
+  }
+}

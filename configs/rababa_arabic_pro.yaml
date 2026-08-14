@@ -34,6 +34,25 @@ model:
   max_len: 256
   batch_size: 32
   with_seg_head: true
+  # ---- v0.6.0 Qwen3 stack ----
+  # GQA: 8 query heads, 2 KV heads (4:1 group size, Qwen3-235B ratio).
+  kv_heads: 2
+  # QK-Norm: RMSNorm on Q/K vectors before attention (Qwen-Max).
+  qk_norm: true
+  # Zero-centered RMSNorm disabled — unstable in our setup (NaN after few epochs).
+  # norm_type: zero_centered
+  norm_type: rmsnorm
+  # ABF: Adjusted Base Frequency for RoPE (Qwen3-S3 recipe).
+  # Base bumped from 10k → 1M for long-context extrapolation.
+  rope_base: 1000000.0
+  # Fine-grained MoE: 16 routed experts, top-2 activated, no shared experts
+  # (Qwen3 recipe, scaled for our 40M-param budget).
+  ffn_type: moe
+  moe:
+    n_experts: 16
+    expert_dim: 512
+    top_k: 2
+    shared_experts: 0
 
 train:
   epochs: 20
@@ -50,6 +69,11 @@ train:
   muon_lr: 0.02
   muon_momentum: 0.95
   ns_steps: 5
+  # QK-Clip (Kimi K2 MuonClip recipe). Anneals attention-logit bound
+  # tau from 8 → 1 over training to prevent logit explosion.
+  qk_clip_every: 50
+  qk_clip_tau_init: 8.0
+  qk_clip_tau_final: 1.0
 
 eval:
   v0.5.0_max_der: 0.04

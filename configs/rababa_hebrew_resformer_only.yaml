@@ -1,0 +1,76 @@
+# rababa_hebrew_resformer_only — Ablation: ResFormer WITHOUT DS-V4 stack.
+#
+# Purpose: isolate ResFormer's contribution. Baseline (rababa_hebrew) has
+# Qwen3 stack only. This config adds ResFormer on top of baseline — no
+# DS-V4 techniques (no SwiGLU clamping, no attention sink, no sqrt_softplus).
+#
+# Compare against:
+#   - rababa_hebrew (baseline): Qwen3 only.
+#   - rababa_hebrew_dsv4: Qwen3 + DS-V4 Tier 1.
+#   - rababa_hebrew_resformer: Qwen3 + DS-V4 Tier 1 + ResFormer + Muon variants.
+#
+# If rababa_hebrew_resformer_only ≈ rababa_hebrew_resformer, then ResFormer
+# alone captures most of the gain and DS-V4 techniques are redundant.
+# If rababa_hebrew_resformer_only > rababa_hebrew but < rababa_hebrew_resformer,
+# both contribute complementary improvements.
+
+name: rababa_hebrew_resformer_only
+description: Hebrew diacritization + ResFormer ablation (no DS-V4 stack).
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 200
+
+model:
+  arch: modern_multi_head
+  dim: 384
+  layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.1
+  max_len: 512
+  batch_size: 32
+  head_sizes: [16, 3, 4]
+  # ---- Same Qwen3 stack as baseline ----
+  kv_heads: 2
+  qk_norm: true
+  norm_type: rmsnorm
+  rope_base: 1000000.0
+  ffn_type: moe
+  moe:
+    n_experts: 8
+    expert_dim: 384
+    top_k: 2
+    shared_experts: 0
+  # ---- ResFormer ONLY (no DS-V4 stack) ----
+  resformer:
+    mode: sparse
+    n_last_layers: 2
+    lambda1: 5.0
+    lambda2: 1.0
+
+train:
+  epochs: 15
+  batch_size: 32
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  fp16: true
+  label_smoothing: 0.1
+  init_from_pretrain: null
+  optimizer: muon
+  muon_lr: 0.02
+  muon_momentum: 0.95
+  ns_steps: 5
+  qk_clip_every: 50
+  qk_clip_tau_init: 8.0
+  qk_clip_tau_final: 1.0
+
+eval:
+  v0.1.0_max_der: 0.12
+  v0.5.0_max_der: 0.08
+  v1.0.0_max_der: 0.06

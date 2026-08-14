@@ -1,0 +1,35 @@
+# rababa_hebrew_byt5_v2 — ByT5-small on expanded corpus (gold + DictaBERT-distilled).
+#
+# Previous: 56K examples → 16.97% DER
+# New: 56K gold + 10K DictaBERT-distilled Wikipedia = ~66K examples
+# The DictaBERT-distilled data adds MODERN Hebrew domain diversity
+# (existing gold is mostly Biblical/Rabbinic from Sefaria).
+
+name: rababa_hebrew_byt5_v2
+description: Hebrew ByT5-small on expanded corpus with DictaBERT-distilled data
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 512
+
+model:
+  arch: byt5_hebrew
+  model_name: google/byt5-small
+  max_len: 512
+
+train:
+  epochs: 15
+  batch_size: 8
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  label_smoothing: 0.1
+
+eval:
+  v0.1.0_max_der: 0.12
+  v0.5.0_max_der: 0.10
+  v1.0.0_max_der: 0.08

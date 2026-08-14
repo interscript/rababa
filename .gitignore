@@ -30,3 +30,17 @@ python/__pycache__/
 # Editor
 .idea/
 .vscode/
+
+# Data caches and artifacts — fetched/cloned at build time
+data/
+models/
+runs/
+.arwiki-repo/
+.hebrew-distilled-repo/
+.hewiki-repo/
+.sefaria-repo/
+.tashkeela-repo/
+.tashkeela-full-repo/
+.venv-dictabert/
+*.bak
+python/arabic/util/constants_[A-Z]*.py

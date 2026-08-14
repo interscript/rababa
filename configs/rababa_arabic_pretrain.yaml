@@ -1,0 +1,38 @@
+# rababa_arabic_pretrain — MLM pretraining config.
+#
+# Char-level masked-LM pretraining on undiacritized Tashkeela text.
+# Output: encoder checkpoint consumed by `rababa_arabic` fine-tune.
+
+name: rababa_arabic_pretrain
+description: Arabic char-level MLM pretraining (Tier 0).
+kind: rababa_mlm
+
+data:
+  module: tashkeela
+  cleaner: arabic
+  mask_prob: 0.15
+  max_len: 200
+
+model:
+  dim: 384
+  layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.1
+  max_len: 200
+  batch_size: 64
+
+train:
+  epochs: 15
+  batch_size: 64
+  learning_rate: 5.0e-4
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  fp16: true
+  optimizer: adamw
+  scheduler: cosine
+
+eval:
+  # MLM val perplexity target (lower is better).
+  v0.1.0_max_val_loss: 2.5

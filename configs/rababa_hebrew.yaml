@@ -24,6 +24,26 @@ model:
   max_len: 512
   batch_size: 32
   head_sizes: [16, 3, 4]   # niqqud, dagesh, sin (matches legacy ONNX)
+  # ---- v0.6.0 Qwen3 stack ----
+  # GQA: 6 query heads, 2 KV heads (3:1 group size).
+  kv_heads: 2
+  # QK-Norm: RMSNorm on Q/K vectors before attention (Qwen-Max).
+  qk_norm: true
+  # Zero-centered RMSNorm (Qwen3.5): UNSTABLE in our setup (gamma stays ≈ 0
+  # during supervised training → no normalization → activations explode → NaN
+  # after a few epochs). Disabled; using standard RMSNorm (gamma init=1) which
+  # actually normalizes. Re-enable when paired with tighter grad clipping.
+  # norm_type: zero_centered
+  norm_type: rmsnorm
+  # ABF: Adjusted Base Frequency for RoPE (Qwen3-S3 recipe).
+  rope_base: 1000000.0
+  # Fine-grained MoE: 8 routed experts, top-2 activated, no shared experts.
+  ffn_type: moe
+  moe:
+    n_experts: 8
+    expert_dim: 384
+    top_k: 2
+    shared_experts: 0
 
 train:
   epochs: 15
@@ -41,6 +61,10 @@ train:
   muon_lr: 0.02
   muon_momentum: 0.95
   ns_steps: 5
+  # QK-Clip (Kimi K2 MuonClip recipe).
+  qk_clip_every: 50
+  qk_clip_tau_init: 8.0
+  qk_clip_tau_final: 1.0
 
 eval:
   v0.1.0_max_der: 0.12
