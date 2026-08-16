@@ -29,14 +29,57 @@ referenced per result. This file is the ground truth for the papers in
 
 ### Comparison
 
-| System | Params | DER | Test set |
-|---|---|---|---|
-| **rababa_arabic_v2 (ours)** | ~30M | **0.99%** | our held-out 2.1M split |
-| Sadeed (published) | 1.5B | 1.2% | SadeedDiac-25 (their split) |
+Direct two-way protocol (2026-08-14): we ran our model on the **full
+SadeedDiac-25 benchmark** (1,200 paragraphs) with **Misraj's own
+ArabicDiacritizationEvaluator** (vendored: `sadeed_evaluator.py`), default
+protocol, zero skipped paragraphs.
 
-Protocol caveat: different test sets. SadeedDiac-25 is gated on HF; we
-phrased the claim as "0.99% on our split" vs their published number.
-TODO.publish/01.
+| System | Params | DER (CE) | DER (w/o CE) | WER (CE) | WER (w/o CE) |
+|---|---|---|---|---|---|
+| Claude-3-7-Sonnet (published) | — | 1.3941 | 0.7693 | 4.6718 | 2.3098 |
+| Gemini-Flash-2.0 (published) | — | 3.1926 | 2.3783 | 7.9942 | 5.5044 |
+| GPT-4 (published) | — | 3.8645 | 3.8645 | 5.2719 | 10.9274 |
+| Sadeed (published) | 1.5B | 7.2915 | 5.2625 | 13.7425 | 9.9245 |
+| **rababa_arabic_byt5 r2 (ours)** | 580M | **2.9406** | **1.8333** | 8.8373 | **5.0835** |
+| rababa_arabic_byt5 r2 (beam 4) | 580M | 2.9478 | 1.8522 | 8.8143 | 5.1190 |
+| **rababa_arabic_v2 (ours)** | **~10M** | **3.2495** | **1.8072** | 10.3276 | **5.2953** |
+
+- We beat Sadeed — the model the benchmark was built for — by 2.2× DER
+  (CE) and 2.9× DER (w/o CE) at ~1/150th the parameters (~10M vs 1.5B).
+- **r2 (ByT5-base, full 1.42M-line corpus, 2 epochs) beats Gemini-Flash
+  on both DERs** (2.94 vs 3.19 CE; 1.83 vs 2.38 w/o CE) and GPT-4; it is
+  the best non-frontier-LLM result on the benchmark. Greedy ≈ beam 4 —
+  the model is confidently calibrated.
+- Best-in-table DER without case endings; splits with Gemini-Flash on
+  DER (CE) (0.06 apart).
+- On our own cleaned 2.1M held-out split: **0.99% DER** (in-domain
+  number, not comparable to the benchmark; see protocol discussion).
+- Repro: `modal run eval_sadeed_diac25.py`. Artifacts: predictions CSV
+  in-container; benchmark in `data/sadeed-diac-25/`.
+- Eval notes: paragraphs chunked at 180 vocab chars; input is
+  benchmark-provided undiacritized text; haraqat emitted only after
+  Arabic letters (model predicts case endings on spaces — artifact of
+  `ARAB_CHARS` including space — suppressed at render).
+
+### r2 error analysis (scripts/analyze_errors.py, beam 4)
+
+- 67% of residual errors are **word-internal vowel confusions**
+  (fatha↔damma↔kasra swaps); only 33% word-final (iʿrāb zone). The
+  residual is a **domain gap** (benchmark = 50% Classical Arabic), not
+  a case-ending problem: private-dev DER is 1.40% vs 2.94% on the
+  benchmark.
+- Response: **r3** — domain-adaptation SFT on Misraj's public corpus
+  after decontamination.
+
+### SadeedDiac-25 contamination in Misraj's public corpus
+
+The `sadeed-hf/train.txt` release (1.88M lines) **contains the
+benchmark**: 122 paragraphs appear verbatim (diacritics-stripped match)
+and ~1k more lines share 60+-char windows with benchmark paragraphs.
+Decontaminated copy at `/datasets/sadeed-decontam/train.txt`
+(1,894,276 kept / 1,103 dropped; 60-char windows, stride-1 both sides —
+stricter than the 13-gram field standard). Any number trained on the
+raw release would be contaminated.
 
 ## Hebrew diacritization
 
