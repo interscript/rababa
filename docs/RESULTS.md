@@ -37,13 +37,25 @@ protocol, zero skipped paragraphs.
 | System | Params | DER (CE) | DER (w/o CE) | WER (CE) | WER (w/o CE) |
 |---|---|---|---|---|---|
 | Claude-3-7-Sonnet (published) | — | 1.3941 | 0.7693 | 4.6718 | 2.3098 |
+| **GLM-5.2 (our reproduction, raw)** | — | 2.5060 | 1.5537 | 7.9929 | 4.7509 |
+| GLM-5.2 (our reproduction, zero-skip) | — | 2.6911 | 1.7179 | 8.3037 | 5.0619 |
 | Gemini-Flash-2.0 (published) | — | 3.1926 | 2.3783 | 7.9942 | 5.5044 |
 | GPT-4 (published) | — | 3.8645 | 3.8645 | 5.2719 | 10.9274 |
 | Sadeed (published) | 1.5B | 7.2915 | 5.2625 | 13.7425 | 9.9245 |
 | **rababa r3 domain-adapted (ours)** | 580M | **2.8429** | **1.7589** | **8.4981** | **4.8859** |
+| rababa r3 zero-skip projected | 580M | 2.8126 | 1.6877 | 8.4110 | 4.5739 |
 | rababa_arabic_byt5 r2 (ours) | 580M | 2.9406 | 1.8333 | 8.8373 | 5.0835 |
 | rababa_arabic_byt5 r2 (beam 4) | 580M | 2.9478 | 1.8522 | 8.8143 | 5.1190 |
 | **rababa_arabic_v2 (ours)** | **~10M** | **3.2495** | **1.8072** | 10.3276 | **5.2953** |
+
+- **GLM-5.2 verification (2026-08-17)**: clean reproduction on the same
+  benchmark+evaluator (temp 0, plain completion, neutral prompt;
+  `results/sadeed-glm-5-2/`): **2.5060/1.5537**. The 2026 frontier is
+  2.51, not the published Claude-3.7 1.39 — that bar is not what a
+  current generic frontier model achieves under a neutral protocol.
+  Our 580M model trails GLM-5.2 by only ~0.3 DER and **splits metrics
+  with it on the zero-skip protocol** (r3 better w/o case endings).
+  GLM-5.3: key denied access (HTTP 403).
 
 - **r3 = r2 + 1 epoch on the decontaminated Misraj corpus (1M lines) +
   150k MSA replay**: best non-frontier-LLM result on the benchmark;
