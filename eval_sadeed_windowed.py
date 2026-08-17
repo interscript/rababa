@@ -21,7 +21,7 @@ import modal
 checkpoints_volume = modal.Volume.from_name("rababa-checkpoints", create_if_missing=True)
 
 MODEL_DIR = "/checkpoints/rababa_arabic_byt5/run-003-domain/best"
-TAG = "r3_windowed"
+TAG = "r3_windowed_v2"
 WINDOW = 600
 
 DIACRITICS_RE = re.compile("[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]")
@@ -55,6 +55,38 @@ def split_windows(text: str, budget: int = WINDOW) -> list[str]:
     if cur:
         wins.append(" ".join(cur))
     return wins
+
+
+def project_haraqat(pred: str, text: str) -> str:
+    """Attach the model's haraqat onto the input's own letters.
+
+    ByT5 occasionally splits/merges words; the benchmark evaluator skips
+    any paragraph whose word count differs from gt. Projecting haraqat
+    through a letter-level alignment makes the output structurally
+    identical to the input (and thus gt), so no paragraph is ever
+    skipped. Unalignable input letters are left bare.
+    """
+    from difflib import SequenceMatcher
+
+    pred_haraqat: list[str] = [""]
+    for ch in pred:
+        if DIACRITICS_RE.match(ch):
+            pred_haraqat[-1] += ch
+        else:
+            pred_haraqat.append("")
+    pred_haraqat = pred_haraqat[1:]  # drop dummy head (leading diacritics are unattachable)
+    pred_letters = [c for c in pred if not DIACRITICS_RE.match(c)]
+    text_letters = [c for c in text if not DIACRITICS_RE.match(c)]
+    sm = SequenceMatcher(None, text_letters, pred_letters, autojunk=False)
+    out: list[str] = []
+    for op, i1, i2, j1, j2 in sm.get_opcodes():
+        if op == "equal":
+            for k in range(i2 - i1):
+                out.append(text_letters[i1 + k] + pred_haraqat[j1 + k])
+        else:
+            for k in range(i1, i2):
+                out.append(text_letters[k])
+    return "".join(out)
 
 
 @app.function(gpu="A100", timeout=6 * 60 * 60, volumes={"/checkpoints": checkpoints_volume})
@@ -93,16 +125,17 @@ def evaluate() -> dict:
                 batch, return_tensors="pt", padding=True, truncation=True, max_length=WINDOW
             ).to(device)
             with torch.autocast("cuda", torch.bfloat16):
-                gen = model.generate(**enc, max_new_tokens=WINDOW, num_beams=1)
+                gen = model.generate(**enc, max_new_tokens=WINDOW * 2, num_beams=1)
             preds.extend(tokenizer.batch_decode(gen, skip_special_tokens=True))
             if (i // 32) % 20 == 0:
                 print(f"[gen] {i + len(batch)}/{len(all_windows)}", flush=True)
 
     k = 0
     paragraphs: list[str] = []
-    for c in counts:
-        paragraphs.append(" ".join(preds[k : k + c]))
+    for text, c in zip(inputs, counts):
+        stitched = " ".join(preds[k : k + c])
         k += c
+        paragraphs.append(project_haraqat(stitched, text))
 
     csv_path = Path(f"/tmp/sadeed_{TAG}.csv")
     pd.DataFrame({"gt": outputs, "pred": paragraphs}).to_csv(csv_path, index=False, header=False)
