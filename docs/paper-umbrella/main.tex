@@ -20,7 +20,13 @@ by exactly one resource---data \emph{quality} (Arabic), data \emph{domain}
 (Hebrew), labeled-data \emph{coverage} (Thai), output
 \emph{representation} (Persian, Urdu)---and a fixed ByT5-based framework
 with one surgical fix per language reached or beat the published
-state of the art in each. Results: Arabic 0.99\% DER; Hebrew 17.5\% DER
+state of the art in each. Results: Arabic \textbf{2.81\% DER} (CE) /
+1.69\% (w/o CE) on the SadeedDiac-25 benchmark with Misraj's own
+evaluator under a zero-skip windowed protocol---2.6$\times$/3.1$\times$
+better than the 1.5B-parameter Sadeed model, ahead of GPT-4 and
+Gemini-Flash-2.0 (only Claude-3.7 ahead), plus a contamination audit
+showing the benchmark's public source corpus leaks 122 of its own
+paragraphs; Hebrew 17.5\% DER
 on Biblical text where the SOTA model scores 35.6\%; Thai 2.32\% PER
 via deterministic (non-LLM) augmentation; Persian homograph accuracy
 77.3--89.5\% and diacritization 0.52\% CER from a G2P-only dataset;
@@ -51,7 +57,7 @@ TS inference needs no vocabulary assets) except Arabic, where a compact
 \toprule
 Language & Task & Result & Published reference \\
 \midrule
-Arabic & diacritization & \textbf{0.99\% DER} & Sadeed 1.2\% (1.5B) \\
+Arabic & diacritization & \textbf{2.81/1.69\% DER} & Sadeed 7.29/5.26\%, Gemini 3.19/2.38\% (same benchmark+evaluator) \\
 Hebrew & diacritization & \textbf{17.46\% DER} (Biblical) & DictaBERT 35.6\% (same test) \\
 Thai & G2P & \textbf{2.32\% PER} & baseline 6.37\% (same test) \\
 Persian & G2P/HA & \textbf{89.5\%} / 77.3\% (SB) & Homo-GE2PE 76.9\% \\

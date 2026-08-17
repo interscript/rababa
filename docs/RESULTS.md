@@ -46,13 +46,21 @@ protocol, zero skipped paragraphs.
 | **rababa_arabic_v2 (ours)** | **~10M** | **3.2495** | **1.8072** | 10.3276 | **5.2953** |
 
 - **r3 = r2 + 1 epoch on the decontaminated Misraj corpus (1M lines) +
-  150k MSA replay**: 2.94 → 2.84 DER (CE), 1.83 → 1.76 DER (w/o CE).
-  Best non-frontier-LLM result on the benchmark; beats Gemini-Flash on
-  all four metrics. Greedy ≈ beam 4 throughout.
-- r2/r3 eval caveat: generation was capped at 1024 bytes — 57/1,200
-  paragraphs were truncated (missing tails scored as errors). A
-  windowed eval (600-byte in-distribution chunks, stitched) is the
-  apples-to-apples number; see `eval_sadeed_windowed.py`.
+  150k MSA replay**: best non-frontier-LLM result on the benchmark;
+  beats Gemini-Flash on all four metrics. Greedy ≈ beam 4 throughout.
+- **Windowed eval protocol** (`eval_sadeed_windowed.py`): inputs > 600B
+  split at word boundaries (in-distribution for ByT5), generation cap at
+  2x window (diacritized output is 1.4-1.6x input bytes — a naive
+  input-length cap silently truncates), haraqat projected onto input
+  letters via SequenceMatcher so output structure always matches gt.
+  **r3 windowed: 2.8126 DER (CE) / 1.6877 DER (w/o CE) / 8.4110 WER /
+  4.5739 WER (w/o CE) — zero skipped paragraphs**, a strictly cleaner
+  protocol than any published row above.
+- Protocol lesson (the GLM-5.3 "honest benchmark" rule applied to
+  ourselves): an intermediate windowed run scored 1.82/0.95, but its
+  generation cap had truncated the hardest paragraphs, which the
+  evaluator then *skipped* — survivorship bias, not quality. The
+  zero-skip protocol above is the only number we publish.
 - Best-in-table DER without case endings; splits with Gemini-Flash on
   DER (CE) (0.06 apart).
 - On our own cleaned 2.1M held-out split: **0.99% DER** (in-domain
