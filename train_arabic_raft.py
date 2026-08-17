@@ -33,7 +33,7 @@ SFT_RUN = "rababa_arabic_byt5/run-003-domain"
 RAFT_RUN = "rababa_arabic_raft/run-002"
 N_VAL = 2_000
 PROMPT_POOL = 200_000
-N_PROMPTS = 6_000
+N_PROMPTS = 3_000
 K = 4
 TEMP = 0.9
 TOP_P = 0.95
@@ -273,10 +273,10 @@ def run() -> dict:
         torch.cuda.empty_cache()
         kept = len(winners)
         print(f"[iter{it}] kept {kept}/{len(srcs)} winner pairs", flush=True)
-        state_path.unlink(missing_ok=True)
         checkpoints_volume.commit()
         if kept == 0:
             iter_marker.touch()
+            state_path.unlink(missing_ok=True)
             checkpoints_volume.commit()
             continue
 
