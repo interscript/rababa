@@ -115,8 +115,25 @@ def train() -> dict:
         return {"run": RUN, "status": "already-done"}
 
     print("[data] joining domain corpus into paragraph units...", flush=True)
-    domain = join_units([Path("/datasets/sadeed-decontam/train.txt")], UNIT_BYTES, N_DOMAIN_UNITS, seed=46)
-    replay = join_units([Path("/datasets/arabic-combined/train.txt")], UNIT_BYTES, N_REPLAY_UNITS, seed=47)
+    # Cache joined units on the volume: preemption relaunches re-paid the full
+    # join (~10 min of CPU) every time.
+    cache = Path("/datasets/r5-units")
+    if (cache / "domain.txt").exists() and (cache / "replay.txt").exists():
+        domain = [l for l in (cache / "domain.txt").read_text(encoding="utf-8").splitlines() if l.strip()]
+        replay = [l for l in (cache / "replay.txt").read_text(encoding="utf-8").splitlines() if l.strip()]
+        random.Random(42).shuffle(domain)
+        random.Random(42).shuffle(replay)
+        domain = domain[:N_DOMAIN_UNITS]
+        replay = replay[:N_REPLAY_UNITS]
+        print(f"[data] loaded from cache: domain={len(domain)} replay={len(replay)}", flush=True)
+    else:
+        domain = join_units([Path("/datasets/sadeed-decontam/train.txt")], UNIT_BYTES, N_DOMAIN_UNITS, seed=46)
+        replay = join_units([Path("/datasets/arabic-combined/train.txt")], UNIT_BYTES, N_REPLAY_UNITS, seed=47)
+        cache.mkdir(parents=True, exist_ok=True)
+        (cache / "domain.txt").write_text("\n".join(domain) + "\n", encoding="utf-8")
+        (cache / "replay.txt").write_text("\n".join(replay) + "\n", encoding="utf-8")
+        datasets_volume.commit()
+        print(f"[data] cached joined units: domain={len(domain)} replay={len(replay)}", flush=True)
 
     domain_pairs = [p for p in (make_pair(u) for u in domain) if p]
     replay_pairs = [p for p in (make_pair(u) for u in replay) if p]
