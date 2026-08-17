@@ -18,6 +18,7 @@ Usage:
 
 from __future__ import annotations
 
+import json
 import random
 import re
 import time
@@ -223,11 +224,20 @@ def run() -> dict:
         golds = [gold for _, gold in prompts]
         print(f"[iter{it}] sampling greedy + {K} candidates on {len(srcs)} prompts", flush=True)
 
-        greedy_preds: list[str] = []
-        samples: list[list[str]] = [[] for _ in srcs]
+        # Preemptions hit mid-sampling; persist winners every 25 batches so a
+        # relaunch resumes inside the sampling loop instead of from zero.
+        state_path = raft_dir / f"iter{it}_sampling.json"
+        winners: list[tuple[str, str]] = []
+        start_idx = 0
+        if state_path.exists():
+            st = json.loads(state_path.read_text(encoding="utf-8"))
+            winners = [(w[0], w[1]) for w in st["winners"]]
+            start_idx = st["done"]
+            print(f"[iter{it}] resume sampling at {start_idx} ({len(winners)} winners so far)", flush=True)
+
         model.eval()
         with torch.no_grad():
-            for i in range(0, len(srcs), 16):
+            for i in range(start_idx, len(srcs), 16):
                 batch = srcs[i : i + 16]
                 enc = tokenizer(
                     batch, return_tensors="pt", padding=True,
@@ -240,24 +250,32 @@ def run() -> dict:
                         do_sample=True, temperature=TEMP, top_p=TOP_P,
                         num_return_sequences=K,
                     )
-                greedy_preds.extend(tokenizer.batch_decode(g, skip_special_tokens=True))
-                decoded = tokenizer.batch_decode(s, skip_special_tokens=True)
+                g_dec = tokenizer.batch_decode(g, skip_special_tokens=True)
+                s_dec = tokenizer.batch_decode(s, skip_special_tokens=True)
                 for j in range(len(batch)):
-                    samples[i + j] = decoded[j * K : (j + 1) * K]
-                if (i // 16) % 25 == 0:
-                    print(f"[iter{it}] sampled {i + len(batch)}/{len(srcs)}", flush=True)
+                    src, gold = srcs[i + j], golds[i + j]
+                    gp, cands = g_dec[j], s_dec[j * K : (j + 1) * K]
+                    gder = der(gp, gold)
+                    if gder == 0.0:
+                        continue
+                    scored = sorted(((der(c, gold), c) for c in cands))
+                    bder, best = scored[0]
+                    if bder < gder and bder <= KEEP_MAX_DER:
+                        winners.append((src, best))
+                if ((i - start_idx) // 16) % 25 == 24 or i + len(batch) >= len(srcs):
+                    state_path.write_text(
+                        json.dumps({"done": i + len(batch), "winners": winners}, ensure_ascii=False),
+                        encoding="utf-8",
+                    )
+                    checkpoints_volume.commit()
+                if (i // 16) % 50 == 0:
+                    print(f"[iter{it}] sampled {i + len(batch)}/{len(srcs)} kept={len(winners)}", flush=True)
 
-        winners: list[tuple[str, str]] = []
-        for src, gold, gp, cands in zip(srcs, golds, greedy_preds, samples):
-            gder = der(gp, gold)
-            if gder == 0.0:
-                continue
-            scored = sorted(((der(c, gold), c) for c in cands))
-            bder, best = scored[0]
-            if bder < gder and bder <= KEEP_MAX_DER:
-                winners.append((src, best))
+        torch.cuda.empty_cache()
         kept = len(winners)
         print(f"[iter{it}] kept {kept}/{len(srcs)} winner pairs", flush=True)
+        state_path.unlink(missing_ok=True)
+        checkpoints_volume.commit()
         if kept == 0:
             iter_marker.touch()
             checkpoints_volume.commit()
