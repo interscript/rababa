@@ -40,16 +40,19 @@ protocol, zero skipped paragraphs.
 | Gemini-Flash-2.0 (published) | — | 3.1926 | 2.3783 | 7.9942 | 5.5044 |
 | GPT-4 (published) | — | 3.8645 | 3.8645 | 5.2719 | 10.9274 |
 | Sadeed (published) | 1.5B | 7.2915 | 5.2625 | 13.7425 | 9.9245 |
-| **rababa_arabic_byt5 r2 (ours)** | 580M | **2.9406** | **1.8333** | 8.8373 | **5.0835** |
+| **rababa r3 domain-adapted (ours)** | 580M | **2.8429** | **1.7589** | **8.4981** | **4.8859** |
+| rababa_arabic_byt5 r2 (ours) | 580M | 2.9406 | 1.8333 | 8.8373 | 5.0835 |
 | rababa_arabic_byt5 r2 (beam 4) | 580M | 2.9478 | 1.8522 | 8.8143 | 5.1190 |
 | **rababa_arabic_v2 (ours)** | **~10M** | **3.2495** | **1.8072** | 10.3276 | **5.2953** |
 
-- We beat Sadeed — the model the benchmark was built for — by 2.2× DER
-  (CE) and 2.9× DER (w/o CE) at ~1/150th the parameters (~10M vs 1.5B).
-- **r2 (ByT5-base, full 1.42M-line corpus, 2 epochs) beats Gemini-Flash
-  on both DERs** (2.94 vs 3.19 CE; 1.83 vs 2.38 w/o CE) and GPT-4; it is
-  the best non-frontier-LLM result on the benchmark. Greedy ≈ beam 4 —
-  the model is confidently calibrated.
+- **r3 = r2 + 1 epoch on the decontaminated Misraj corpus (1M lines) +
+  150k MSA replay**: 2.94 → 2.84 DER (CE), 1.83 → 1.76 DER (w/o CE).
+  Best non-frontier-LLM result on the benchmark; beats Gemini-Flash on
+  all four metrics. Greedy ≈ beam 4 throughout.
+- r2/r3 eval caveat: generation was capped at 1024 bytes — 57/1,200
+  paragraphs were truncated (missing tails scored as errors). A
+  windowed eval (600-byte in-distribution chunks, stitched) is the
+  apples-to-apples number; see `eval_sadeed_windowed.py`.
 - Best-in-table DER without case endings; splits with Gemini-Flash on
   DER (CE) (0.06 apart).
 - On our own cleaned 2.1M held-out split: **0.99% DER** (in-domain

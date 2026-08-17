@@ -29,8 +29,8 @@ import modal
 datasets_volume = modal.Volume.from_name("rababa-datasets", create_if_missing=True)
 checkpoints_volume = modal.Volume.from_name("rababa-checkpoints", create_if_missing=True)
 
-SFT_RUN = "rababa_arabic_byt5/run-002-full-2ep"
-RAFT_RUN = "rababa_arabic_raft/run-001"
+SFT_RUN = "rababa_arabic_byt5/run-003-domain"
+RAFT_RUN = "rababa_arabic_raft/run-002"
 N_VAL = 2_000
 PROMPT_POOL = 200_000
 N_PROMPTS = 6_000
