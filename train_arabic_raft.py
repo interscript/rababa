@@ -192,7 +192,6 @@ def run() -> dict:
         # resuming after preemption: recompute the SFT baseline only if absent
         if metrics_path.exists():
             for line in metrics_path.read_text(encoding="utf-8").splitlines():
-                import json
 
                 m = json.loads(line)
                 if m.get("best_dev") is not None:
@@ -318,7 +317,6 @@ def run() -> dict:
             tokenizer.save_pretrained(str(best_dir))
             print(f"[iter{it}] new best -> {best_dir}", flush=True)
 
-        import json
 
         with metrics_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps({
