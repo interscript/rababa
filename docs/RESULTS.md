@@ -47,6 +47,8 @@ protocol, zero skipped paragraphs.
 | rababa_arabic_byt5 r2 (ours) | 580M | 2.9406 | 1.8333 | 8.8373 | 5.0835 |
 | rababa_arabic_byt5 r2 (beam 4) | 580M | 2.9478 | 1.8522 | 8.8143 | 5.1190 |
 | **rababa_arabic_v2 (ours)** | **~10M** | **3.2495** | **1.8072** | 10.3276 | **5.2953** |
+| rababa r3 + RAFT run-002 (beam 4) | 580M | 2.8515 | 1.7617 | 8.5410 | 4.8859 |
+| rababa r3 + RAFT run-002 (beam 1) | 580M | 2.8308 | 1.7638 | — | — |
 
 - **GLM-5.2 verification (2026-08-17)**: clean reproduction on the same
   benchmark+evaluator (temp 0, plain completion, neutral prompt;
@@ -103,6 +105,19 @@ Decontaminated copy at `/datasets/sadeed-decontam/train.txt`
 (1,894,276 kept / 1,103 dropped; 60-char windows, stride-1 both sides —
 stricter than the 13-gram field standard). Any number trained on the
 raw release would be contaminated.
+
+### RAFT on r3 — negative result, closed (run-002, 2026-08-18)
+
+3 iterations of rejection-sampling fine-tuning from r3 (K=8 samples,
+temp 0.9, keep-if-better-and<=1.5% DER; 1,170 winners iter-3). Dev DER
+flat end-to-end (1.1844 -> 1.1828 -> 1.1830 -> 1.1847). Final public
+benchmark (rows above): beam-4 2.8515/1.7617, beam-1 2.8308/1.7638 vs
+r3's 2.8429/1.7589 — within noise on both protocols. Positive-only
+updates cannot sharpen split posteriors at SFT convergence (98.7% of
+residual errors are phonotactically legal alternates). Same verdict as
+Persian RAFT — cross-language negative result. Beam search adds nothing
+for this model (unlike Hebrew s43, where beam-4 was worth 12 DER points).
+Preds: `rababa_arabic_raft/run-002/sadeed_preds_beam{4,1}.csv`.
 
 ### WikiNews-2024 multi-reference (QCRI EMNLP 2025 protocol)
 
