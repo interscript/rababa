@@ -37,8 +37,8 @@ N_VAL = 2_000
 PROMPT_POOL = 100_000
 STEPS = 1_000
 GROUP = 8
-PROMPTS_PER_STEP = 4
-GRAD_ACCUM = 4
+PROMPTS_PER_STEP = 2
+GRAD_ACCUM = 8
 TEMP = 1.0
 LR = 1e-5
 KL_BETA = 0.05
@@ -173,9 +173,11 @@ def run() -> dict:
         mask = attn[:, 1:].float()
         # GTPO-style dynamic entropy weighting (arXiv 2508.04349): credit
         # concentrates on high-entropy decision tokens (the haraqat), not the
-        # copied letters — plain sequence reward smears signal and collapses.
-        ent = -(probs[:, :-1] * logprobs[:, :-1]).sum(dim=-1)
-        w = (ent / ent.mean().clamp(min=1e-6)).clamp(0.1, 4.0) * mask
+        # copied letters. Weights are redistribution constants — detached so
+        # no gradient flows through the entropy term itself.
+        with torch.no_grad():
+            ent = -(probs[:, :-1] * logprobs[:, :-1]).sum(dim=-1)
+            w = (ent / ent.mean().clamp(min=1e-6)).clamp(0.1, 4.0) * mask
         return (lp * w).sum(dim=1), w.sum(dim=1)
 
     state_path = run_dir / "state.json"
