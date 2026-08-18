@@ -55,16 +55,38 @@ def _pos_of(word_result) -> str:
     return "X"
 
 
+import re as _re
+_PUNCT = _re.compile(r"[\u060C\u061B\u061F.()\[\]\u00AB\u00BB\"'\-\u2013\u2014\u2026]+")
+_DIAC = _re.compile("[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]")
+
+
 def _label_line(line: str) -> tuple[str, list[str]]:
     an = _get_analyzer()
     words = line.split()
     tags: list[str] = []
     for w in words:
+        w = _PUNCT.sub("", w)
+        if not w:
+            tags.append("PUNCT")
+            continue
+        # Diacritized input carries the case ending -> exact tag when it
+        # resolves. qalsadi's stopword list needs bare letters, so misses
+        # fall back to a COARSE pos from the stripped form (marked "C:").
         try:
             res = an.check_word(w) or []
         except Exception:
             res = []
-        tags.append(_pos_of(res[0]) if res else "X")
+        if res:
+            tags.append(_pos_of(res[0]))
+            continue
+        try:
+            res2 = an.check_word(_DIAC.sub("", w)) or []
+        except Exception:
+            res2 = []
+        if res2:
+            tags.append("C:" + _pos_of(res2[0]).split(":")[0])
+        else:
+            tags.append("X")
     return line, tags
 
 
