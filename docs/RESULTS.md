@@ -104,6 +104,28 @@ Decontaminated copy at `/datasets/sadeed-decontam/train.txt`
 stricter than the 13-gram field standard). Any number trained on the
 raw release would be contaminated.
 
+### WikiNews-2024 multi-reference (QCRI EMNLP 2025 protocol)
+
+Python port of their EvalDiac.java (eval_wikinews_multiref.py): word
+correct if ANY "/" alternate matches; redundant diacritization
+normalized; ref letters without diacritics accept anything.
+
+| Model | WER (full) | DER (full) | WER (stem) | DER (stem) |
+|---|---|---|---|---|
+| r3 (best) | 19.99 | 12.60 | 14.47 | 13.80 |
+| QCRI BiLSTM (published) | 2.70 | — | — | — |
+
+Stem DER > full DER because multi-reference alternates absorb case
+endings (any valid i'rab credited) — our residual errors concentrate in
+INTERNAL vowels, consistent with the phonotactic-ambiguity diagnosis.
+The WER gap vs QCRI is domain mismatch: their models train on
+in-domain WikiNews/Wikipedia news text; ours train on Misraj/Tashkeela
+classical text. SadeedDiac-25 remains the headline benchmark;
+WikiNews-2024 is the cross-domain probe. r5 (paragraph-context) to be
+scored when it lands. 2014 benchmark deliberately not scored: it
+derives from Tashkeela (in our training corpus) — contaminated by
+construction.
+
 ## Hebrew diacritization
 
 ### Best result
