@@ -8,11 +8,12 @@ verdicts land; check `git log` on this file for recency.
 
 | Teacher | Volume path | DER (CE) / (w/o CE) | Protocol | Status |
 |---|---|---|---|---|
-| **r3 (current best)** | `/checkpoints/rababa_arabic_byt5/run-003-domain/best` | 2.8126 / 1.6877 | windowed zero-skip, 600B | ✅ final |
+| **r5 paragraph-context (current best)** | `/checkpoints/rababa_arabic_byt5/run-005-context/best` | **2.6775 / 1.5965** | windowed zero-skip, 1400B | ✅ final |
+| r3 | `/checkpoints/rababa_arabic_byt5/run-003-domain/best` | 2.8126 / 1.6877 | windowed zero-skip, 600B | final |
 | r3 raw | same | 2.8429 / 1.7723 | single-shot 1024 | final |
 | r2 | `/checkpoints/rababa_arabic_byt5/run-002-full-2ep/best` | 2.9406 / 1.8333 | single-shot | final |
 | char-encoder (10M) | `/checkpoints/rababa_arabic_v2/run-001/best.pt` | 3.2495 / 1.8072 | benchmark protocol | final |
-| **r5 paragraph-context** | `/checkpoints/rababa_arabic_byt5/run-005-context/best` | — | windowed zero-skip, 1400B | 🔄 training |
+
 | **GRPO** | `/checkpoints/rababa_arabic_grpo/run-001/best` | — | windowed zero-skip | 🔄 chained after r5 |
 | RAFT-002 | `/checkpoints/rababa_arabic_raft/run-002/best` | — | dev-selected | 🔄 running |
 
