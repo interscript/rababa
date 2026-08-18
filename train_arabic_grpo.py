@@ -35,7 +35,7 @@ checkpoints_volume = modal.Volume.from_name("rababa-checkpoints", create_if_miss
 RUN = "rababa_arabic_grpo/run-001"
 N_VAL = 2_000
 PROMPT_POOL = 100_000
-STEPS = 1_000
+STEPS = 400
 GROUP = 8
 PROMPTS_PER_STEP = 2
 GRAD_ACCUM = 8
@@ -44,8 +44,8 @@ LR = 1e-5
 KL_BETA = 0.05
 MAX_BYTES = 1400
 DEV_N = 500
-EVAL_EVERY = 200
-SAVE_EVERY = 200
+EVAL_EVERY = 100
+SAVE_EVERY = 50
 
 DIACRITICS_RE = re.compile("[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]")
 
