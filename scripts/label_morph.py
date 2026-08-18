@@ -72,19 +72,29 @@ def _label_line(line: str) -> tuple[str, list[str]]:
         # Diacritized input carries the case ending -> exact tag when it
         # resolves. qalsadi's stopword list needs bare letters, so misses
         # fall back to a COARSE pos from the stripped form (marked "C:").
+        tag = None
         try:
             res = an.check_word(w) or []
+            if res:
+                t = _pos_of(res[0])
+                if "Not exists" not in t:
+                    tag = t
         except Exception:
-            res = []
-        if res:
-            tags.append(_pos_of(res[0]))
+            pass
+        if tag is not None:
+            tags.append(tag)
             continue
         try:
             res2 = an.check_word(_DIAC.sub("", w)) or []
         except Exception:
             res2 = []
         if res2:
-            tags.append("C:" + _pos_of(res2[0]).split(":")[0])
+            t2 = _pos_of(res2[0])
+            if "Not exists" in t2:
+                tags.append("X")
+            else:
+                coarse = next((f for f in t2.split(":") if f.strip()), "?")
+                tags.append("C:" + coarse)
         else:
             tags.append("X")
     return line, tags
