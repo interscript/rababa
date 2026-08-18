@@ -166,11 +166,17 @@ def run() -> dict:
         with torch.autocast("cuda", torch.bfloat16):
             logits = model(input_ids=enc["input_ids"], attention_mask=enc["attention_mask"],
                            labels=lab).logits
-        logprobs = torch.log_softmax(logits.float(), dim=-1)
+        probs = torch.softmax(logits.float(), dim=-1)
+        logprobs = probs.log()
         tgt = lab[:, 1:].unsqueeze(-1)
         lp = torch.gather(logprobs[:, :-1], 2, tgt).squeeze(-1)
         mask = attn[:, 1:].float()
-        return (lp * mask).sum(dim=1), mask.sum(dim=1)
+        # GTPO-style dynamic entropy weighting (arXiv 2508.04349): credit
+        # concentrates on high-entropy decision tokens (the haraqat), not the
+        # copied letters — plain sequence reward smears signal and collapses.
+        ent = -(probs[:, :-1] * logprobs[:, :-1]).sum(dim=-1)
+        w = (ent / ent.mean().clamp(min=1e-6)).clamp(0.1, 4.0) * mask
+        return (lp * w).sum(dim=1), w.sum(dim=1)
 
     state_path = run_dir / "state.json"
     metrics_path = run_dir / "metrics.jsonl"
