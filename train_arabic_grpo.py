@@ -136,6 +136,10 @@ def run() -> dict:
     for p in ref.parameters():
         p.requires_grad_(False)
     device = next(policy.parameters()).device
+    # byt5-base activations for 16x(1400+2800) byte-tokens with grad exceed
+    # an A100; checkpointing trades ~30% speed for ~10x activation memory.
+    policy.gradient_checkpointing_enable()
+    policy.config.use_cache = False
     opt = torch.optim.AdamW(policy.parameters(), lr=LR, weight_decay=0.01)
 
     dev, pool = load_pool()
