@@ -128,7 +128,8 @@ normalized; ref letters without diacritics accept anything.
 
 | Model | WER (full) | DER (full) | WER (stem) | DER (stem) |
 |---|---|---|---|---|
-| r3 (best) | 19.99 | 12.60 | 14.47 | 13.80 |
+| r3 | 19.99 | 12.60 | 14.47 | 13.80 |
+| r5 paragraph-context | 20.52 | 12.72 | 14.91 | 13.92 |
 | QCRI BiLSTM (published) | 2.70 | — | — | — |
 
 Stem DER > full DER because multi-reference alternates absorb case
@@ -137,7 +138,10 @@ INTERNAL vowels, consistent with the phonotactic-ambiguity diagnosis.
 The WER gap vs QCRI is domain mismatch: their models train on
 in-domain WikiNews/Wikipedia news text; ours train on Misraj/Tashkeela
 classical text. SadeedDiac-25 remains the headline benchmark;
-WikiNews-2024 is the cross-domain probe. r5 (paragraph-context) to be
+WikiNews-2024 is the cross-domain probe. r5's paragraph-context
+specialization slightly regresses the cross-domain probe (+0.53 WER /
++0.12 DER) while improving the in-benchmark numbers by 0.14/0.09 —
+domain specialization tradeoff, recorded honestly. r5 (paragraph-context) to be
 scored when it lands. 2014 benchmark deliberately not scored: it
 derives from Tashkeela (in our training corpus) — contaminated by
 construction.
