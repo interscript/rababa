@@ -51,6 +51,7 @@ image = (
     .pip_install(
         "torch==2.5.1",
         "transformers==4.46.3",
+        "accelerate>=1.1.0",
         "pandas",
         "pyarrow",
         "tqdm",
