@@ -176,8 +176,8 @@ def train() -> dict:
     args = Seq2SeqTrainingArguments(
         output_dir="/checkpoints/" + RUN,
         num_train_epochs=1,
-        per_device_train_batch_size=2,
-        gradient_accumulation_steps=15,
+        per_device_train_batch_size=1,
+        gradient_accumulation_steps=30,
         per_device_eval_batch_size=1,
         bf16=True,
         learning_rate=3e-5,
