@@ -105,10 +105,8 @@ def word_matches(sys_word: str, ref_alt: str, skip_last: bool) -> tuple[bool, in
         d1 = sd if not rd else rd  # empty ref diac accepts anything
         if d1 == sd or (rd == "SH" and sd.startswith("SH")):
             correct += 1
-    if skip_last:
-        correct += 1
-    matched = correct == end or (end == 0)
-    return matched, correct, n
+    matched = correct == end or end == 0
+    return matched, correct, end
 
 
 def score(preds: list[str], refs: list[str], skip_last: bool) -> dict:
@@ -120,7 +118,8 @@ def score(preds: list[str], refs: list[str], skip_last: bool) -> dict:
             alts = ref_w.split("/") if "/" in ref_w else [ref_w]
             if k >= len(pw):
                 # prediction shorter than reference: ref letters count, no credit
-                tot_l += len(get_diac_codes(remove_default_diac(alts[0])))
+                m = len(get_diac_codes(remove_default_diac(alts[0])))
+                tot_l += max(0, m - 1) if skip_last else m
                 continue
             scored = [word_matches(pw[k], a, skip_last) for a in alts]
             matched = next((x for x in scored if x[0]), None)
@@ -183,6 +182,8 @@ def run(model_dir: str = MODEL_DIR, tag: str = TAG, bench: str = BENCH) -> dict:
     print(json.dumps(out, ensure_ascii=False, indent=1), flush=True)
 
     out_dir = Path("/checkpoints") / "/".join(model_dir.strip("/").split("/")[1:-1])
+    (out_dir / f"wikinews_preds_{tag}_{bench}.txt").write_text(
+        "\n".join(preds), encoding="utf-8")
     (out_dir / f"wikinews_multiref_{tag}.json").write_text(
         json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     checkpoints_volume.commit()
