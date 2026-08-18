@@ -47,6 +47,7 @@ protocol, zero skipped paragraphs.
 | rababa_arabic_byt5 r2 (ours) | 580M | 2.9406 | 1.8333 | 8.8373 | 5.0835 |
 | rababa_arabic_byt5 r2 (beam 4) | 580M | 2.9478 | 1.8522 | 8.8143 | 5.1190 |
 | **rababa_arabic_v2 (ours)** | **~10M** | **3.2495** | **1.8072** | 10.3276 | **5.2953** |
+| **rababa r5 paragraph-context, windowed zero-skip** | 580M | **2.6775** | **1.5965** | **8.0919** | **4.3863** |
 | rababa r3 + RAFT run-002 (beam 4) | 580M | 2.8515 | 1.7617 | 8.5410 | 4.8859 |
 | rababa r3 + RAFT run-002 (beam 1) | 580M | 2.8308 | 1.7638 | — | — |
 
