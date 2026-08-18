@@ -37,8 +37,8 @@ N_VAL = 2_000
 PROMPT_POOL = 100_000
 STEPS = 400
 GROUP = 8
-PROMPTS_PER_STEP = 2
-GRAD_ACCUM = 8
+PROMPTS_PER_STEP = 1
+GRAD_ACCUM = 16
 TEMP = 1.0
 LR = 1e-5
 KL_BETA = 0.05
@@ -144,8 +144,16 @@ def run() -> dict:
     print(f"[init] {init_dir}", flush=True)
 
     tokenizer = AutoTokenizer.from_pretrained(init_dir)
-    policy = AutoModelForSeq2SeqLM.from_pretrained(init_dir).to("cuda")
-    ref = AutoModelForSeq2SeqLM.from_pretrained(init_dir).to("cuda").eval()
+    try:
+        policy = AutoModelForSeq2SeqLM.from_pretrained(
+            init_dir, attn_implementation="sdpa").to("cuda")
+    except Exception:
+        policy = AutoModelForSeq2SeqLM.from_pretrained(init_dir).to("cuda")
+    try:
+        ref = AutoModelForSeq2SeqLM.from_pretrained(
+            init_dir, attn_implementation="sdpa").to("cuda").eval()
+    except Exception:
+        ref = AutoModelForSeq2SeqLM.from_pretrained(init_dir).to("cuda").eval()
     for p in ref.parameters():
         p.requires_grad_(False)
     device = next(policy.parameters()).device
