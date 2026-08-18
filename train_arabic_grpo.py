@@ -35,17 +35,17 @@ checkpoints_volume = modal.Volume.from_name("rababa-checkpoints", create_if_miss
 RUN = "rababa_arabic_grpo/run-001"
 N_VAL = 2_000
 PROMPT_POOL = 100_000
-STEPS = 400
-GROUP = 8
-PROMPTS_PER_STEP = 1
-GRAD_ACCUM = 16
+STEPS = 150
+GROUP = 6
+PROMPTS_PER_STEP = 2
+GRAD_ACCUM = 8
 TEMP = 1.0
 LR = 1e-5
 KL_BETA = 0.05
-MAX_BYTES = 1400
-DEV_N = 500
-EVAL_EVERY = 100
-SAVE_EVERY = 50
+MAX_BYTES = 700
+DEV_N = 200
+EVAL_EVERY = 50
+SAVE_EVERY = 25
 
 DIACRITICS_RE = re.compile("[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]")
 
@@ -125,7 +125,7 @@ def load_pool() -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
 
 
 @app.function(
-    gpu="A100",
+    gpu="A100-80GB",
     timeout=11 * 60 * 60,
     volumes={"/datasets": datasets_volume, "/checkpoints": checkpoints_volume},
 )
@@ -157,10 +157,8 @@ def run() -> dict:
     for p in ref.parameters():
         p.requires_grad_(False)
     device = next(policy.parameters()).device
-    # byt5-base activations for 16x(1400+2800) byte-tokens with grad exceed
-    # an A100; checkpointing trades ~30% speed for ~10x activation memory.
-    policy.gradient_checkpointing_enable()
-    policy.config.use_cache = False
+    # A100-80GB fits 12x(700+1400) teacher-forced activations without
+    # checkpointing; the 40GB variant needed it at ~30% step-time cost.
     opt = torch.optim.AdamW(policy.parameters(), lr=LR, weight_decay=0.01)
 
     dev, pool = load_pool()
