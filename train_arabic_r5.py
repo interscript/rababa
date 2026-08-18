@@ -85,7 +85,7 @@ def make_pair(unit: str) -> tuple[str, str] | None:
     src = DIACRITICS_RE.sub("", unit)
     if not src:
         return None
-    if len(src.encode("utf-8")) > 1600 or len(unit.encode("utf-8")) > 1600:
+    if len(src.encode("utf-8")) > 1450 or len(unit.encode("utf-8")) > 1450:
         return None
     return src, unit
 
@@ -176,9 +176,9 @@ def train() -> dict:
     args = Seq2SeqTrainingArguments(
         output_dir="/checkpoints/" + RUN,
         num_train_epochs=1,
-        per_device_train_batch_size=3,
-        gradient_accumulation_steps=10,
-        per_device_eval_batch_size=2,
+        per_device_train_batch_size=2,
+        gradient_accumulation_steps=15,
+        per_device_eval_batch_size=1,
         bf16=True,
         learning_rate=3e-5,
         lr_scheduler_type="cosine",
