@@ -191,5 +191,5 @@ def run(model_dir: str = MODEL_DIR, tag: str = TAG, bench: str = BENCH) -> dict:
 
 
 @app.local_entrypoint()
-def main():
-    run.remote()
+def main(model_dir: str = MODEL_DIR, tag: str = TAG, bench: str = BENCH):
+    run.remote(model_dir=model_dir, tag=tag, bench=bench)
