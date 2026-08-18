@@ -73,20 +73,33 @@ def letter_haraqat(text: str) -> list[list[str]]:
 
 
 def der(pred: str, gold: str) -> float:
+    # Graded, alignment-based: binary letter-mismatch penalty would make
+    # every temp-1.0 sample score 1.0 (one wrong byte = full penalty),
+    # collapsing group advantages to zero. Align letters instead and
+    # count haraqat errors on gold-vocalized positions.
+    from difflib import SequenceMatcher
+
     p, g = letter_haraqat(pred), letter_haraqat(gold)
-    if len(p) != len(g) or any(a[0] != b[0] for a, b in zip(p, g)):
-        return 1.0
+    pl, gl = [a[0] for a in p], [b[0] for b in g]
+    sm = SequenceMatcher(None, gl, pl, autojunk=False)
     err = tot = 0
-    for a, b in zip(p, g):
-        if a[0] == " ":
-            continue
-        if b[1]:
-            tot += 1
-            err += a[1] != b[1]
-        elif a[1]:
-            tot += 1
-            err += 1
-    return err / tot if tot else 0.0
+    for op, i1, i2, j1, j2 in sm.get_opcodes():
+        if op == "equal":
+            for k in range(i2 - i1):
+                if gl[i1 + k] == " ":
+                    continue
+                if g[i1 + k][1]:
+                    tot += 1
+                    err += p[j1 + k][1] != g[i1 + k][1]
+                elif p[j1 + k][1]:
+                    tot += 1
+                    err += 1
+        else:
+            for k in range(i1, i2):
+                if gl[k] != " " and g[k][1]:
+                    tot += 1
+                    err += 1
+    return err / tot if tot else 1.0
 
 
 def load_pool() -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
