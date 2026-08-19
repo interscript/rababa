@@ -222,6 +222,14 @@ def run() -> dict:
     if best_dev is None:
         best_dev = greedy_der(dev)
         print(f"[dev] init DER={best_dev:.4%}", flush=True)
+    # A flat curve never triggers the best-save inside the loop; the final
+    # benchmark still needs a valid best/ (the KL-leashed policy).
+    best_dir = run_dir / "best"
+    if not best_dir.is_dir():
+        best_dir.mkdir(parents=True, exist_ok=True)
+        policy.save_pretrained(str(best_dir))
+        tokenizer.save_pretrained(str(best_dir))
+        checkpoints_volume.commit()
 
     rng = random.Random(7)
     ptr = 0
