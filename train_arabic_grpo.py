@@ -51,7 +51,8 @@ DIACRITICS_RE = re.compile("[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]")
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .pip_install("torch==2.5.1", "transformers==4.46.3", "pandas", "pyarrow", "tqdm")
+    .pip_install("torch==2.5.1", "transformers==4.46.3", "pandas", "pyarrow", "tqdm",
+                 "pyarabic", "prettytable")
     .add_local_file("sadeed_evaluator.py", "/opt/rababa/sadeed_evaluator.py", copy=True)
     .add_local_dir("data/sadeed-diac-25", "/opt/rababa/data/sadeed-diac-25", copy=True)
     .workdir("/opt/rababa")
