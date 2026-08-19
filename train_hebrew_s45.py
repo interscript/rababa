@@ -52,7 +52,7 @@ image = (
     )
     .add_local_dir("src", "/opt/rababa/src", copy=True)
     .workdir("/opt/rababa")
-    .env({"PYTHONPATH": "/opt/rababa/src"})
+    .env({"PYTHONPATH": "/opt/rababa/src", "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"})
 )
 
 app = modal.App("rababa-hebrew-s45", image=image)
@@ -204,8 +204,9 @@ def stage1() -> dict:
     args = Seq2SeqTrainingArguments(
         output_dir=str(out_dir),
         num_train_epochs=1,
-        per_device_train_batch_size=64,
-        per_device_eval_batch_size=32,
+        per_device_train_batch_size=16,
+        gradient_accumulation_steps=4,
+        per_device_eval_batch_size=16,
         bf16=True,
         learning_rate=3e-4,
         warmup_steps=500,
