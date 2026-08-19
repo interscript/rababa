@@ -14,13 +14,14 @@ verdicts land; check `git log` on this file for recency.
 | r2 | `/checkpoints/rababa_arabic_byt5/run-002-full-2ep/best` | 2.9406 / 1.8333 | single-shot | final |
 | char-encoder (10M) | `/checkpoints/rababa_arabic_v2/run-001/best.pt` | 3.2495 / 1.8072 | benchmark protocol | final |
 
-| **GRPO** | `/checkpoints/rababa_arabic_grpo/run-001/best` | — | windowed zero-skip | 🔄 chained after r5 |
-| RAFT-002 | `/checkpoints/rababa_arabic_raft/run-002/best` | — | dev-selected | 🔄 running |
+| GTPO-GRPO on r5 | `/checkpoints/rababa_arabic_grpo/run-001/best` | 2.6597 / 1.5818 | 700B windows (≠ r5's 1400B) | final — flat vs r5, kept for reference only |
+| RAFT-002 on r3 | `/checkpoints/rababa_arabic_raft/run-002/best` | 2.8515 / 1.7617 | benchmark, beam 4 | final — flat vs r3 |
 
-**When r5/GRPO land, re-check this file — teacher should move to the new
-best.** (GLM-5.2 is NOT a teacher: standing rule — no LLM teachers for
-diacritization; see `results/sadeed-glm-5-2/README.md` for why the
-distillation idea was rejected on principle.)
+Teacher stays **r5**: both RL variants were flat/negative, so r5's best
+is the distilled-knowledge ceiling. (GLM-5.2 is NOT a teacher: standing
+rule — no LLM teachers for diacritization; see
+`results/sadeed-glm-5-2/README.md` for why the distillation idea was
+rejected on principle.)
 
 ## Evaluation protocol for parity gates
 
@@ -39,5 +40,6 @@ distillation idea was rejected on principle.)
   test) — see `docs/RESULTS.md`.
 - Persian G2P: `persian_g2p/run-001/best` (v1, 77.34% SB HA ezafe-norm;
   RAFT run tied — v1 remains canonical).
-- Thai G2P: umt5 fine-tune (6.37% PER) per secryst stack.
+- Thai G2P: umt5 continued-fine-tune + epitran-labeled augmentation,
+  2.32% PER (public baseline 6.37%) — secryst `docs/paper-thai`.
 - Khmer: secryst forward model (59.66% EM) + backward (50.3% EM).
