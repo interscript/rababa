@@ -16,11 +16,12 @@ General rules (unchanged):
   negative on these teachers — do not retrain or RL-polish a teacher,
   and treat teacher outputs (not any RL variant) as the label source.
 - SUCCESSORS IN FLIGHT (2026-08-19): r6 Arabic morph aux-task
-  (run-006-morph, ~20h), Hebrew s45 phonikud curriculum
-  (run-s45-phonikud, ~11h), Thai scaleup600k (~12h). Standing rule:
-  none replaces its teacher below until a verified eval lands in
-  docs/RESULTS.md AND this file is updated. Do not poll for them, do
-  not use intermediate checkpoints.
+  (run-006-morph, ~15h remaining), Hebrew s45 phonikud curriculum
+  (run-s45-phonikud, restarted after a client-stream drop; resumes
+  from volume checkpoints). Standing rule: none replaces its teacher
+  below until a verified eval lands in docs/RESULTS.md AND this file
+  is updated. Do not poll for them, do not use intermediate
+  checkpoints. (Thai scaleup600k VERIFIED 1.7260% PER — section 4.)
 
 ## 1. Arabic diacritizer — r5 paragraph-context (580M ByT5-base) ★ NEW CANONICAL
 - Path: `/checkpoints/rababa_arabic_byt5/run-005-context/best` (HF)
@@ -96,9 +97,8 @@ Start NOW, in parallel where possible:
    replace it — the repr line of work is closed).
 3. Hebrew s43 (beam-4 teacher labels required). s45 may land ~11h
    later; same re-distill-once logic as Arabic.
-4. Thai — WAIT per section 4 (gate on scaleup600k verdict, then it
-   becomes the first actual distillation target: smallest, cleanest
-   contract).
+4. Thai — GO. scaleup600k verified 1.7260% PER (section 4); smallest,
+   cleanest contract, first recommended target.
 
 ## What we will NOT ship
 - Any LLM-labeled variant (hallucinated haraqat poison chains).
