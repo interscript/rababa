@@ -40,6 +40,8 @@ rejected on principle.)
   test) — see `docs/RESULTS.md`.
 - Persian G2P: `persian_g2p/run-001/best` (v1, 77.34% SB HA ezafe-norm;
   RAFT run tied — v1 remains canonical).
-- Thai G2P: umt5 continued-fine-tune + epitran-labeled augmentation,
-  2.32% PER (public baseline 6.37%) — secryst `docs/paper-thai`.
+- Thai G2P: umt5 continued-fine-tune + epitran augmentation at scale
+  (367K lines, full Wikipedia), **1.7260% PER** (prior 2.32%; public
+  baseline 6.37%) — `/ckpts/secryst_thai_ipa_scaleup600k/run-001/best`
+  on `secryst-checkpoints`; secryst `docs/paper-thai`.
 - Khmer: secryst forward model (59.66% EM) + backward (50.3% EM).
