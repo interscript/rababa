@@ -29,3 +29,20 @@ homograph accuracy (77.34 vs recipe roulette).
 ## Success metric
 Arabic DER(CE) < 1.5 without touching the benchmark during development;
 Persian SB HA >= 80 measured once, at the end.
+
+
+## Final outcome (2026-08-19): all three RL variants negative
+
+| Method | Language | Result |
+|---|---|---|
+| RAFT (positive-only) | Arabic | flat (2.8429 -> 2.8515 beam-4 / 2.8308 beam-1) |
+| RAFT (positive-only) | Persian | tie (76.85 vs 77.34) |
+| GRPO (sequence reward) | Persian | negative (75.37 vs 77.34; degraded past step 200) |
+| GTPO-GRPO (entropy-weighted, graded reward) | Arabic | exactly flat dev (5.9692 x3); benchmark = r5 within protocol noise |
+
+Verdict: knowledge-limited, not policy-limited. Posterior sharpening
+cannot recover distinctions the SFT posterior has already baked in from
+2M clean lines. Infrastructure lessons recorded in git history: binary
+reward was dead at temp 1.0 (all-1.0 groups), byt5-base GRPO needs
+A100-80GB or gradient checkpointing at 700B+ units, and flat curves
+must still materialize best/ before the final eval.

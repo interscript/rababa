@@ -48,6 +48,7 @@ protocol, zero skipped paragraphs.
 | rababa_arabic_byt5 r2 (beam 4) | 580M | 2.9478 | 1.8522 | 8.8143 | 5.1190 |
 | **rababa_arabic_v2 (ours)** | **~10M** | **3.2495** | **1.8072** | 10.3276 | **5.2953** |
 | **rababa r5 paragraph-context, windowed zero-skip** | 580M | **2.6775** | **1.5965** | **8.0919** | **4.3863** |
+| rababa r5 + GTPO-GRPO (700B windows) | 580M | 2.6597 | 1.5818 | 8.1165 | 4.3874 |
 | rababa r3 + RAFT run-002 (beam 4) | 580M | 2.8515 | 1.7617 | 8.5410 | 4.8859 |
 | rababa r3 + RAFT run-002 (beam 1) | 580M | 2.8308 | 1.7638 | — | — |
 
@@ -119,6 +120,26 @@ residual errors are phonotactically legal alternates). Same verdict as
 Persian RAFT — cross-language negative result. Beam search adds nothing
 for this model (unlike Hebrew s43, where beam-4 was worth 12 DER points).
 Preds: `rababa_arabic_raft/run-002/sadeed_preds_beam{4,1}.csv`.
+
+### GTPO-GRPO on r5 — negative result, closed (run-001, 2026-08-19)
+
+Entropy-weighted GRPO (GTPO, arXiv 2508.04349): per-token credit ∝
+detached normalized token entropy, graded alignment-based der reward,
+KL leash 0.05, 150 steps x 16 prompts x 6 samples on 700B units,
+A100-80GB. Dev curve EXACTLY flat: 5.9692 -> 5.9794 -> 5.9692 ->
+5.9692 (greedy outputs unchanged under the leash). Final benchmark
+(row above; 700B windows -> not directly comparable to r5's 1400B
+protocol): 2.6597/1.5818, i.e. r5 within protocol noise.
+
+Third convergent negative RL result (RAFT flat, sequence-GRPO negative
+on Persian, GTPO-GRPO flat on Arabic). Conclusion for the paper: at
+SFT convergence on 2M clean lines, Arabic diacritization residual
+error is KNOWLEDGE-LIMITED, not policy-limited — no policy-sharpening
+operator (positive-only, group-normalized, or entropy-weighted credit)
+moves it. The levers that DID move the benchmark are all data-side:
+decontamination (-0.1 DER), domain adaptation (-0.1), paragraph
+context (-0.14). Next: r6 morphological aux-task (labels ready on
+volume) and multi-reference-aware training, not more RL.
 
 ### WikiNews-2024 multi-reference (QCRI EMNLP 2025 protocol)
 
