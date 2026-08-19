@@ -15,11 +15,12 @@ General rules (unchanged):
 - NEW standing verdict: RL variants (RAFT/GRPO/GTPO) are all flat or
   negative on these teachers — do not retrain or RL-polish a teacher,
   and treat teacher outputs (not any RL variant) as the label source.
-- SUCCESSORS IN FLIGHT (2026-08-19, do NOT wait on or use these):
-  r6 Arabic morph aux-task (run-006-morph), Hebrew s45 phonikud
-  curriculum (run-s45-phonikud), Thai scaleup600k. Each may replace its
-  teacher below ONLY after a verified eval lands in docs/RESULTS.md and
-  this file is updated. Until then the listed teachers are final.
+- SUCCESSORS IN FLIGHT (2026-08-19): r6 Arabic morph aux-task
+  (run-006-morph, ~20h), Hebrew s45 phonikud curriculum
+  (run-s45-phonikud, ~11h), Thai scaleup600k (~12h). Standing rule:
+  none replaces its teacher below until a verified eval lands in
+  docs/RESULTS.md AND this file is updated. Do not poll for them, do
+  not use intermediate checkpoints.
 
 ## 1. Arabic diacritizer — r5 paragraph-context (580M ByT5-base) ★ NEW CANONICAL
 - Path: `/checkpoints/rababa_arabic_byt5/run-005-context/best` (HF)
@@ -71,22 +72,35 @@ General rules (unchanged):
   exact / 71.29% ezafe-norm — still 6 points under v1. v5/mapped repr
   is CLOSED negative; v1 remains the only Persian teacher.
 
-## 4. Thai G2P (ByT5-small / umt5 continued-FT, RELEASE-FROZEN)
+## 4. Thai G2P (ByT5-small / umt5 continued-FT) — WAIT for scaleup verdict
 - Path: secryst Thai stack (`secryst/docs/paper-thai` + MODELS.md).
 - Contract: Thai graphemes → IPA phonemes.
-- Quality: **2.32% PER** (public baseline 6.37%). Recommended FIRST
-  distillation target — smallest, cleanest contract.
-- scaleup600k (367K epitran-augmented lines, 7.3x corpus) is training;
-  if it verifies below 2.32% it replaces this teacher and this file
-  gets updated. Original 50K augmentation file
-  (`augmented_epitran.jsonl`) stays untouched on the volume.
+- Quality: **2.32% PER** (public baseline 6.37%).
+- **INSTRUCTION: do NOT start the Thai distillation yet.** The
+  scaleup600k successor (367K epitran lines, 7.3x corpus) finishes
+  ~12h after 2026-08-19 launch and is the ONLY in-flight run that
+  should gate your start — it finishes soonest and Thai is the
+  smallest job, so waiting costs half a day and may save a full
+  re-distill. Check this file first: if section 4 lists a scaleup600k
+  teacher with a verified PER, distill THAT; if it still names
+  thai_combined_mixed, scaleup failed or was flat — distill
+  thai_combined_mixed. Until then, spend the wait building the Thai
+  harness (test.jsonl, beam-4 PER scorer from
+  `secryst/train_thai_scaleup.py::evaluate`).
 
-## Suggested order
-1. Thai (cleanest win)
-2. Arabic r5 (new canonical teacher; biggest quality story — a mini
-   model at ≤3.2 DER windowed still beats Gemini-Flash published)
-3. Persian (two-metric gate)
-4. Hebrew (beam-4 teacher labels required)
+## Suggested order (2026-08-19)
+Start NOW, in parallel where possible:
+1. Arabic r5 (canonical teacher; biggest quality story — a mini model
+   at ≤3.2 DER windowed still beats Gemini-Flash published). r6 may
+   land ~20h later; if it verifies better you re-distill once — cheap
+   next to idling.
+2. Persian (two-metric gate; v1 is final, nothing in flight can
+   replace it — the repr line of work is closed).
+3. Hebrew s43 (beam-4 teacher labels required). s45 may land ~11h
+   later; same re-distill-once logic as Arabic.
+4. Thai — WAIT per section 4 (gate on scaleup600k verdict, then it
+   becomes the first actual distillation target: smallest, cleanest
+   contract).
 
 ## What we will NOT ship
 - Any LLM-labeled variant (hallucinated haraqat poison chains).
