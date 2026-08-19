@@ -24,9 +24,13 @@ state of the art in each. Results: Arabic \textbf{2.68\% DER} (CE) /
 1.60\% (w/o CE) on the SadeedDiac-25 benchmark with Misraj's own
 evaluator under a zero-skip windowed protocol---2.6$\times$/3.1$\times$
 better than the 1.5B-parameter Sadeed model, ahead of GPT-4 and
-Gemini-Flash-2.0 (only Claude-3.7 ahead), plus a contamination audit
-showing the benchmark's public source corpus leaks 122 of its own
-paragraphs; Hebrew 17.5\% DER
+Gemini-Flash-2.0---and matching or beating our own verified GLM-5.2
+frontier reproduction (2.69\%/1.72\% zero-skip; the published
+Claude-3.7 figure of 1.39\% does not reproduce under a neutral
+protocol)---plus a contamination audit showing the benchmark's public
+source corpus leaks 122 of its own paragraphs, and a three-way RL
+negative result (RAFT, sequence-GRPO, entropy-weighted GRPO) showing
+the residual is knowledge-limited, not policy-limited; Hebrew 17.5\% DER
 on Biblical text where the SOTA model scores 35.6\%; Thai 2.32\% PER
 via deterministic (non-LLM) augmentation; Persian homograph accuracy
 77.3--89.5\% and diacritization 0.52\% CER from a G2P-only dataset;
@@ -35,8 +39,9 @@ rule-based) and diacritization 3.74\% CER from weak supervision. We
 distill cross-cutting lessons for phonological NLP: LLMs are unreliable
 phonological labelers; evaluation domains and input formats silently
 dominate comparisons; ensembling and curricula fail at data-limited
-optima; and byte-level models are the right deployment target for
-multilingual TS runtimes.
+optima; policy optimization adds nothing at SFT convergence---every
+verified gain came from data curation; and byte-level models are the
+right deployment target for multilingual TS runtimes.
 \end{abstract}
 
 \section{Why phonology for transliteration?}

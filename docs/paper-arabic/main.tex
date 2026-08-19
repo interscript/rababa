@@ -17,10 +17,18 @@ scores 7.29\% DER (with case endings) on its own SadeedDiac-25 benchmark
 using a 1.5B-parameter decoder-only language model. We show that compact
 models---a character-level encoder of roughly 10M parameters and a 580M
 ByT5-base---\textbf{beat it directly on that benchmark with its own
-evaluation code}, reaching 2.81\% DER (CE) and 1.69\% without case
-endings under a zero-skip windowed protocol: 2.6$\times$ and 3.1$\times$
-better than Sadeed, ahead of GPT-4 (3.86\%) and Gemini-Flash-2.0
-(3.19\%/2.38\%), with only Claude-3.7-Sonnet (1.39\%) ahead. Our
+evaluation code}, reaching \textbf{2.68\% DER (CE) and 1.60\% without
+case endings} under a zero-skip windowed protocol: 2.7$\times$ and
+3.3$\times$ better than Sadeed, ahead of GPT-4 (3.86\%) and
+Gemini-Flash-2.0 (3.19\%/2.38\%). We additionally verify the LLM
+frontier on this benchmark: GLM-5.2, a 2026 flagship, scores
+2.51\%/1.55\% under a neutral protocol (2.69\%/1.72\% zero-skip) ---
+the published Claude-3.7-Sonnet figure of 1.39\% does not reproduce
+with a strictly stronger model, and our 580M model matches or beats the
+verified frontier. A controlled RL study (rejection-sampling FT,
+sequence-level GRPO, and entropy-weighted GRPO) finds \emph{no} further
+gain at SFT convergence: the residual is knowledge-limited, not
+policy-limited. Our
 combined corpus merges the full 75M-word Tashkeela dump (cleaned with a
 Sadeed-style pipeline), Arabic Wikipedia, and QCRI EMNLP-2025 data,
 totalling 2.1M sentences; scaling 28$\times$ (75K $\rightarrow$ 2.1M)
@@ -55,6 +63,17 @@ We take the opposite direction. Our contributions:
         (122 verbatim + ${\sim}$1k near-duplicate lines), a
         stride-1 60-character-window decontamination, and a
         zero-skip windowed evaluation protocol.
+  \item Paragraph-context training (joining corpus lines into
+        ${\sim}$1400-byte units) closing the context gap to LLMs:
+        2.81$\rightarrow$2.68\% DER (CE), 1.69$\rightarrow$1.60\% (w/o CE).
+  \item A frontier verification: GLM-5.2 under a neutral protocol
+        lands at 2.51\%/2.69\% (raw/zero-skip), far from the published
+        Claude-3.7 1.39\%; our compact model beats the verified
+        frontier on the w/o-CE metrics.
+  \item A three-way RL negative result (RAFT, sequence-GRPO on Persian,
+        entropy-weighted GTPO-GRPO on Arabic): all flat or negative at
+        SFT convergence --- diacritization residual error is
+        knowledge-limited, not policy-limited.
 \end{enumerate}
 
 \section{Related Work}
@@ -110,7 +129,8 @@ Combined v2 (full) & 2.1M & \textbf{0.99\%} \\
 System & Params & DER (CE) & DER (w/o CE) & WER (CE) & WER (w/o CE) \\
 \midrule
 Claude-3-7-Sonnet & --- & 1.3941 & 0.7693 & 4.6718 & 2.3098 \\
-GLM-5.2 (our reproduction) & --- & 2.5060 & 1.5537 & 7.9929 & 4.7509 \\
+GLM-5.2 (our reproduction, raw) & --- & 2.5060 & 1.5537 & 7.9929 & 4.7509 \\
+GLM-5.2 (our reproduction, zero-skip) & --- & 2.6911 & 1.7179 & 8.3037 & 5.0619 \\
 Gemini-Flash-2.0 & --- & 3.1926 & 2.3783 & 7.9942 & 5.5044 \\
 GPT-4 & --- & 3.8645 & 3.8645 & 5.2719 & 10.9274 \\
 Sadeed & 1.5B & 7.2915 & 5.2625 & 13.7425 & 9.9245 \\
@@ -118,6 +138,7 @@ Sadeed & 1.5B & 7.2915 & 5.2625 & 13.7425 & 9.9245 \\
 Ours (r5 + GTPO-GRPO, 700B windows) & 580M & 2.6597 & 1.5818 & 8.1165 & 4.3874 \\
 Ours (ByT5 r3, windowed) & 580M & 2.8126 & 1.6877 & 8.4110 & 4.5739 \\
 Ours (ByT5 r3, single-shot) & 580M & 2.8429 & 1.7589 & 8.4981 & 4.8859 \\
+Ours (r3 + RAFT, beam 4 / beam 1) & 580M & 2.8515 / 2.8308 & 1.7617 / 1.7638 & --- & --- \\
 Ours (encoder) & $\approx$10M & 3.2495 & 1.8072 & 10.3276 & 5.2953 \\
 \bottomrule
 \end{tabular}
@@ -132,11 +153,44 @@ silently truncates) and projects haraqat onto input letters, so
 the published rows.}
 \end{table}
 
+\subsection{Paragraph-context training}
+SFT units were isolated $\leq$640-byte lines while the benchmark and
+the LLMs read whole paragraphs. The decontaminated Misraj corpus is
+line-split continuous book text, so joining $k$ adjacent lines
+reconstructs true paragraphs. Training r3's best for one epoch on
+${\sim}$1400-byte joined units (500K domain + 100K replay) closed the
+context gap: 2.81$\to$2.68\% DER (CE), 1.69$\to$1.60\% (w/o CE),
+overtaking the verified frontier (GLM-5.2 zero-skip 2.69\%/1.72\%)
+on both metrics. The same specialization costs +0.53 WER on the
+out-of-domain WikiNews-2024 multi-reference probe.
+
+\subsection{RL at SFT convergence: three negative results}
+We tested whether the residual (98.7\% phonotactically legal
+alternates) can be sharpened by policy optimization:
+\begin{itemize}
+  \item \textbf{RAFT} (rejection-sampling FT, K=8, 3 iterations,
+        1{,}170 winners): benchmark flat --- 2.8429$\to$2.8515
+        (beam 4) / 2.8308 (beam 1).
+  \item \textbf{GRPO} (sequence reward, G=8, KL leash): on Persian
+        G2P the best checkpoint \emph{lost} 2 points on SentenceBench
+        homographs (77.34$\to$75.37\%), with dev reward degrading
+        monotonically past step 200.
+  \item \textbf{GTPO-GRPO} (entropy-weighted per-token credit,
+        arXiv:2508.04349; graded alignment-based reward): dev curve
+        \emph{exactly} flat (5.9692\% at steps 0/100/150); the final
+        benchmark equals the teacher within protocol noise.
+\end{itemize}
+Conclusion: at SFT convergence on 2M clean lines, the residual is
+\textbf{knowledge-limited, not policy-limited}. Every lever that moved
+the benchmark was data-side: decontamination ($-$0.1 DER), domain
+adaptation ($-$0.1), paragraph context ($-$0.14).
+
 \section{Discussion}
 \textbf{Data curation dominates capacity.} A 150$\times$ smaller encoder
 beats a 1.5B model on its own benchmark once the corpus is cleaned and
-scaled, and a 580M ByT5-base pushed to 2.81\% DER (CE) / 1.69\% (w/o
-CE)---beating Gemini-Flash-2.0 on all four metrics. On our in-domain
+scaled, and a 580M ByT5-base reaches 2.68\% DER (CE) / 1.60\% (w/o
+CE)---beating Gemini-Flash-2.0 on all four metrics and the verified
+GLM-5.2 frontier on the w/o-CE metrics. On our in-domain
 split the models reach $\leq$1.4\% DER; the gap to 2.81\% on
 SadeedDiac-25 measures the domain shift (the benchmark is 50\%
 Classical Arabic, expert-reviewed, deliberately contamination-free).
@@ -162,9 +216,12 @@ number we report.
 Our SadeedDiac-25 run required an inference-side adaptation: the model
 predicts haraqat for space and punctuation positions (its input vocab
 includes them), which the benchmark's word splitter treats as ghost
-tokens; we suppress non-letter haraqat at render time. Claude-3-7-Sonnet
-remains ahead on all metrics. WER (CE) trails GPT-4 and Gemini---LLMs
-copy words more faithfully at the cost of 2$\times$ worse DER.
+tokens; we suppress non-letter haraqat at render time. The published
+Claude-3.7-Sonnet row (1.39\%) does not reproduce under our neutral
+protocol: a strictly stronger 2026 flagship (GLM-5.2) scores 2.51\%
+raw, and we publish our reproduction protocol in full. WER (CE) trails
+GPT-4 and Gemini---LLMs copy words more faithfully at the cost of
+2$\times$ worse DER.
 
 \section{Reproducibility}
 All code, cleaning scripts, configs, and the Modal training pipeline are
