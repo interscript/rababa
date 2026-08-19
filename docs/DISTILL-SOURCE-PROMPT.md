@@ -72,21 +72,19 @@ General rules (unchanged):
   exact / 71.29% ezafe-norm — still 6 points under v1. v5/mapped repr
   is CLOSED negative; v1 remains the only Persian teacher.
 
-## 4. Thai G2P (ByT5-small / umt5 continued-FT) — WAIT for scaleup verdict
-- Path: secryst Thai stack (`secryst/docs/paper-thai` + MODELS.md).
-- Contract: Thai graphemes → IPA phonemes.
-- Quality: **2.32% PER** (public baseline 6.37%).
-- **INSTRUCTION: do NOT start the Thai distillation yet.** The
-  scaleup600k successor (367K epitran lines, 7.3x corpus) finishes
-  ~12h after 2026-08-19 launch and is the ONLY in-flight run that
-  should gate your start — it finishes soonest and Thai is the
-  smallest job, so waiting costs half a day and may save a full
-  re-distill. Check this file first: if section 4 lists a scaleup600k
-  teacher with a verified PER, distill THAT; if it still names
-  thai_combined_mixed, scaleup failed or was flat — distill
-  thai_combined_mixed. Until then, spend the wait building the Thai
-  harness (test.jsonl, beam-4 PER scorer from
-  `secryst/train_thai_scaleup.py::evaluate`).
+## 4. Thai G2P (umt5 continued-FT) — scaleup600k IS the teacher ★ VERIFIED 2026-08-19
+- Path: `/ckpts/secryst_thai_ipa_scaleup600k/run-001/best` on volume
+  `secryst-checkpoints` (modal volume get).
+- Contract: Thai graphemes → IPA phonemes; beam 4.
+- Quality: **1.7260% PER** on the fixed 1,219-sentence Kaikki test
+  (same harness as all previous rows; tha scaleup before it: 2.32%;
+  public baseline 6.37%). Verified by
+  `secryst/train_thai_scaleup.py::evaluate` (metrics.json on the
+  volume). Known artifact: the sentence-level WER printed as 1.0 —
+  treat PER as the parity metric, investigate WER only if your student
+  harness shows nonzero exact matches where this shows zero.
+- Parity gate: student within +5pp-equivalent of teacher PER (scale
+  from 1.73 → student must land ≤ ~2.6% PER on the same test set).
 
 ## Suggested order (2026-08-19)
 Start NOW, in parallel where possible:
