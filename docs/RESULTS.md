@@ -265,3 +265,14 @@ beam4: CER 6.53% / word_acc 47.97% vs greedy 6.57% / 46.99%
 weak labels are near-deterministic, so greedy is already confident.
 Per TODO 06 rule (<55% word_acc): d2 launched (one epoch at 1e-5 from
 d1, run-002-d2); corpus-label consistency is the expected ceiling.
+
+## Urdu d2 — continuous low-LR second epoch (2026-08-20) ★ NEW BEST
+
+`rababa_urdu_byt5/run-002-d2` (best on volume): 1 epoch at LR 1e-5
+from run-001-d1, identical test protocol.
+
+**CER 5.77% / word_acc 52.47%** (greedy, n=11,714) vs d1 6.40/47.43 —
+CER down 0.63pp, word_acc up 5.0pp. The weak-corpus ceiling is higher
+than d1 alone reached; the standing rule remains that absolute
+numbers are within-corpus (machine labels both sides). Best model
+now: run-002-d2. Script: train_urdu_d2.py.
