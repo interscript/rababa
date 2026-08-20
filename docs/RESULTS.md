@@ -173,7 +173,8 @@ construction.
 
 | Model | DER (beam=4, standard) | Note |
 |---|---|---|
-| **s43 (production)** | **17.46%** | best single model |
+| **s45 phonikud curriculum (production)** | **16.58%** | stage 1: 1.5M phonikud knesset weak-pretrain (machine-labeled, deduped, decontaminated); stage 2: s43 gold recipe verbatim. Verified 2026-08-20, 5,095 test examples, `run-s45-phonikud/run-002-gold-ft/best` |
+| s43 | 17.46% | previous best single model |
 | v2 | 17.3% | original recipe (22K data); checkpoint has loading quirks under new transformers |
 | s44 | 17.65% | seed replica |
 | v4 (50K data) | 17.78% | 2.3× data → no gain |

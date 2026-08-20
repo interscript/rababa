@@ -15,13 +15,13 @@ General rules (unchanged):
 - NEW standing verdict: RL variants (RAFT/GRPO/GTPO) are all flat or
   negative on these teachers — do not retrain or RL-polish a teacher,
   and treat teacher outputs (not any RL variant) as the label source.
-- SUCCESSORS IN FLIGHT (2026-08-19): r6 Arabic morph aux-task
-  (run-006-morph, ~15h remaining), Hebrew s45 phonikud curriculum
-  (run-s45-phonikud, restarted after a client-stream drop; resumes
-  from volume checkpoints). Standing rule: none replaces its teacher
-  below until a verified eval lands in docs/RESULTS.md AND this file
-  is updated. Do not poll for them, do not use intermediate
-  checkpoints. (Thai scaleup600k VERIFIED 1.7260% PER — section 4.)
+- SUCCESSORS IN FLIGHT (2026-08-20): r6 Arabic morph aux-task
+  (run-006-morph, resumed from checkpoint-6000 after a preemption;
+  ~15h remaining). Standing rule: it does not replace r5 until a
+  verified eval lands in docs/RESULTS.md AND this file is updated.
+  Do not poll, do not use intermediate checkpoints. (VERIFIED:
+  Thai scaleup600k 1.7260% PER — section 4; Hebrew s45 16.58% DER —
+  section 2.)
 
 ## 1. Arabic diacritizer — r5 paragraph-context (580M ByT5-base) ★ NEW CANONICAL
 - Path: `/checkpoints/rababa_arabic_byt5/run-005-context/best` (HF)
@@ -45,18 +45,20 @@ General rules (unchanged):
   ~0.5 DER there. If the client tier is news-heavy, flag it; do not
   silently evaluate news text on the SadeedDiac-25 harness.
 
-## 2. Hebrew diacritizer — s43 (ByT5-base, RELEASE-FROZEN)
-- Path: `/checkpoints/rababa_hebrew/run-s43/best` (HF)
+## 2. Hebrew diacritizer — s45 phonikud curriculum (ByT5-base) ★ VERIFIED 2026-08-20
+- Path: `/checkpoints/rababa_hebrew/run-s45-phonikud/run-002-gold-ft/best` (HF)
 - Contract: input Hebrew consonants (+teamim preserved as-is) → same
   text + nikud. **Use beam=4 at inference**; greedy costs 12 DER points.
-- Quality: 17.46% DER on Nakdimon Biblical test (DictaBERT: 35.6% same
-  protocol). Positioning: Biblical/rabbinic vocalization for Torah
-  study, digital humanities, bibliographic transliteration.
+- Quality: **16.58% DER** on Nakdimon Biblical test (5,095 examples,
+  identical protocol/harness as s43's 17.46 and DictaBERT's 35.6).
+  Recipe: 1.5M-line phonikud knesset weak-pretrain (Dicta
+  machine-labels, deduped 2.48M boilerplate dups, zero test
+  contamination) THEN the s43 gold recipe verbatim — the gold stage
+  corrects the teacher, per the no-teacher-poison rule.
 - Distill notes: teacher labels MUST be beam-4 outputs; ~5.6pp shrink
-  cost observed previously is acceptable.
-- s45 phonikud curriculum is training (may beat 17.46); until its
-  verified eval lands here, s43 is the teacher. Do not distill from
-  phonikud/Dicta machine labels directly (teacher-poison rule).
+  cost observed previously is acceptable. s43 remains available at
+  `/checkpoints/rababa_hebrew/run-s43/best` if a comparison student
+  is wanted.
 
 ## 3. Persian G2P — v1 (ByT5-small, RELEASE-FROZEN)
 - Path on volume `persian-g2p-checkpoints`: `/checkpoints/persian_g2p/run-001/best`
@@ -95,8 +97,7 @@ Start NOW, in parallel where possible:
    next to idling.
 2. Persian (two-metric gate; v1 is final, nothing in flight can
    replace it — the repr line of work is closed).
-3. Hebrew s43 (beam-4 teacher labels required). s45 may land ~11h
-   later; same re-distill-once logic as Arabic.
+3. Hebrew s45 (beam-4 teacher labels required) — GO, verified 16.58.
 4. Thai — GO. scaleup600k verified 1.7260% PER (section 4); smallest,
    cleanest contract, first recommended target.
 
