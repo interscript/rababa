@@ -36,7 +36,8 @@ rejected on principle.)
 
 ## Other languages (best checkpoints)
 
-- Hebrew diacritization: ByT5-base s43, 17.46% DER (Nakdimon Biblical
+- Hebrew diacritization: ByT5-base **s45 phonikud curriculum, 16.58% DER**
+  (prior s43: 17.46; Nakdimon Biblical
   test) — see `docs/RESULTS.md`.
 - Persian G2P: `persian_g2p/run-001/best` (v1, 77.34% SB HA ezafe-norm;
   RAFT run tied — v1 remains canonical).
