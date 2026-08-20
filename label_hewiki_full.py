@@ -23,7 +23,7 @@ image = (
     .apt_install("build-essential")
     .pip_install(
         "torch==2.5.1",
-        "transformers==4.46.3",
+        "transformers==4.38.0",
         "huggingface_hub>=0.20",
         "sentencepiece>=0.2",
         "tqdm",
