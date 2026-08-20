@@ -49,6 +49,7 @@ app = modal.App("rababa-arabic-news-label", image=image)
 
 
 def _clean(line: str) -> str | None:
+    line = re.sub(r"[\u200c\u200f\u200e]", " ", line)
     line = re.sub(r"\s+", " ", line).strip()
     if not (60 <= len(line) <= 2000):
         return None
@@ -79,31 +80,50 @@ def label() -> dict:
     if (out_dir / "DONE").exists():
         return {"status": "already-done"}
 
-    # ---- fetch unlabeled news ----
+    # ---- fetch unlabeled news (BBC Arabic parquet: id/url/title/summary/text) ----
+    def _chunks(article: str) -> list[str]:
+        # split long articles on sentence boundaries into ~600-1400 char chunks
+        article = re.sub(r"\s+", " ", article).strip()
+        if len(article) <= 1600:
+            return [article]
+        parts = re.split(r"(?<=[.!؟]) ", article)
+        out, cur = [], ""
+        for part in parts:
+            if cur and len(cur) + len(part) + 1 > 1200:
+                out.append(cur)
+                cur = part
+            else:
+                cur = f"{cur} {part}".strip()
+        if cur:
+            out.append(cur)
+        return out
+
     lines: list[str] = []
     tried = []
     for repo, cols in (
+        ("Abdelkareem/arabic-bbc-news", ("text", "summary", "title")),
         ("khalidalt/ultimate_arabic_news", ("content", "text", "article", "Body")),
-        ("Abdelkareem/arabic-bbc-news", ("content", "text", "article")),
     ):
         try:
             tried.append(repo)
+            before = len(lines)
             ds = load_dataset(repo, split="train", streaming=True)
             for row in ds:
                 for c in cols:
                     v = row.get(c)
-                    if isinstance(v, str):
-                        cleaned = _clean(v)
-                        if cleaned:
-                            lines.append(cleaned)
+                    if isinstance(v, str) and len(v) >= 60:
+                        for chunk in _chunks(v):
+                            cleaned = _clean(chunk)
+                            if cleaned:
+                                lines.append(cleaned)
                         break
                 if len(lines) >= TARGET_NEWS_LINES * 2:
                     break
-            if lines:
-                print(f"[fetch] {repo}: {len(lines)} raw lines", flush=True)
-                break
+            print(f"[fetch] {repo}: +{len(lines) - before} raw chunks", flush=True)
         except Exception as e:
             print(f"[fetch] {repo} failed: {e}", flush=True)
+        if len(lines) >= TARGET_NEWS_LINES * 2:
+            break
     if not lines:
         return {"status": "no-news-source", "tried": tried}
 
