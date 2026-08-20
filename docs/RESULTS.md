@@ -224,3 +224,20 @@ construction.
   - `/checkpoints/rababa_hebrew_byt5_v2|v4|s43|s44/run-001/best`
 - Prediction cache: `/datasets/hebrew-pred-cache/{v2,v4,s43,s44}.jsonl`
 - Corpora: `/datasets/hebrew-v4/{train,val,test}.jsonl` (50,433/2,654/1,864)
+
+## RAG homograph probe (Persian v1) — CLOSED NEGATIVE (2026-08-20)
+
+Retrieval few-shot (k=3 char-3gram cosine over the 445K v1 train
+sentences, candidates restricted to same-homograph contexts, beam-4,
+identical SentenceBench scoring): **26.07% ezafe-norm vs the 77.34%
+baseline (−51.3pp)**. Baseline reproduced exactly (77.3400, n=203),
+validating the harness. Contamination check: 4 exact test-sentence
+overlaps found in train and excluded.
+
+Interpretation: v1 was never trained with multi-example prompts, so
+the few-shot prefix is a hard format shift — the collapse is a prompt
+artifact as much as a knowledge result. Verdict per the pre-committed
+decision rule (<+0.5pp): the lever is closed for inference-time use;
+any revisit must be train-time retrieval conditioning, budgeted as a
+new experiment, not a polish of this one. Artifacts:
+persian_g2p/rag_probe_result.json, rababa-farsi/eval_persian_rag_probe.py.
