@@ -193,7 +193,7 @@ def train() -> dict:
         label_smoothing_factor=0.1,
         seed=42,
         save_strategy="steps",
-        save_steps=1000,
+        save_steps=300,
         eval_strategy="epoch",
         save_total_limit=1,
         logging_steps=100,
