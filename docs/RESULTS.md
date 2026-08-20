@@ -256,3 +256,12 @@ model + G2P back-projection, so this is a within-corpus comparison;
 a human-labeled Urdu gold set remains the missing evaluation. Next
 lever if wanted: gold corpus (none verifiable exists in our stack),
 or paragraph-context windowing for Urdu. Script: train_urdu_d1.py.
+
+### Urdu d1 beam-4 re-eval — flat (2026-08-20)
+
+beam4: CER 6.53% / word_acc 47.97% vs greedy 6.57% / 46.99%
+(re-run; original verdict 6.40/47.43). Unlike Hebrew s45 (beam worth
+12 DER points), Urdu gains nothing from beam — the G2P-back-projected
+weak labels are near-deterministic, so greedy is already confident.
+Per TODO 06 rule (<55% word_acc): d2 launched (one epoch at 1e-5 from
+d1, run-002-d2); corpus-label consistency is the expected ceiling.
