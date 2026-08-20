@@ -241,3 +241,18 @@ decision rule (<+0.5pp): the lever is closed for inference-time use;
 any revisit must be train-time retrieval conditioning, budgeted as a
 new experiment, not a polish of this one. Artifacts:
 persian_g2p/rag_probe_result.json, rababa-farsi/eval_persian_rag_probe.py.
+
+## Urdu d1 — ByT5-base + Arabic-r5 cross-lingual init (2026-08-20) ★ NEW BEST
+
+`rababa_urdu_byt5/run-001-d1` (HF `best/` on rababa-checkpoints):
+ByT5-base initialized from the Arabic r5 paragraph-context teacher,
+1 epoch over the 573K Urdu pair corpus (alignment-filtered, deduped;
+weak machine labels — comparative eval, not absolute).
+
+**CER 6.40% / word accuracy 47.43% (greedy, n=11,714)** vs the shipped
+Urdu model's 14.77% CER — 2.3x reduction from architecture + teacher
+init alone. Caveat: both train and test labels derive from our Arabic
+model + G2P back-projection, so this is a within-corpus comparison;
+a human-labeled Urdu gold set remains the missing evaluation. Next
+lever if wanted: gold corpus (none verifiable exists in our stack),
+or paragraph-context windowing for Urdu. Script: train_urdu_d1.py.
