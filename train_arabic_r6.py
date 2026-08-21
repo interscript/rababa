@@ -279,18 +279,39 @@ def train() -> dict:
         all_windows.extend(ws)
     print(f"[eval] {len(inputs)} paragraphs -> {len(all_windows)} windows", flush=True)
 
-    preds: list[str] = []
-    with torch.no_grad():
-        for i in range(0, len(all_windows), 8):
-            batch = all_windows[i : i + 8]
+    # resumable generation: append per-window predictions to the volume
+    import json as _json
+    prog = Path("/checkpoints") / RUN / "eval_progress.jsonl"
+    saved: dict[int, str] = {}
+    if prog.exists():
+        for line in prog.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                row = _json.loads(line)
+                saved[row["i"]] = row["pred"]
+        print(f"[gen] resuming with {len(saved)} saved windows", flush=True)
+
+    missing = [i for i in range(len(all_windows)) if i not in saved]
+    n_new = 0
+    with torch.no_grad(), prog.open("a", encoding="utf-8") as prog_out:
+        for bi in range(0, len(missing), 8):
+            idxs = missing[bi : bi + 8]
+            batch = [all_windows[i] for i in idxs]
             enc = tokenizer(
                 batch, return_tensors="pt", padding=True, truncation=True, max_length=1600
             ).to(device)
             with torch.autocast("cuda", torch.bfloat16):
                 gen = trainer.model.generate(**enc, max_new_tokens=3200, num_beams=1)
-            preds.extend(tokenizer.batch_decode(gen, skip_special_tokens=True))
-            if (i // 8) % 40 == 0:
-                print(f"[gen] {i + len(batch)}/{len(all_windows)}", flush=True)
+            batch_preds = tokenizer.batch_decode(gen, skip_special_tokens=True)
+            for i, pred in zip(idxs, batch_preds):
+                prog_out.write(_json.dumps({"i": i, "pred": pred}, ensure_ascii=False) + "\n")
+                saved[i] = pred
+            n_new += len(idxs)
+            if n_new % 160 == 0:
+                prog_out.flush()
+                checkpoints_volume.commit()
+                print(f"[gen] {len(saved)}/{len(all_windows)} (committed)", flush=True)
+    checkpoints_volume.commit()
+    preds = [saved[i] for i in range(len(all_windows))]
 
     k = 0
     paragraphs = []
