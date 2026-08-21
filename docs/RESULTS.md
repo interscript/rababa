@@ -276,3 +276,19 @@ CER down 0.63pp, word_acc up 5.0pp. The weak-corpus ceiling is higher
 than d1 alone reached; the standing rule remains that absolute
 numbers are within-corpus (machine labels both sides). Best model
 now: run-002-d2. Script: train_urdu_d2.py.
+
+## Arabic r6 — morphological aux-task (iʿrāb supervision) ★ NEW CANONICAL TEACHER (2026-08-21)
+
+`rababa_arabic_byt5/run-006-morph/best` (HF, rababa-checkpoints): r5's
+plain stream + TAG-prefixed morph stream (qalsadi 300K lines, 68.6%
+exact case/tense), two-format multitask on one ByT5-base, upsampled
+x4 to ~25% of the mix, init from r5, 1 epoch, A100-80GB.
+
+**Total DER (CE) 2.5793 / Morphological DER 1.5317** on
+SadeedDiac-25, windowed zero-skip at 1400B — vs r5's 2.6775/1.5965.
+Both components improved; the diagnosis (33% of residual = word-final
+case endings; Total-vs-Morph gap) is confirmed and the fix is
+knowledge injection, not policy sharpening. Inference contract is
+UNCHANGED from r5 (no TAG prefix at inference = plain diacritization;
+1400B windows). r6 REPLACES r5 as the Arabic teacher for distillation.
+Script: train_arabic_r6.py.
