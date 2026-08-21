@@ -300,21 +300,44 @@ def evaluate() -> dict:
             examples.append((undiacritized, line))
     print(f"[eval] {len(examples)} examples", flush=True)
 
-    total_wrong = total_positions = total_n = 0
-    with torch.no_grad():
-        for i in range(0, len(examples), 8):
-            batch = examples[i : i + 8]
+    # resumable beam-4 generation: per-example predictions on the volume
+    prog = Path("/checkpoints") / RUN / "eval_progress.jsonl"
+    saved: dict[int, str] = {}
+    if prog.exists():
+        for line in prog.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                row = json.loads(line)
+                saved[row["i"]] = row["pred"]
+        print(f"[eval] resuming with {len(saved)} saved examples", flush=True)
+
+    missing = [i for i in range(len(examples)) if i not in saved]
+    n_new = 0
+    with torch.no_grad(), prog.open("a", encoding="utf-8") as prog_out:
+        for bi in range(0, len(missing), 8):
+            idxs = missing[bi : bi + 8]
+            batch = [examples[i] for i in idxs]
             enc = tokenizer([s for s, _ in batch], return_tensors="pt", padding=True,
                             truncation=True, max_length=512).to("cuda")
             gen = model.generate(**enc, max_new_tokens=512, num_beams=4)
             preds = tokenizer.batch_decode(gen, skip_special_tokens=True)
-            for pred, (_, gold) in zip(preds, batch):
-                der, n = seq2seq_der(pred, gold)
-                total_wrong += int(der * n)
-                total_positions += n
-                total_n += 1
-            if i % 240 == 0 and i > 0:
-                print(f"  [{i}/{len(examples)}] DER={total_wrong / max(1, total_positions):.4f}", flush=True)
+            for i, pred in zip(idxs, preds):
+                prog_out.write(json.dumps({"i": i, "pred": pred}, ensure_ascii=False) + "\n")
+                saved[i] = pred
+            n_new += len(idxs)
+            if n_new % 160 == 0:
+                prog_out.flush()
+                checkpoints_volume.commit()
+                print(f"  [{len(saved)}/{len(examples)}] (committed)", flush=True)
+    checkpoints_volume.commit()
+
+    total_wrong = total_positions = total_n = 0
+    for i, (_, gold) in enumerate(examples):
+        der, n = seq2seq_der(saved[i], gold)
+        total_wrong += int(der * n)
+        total_positions += n
+        total_n += 1
+        if i % 240 == 0 and i > 0:
+            print(f"  [{i}/{len(examples)}] DER={total_wrong / max(1, total_positions):.4f}", flush=True)
 
     der = total_wrong / max(1, total_positions)
     print(f"=== s46 diversified-weak DER (beam-4): {der:.4f} ({total_n} examples) ===", flush=True)
