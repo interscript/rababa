@@ -157,25 +157,42 @@ def label() -> dict:
     model = AutoModelForSeq2SeqLM.from_pretrained(TEACHER).to("cuda")
     model.eval()
 
-    preds: list[str] = []
+    import json as _json
+    out_dir.mkdir(parents=True, exist_ok=True)
+    prog = out_dir / "label_progress.jsonl"
+    saved: dict[int, str] = {}
+    if prog.exists():
+        for line in prog.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                row = _json.loads(line)
+                saved[row["i"]] = row["pred"]
+        print(f"[label] resuming: {len(saved)} windows already labeled", flush=True)
+
+    todo = [i for i in range(len(windows)) if i not in saved]
     batch = 8
-    with torch.no_grad():
-        for i in range(0, len(windows), batch):
-            chunk = windows[i : i + batch]
+    with torch.no_grad(), prog.open("a", encoding="utf-8") as prog_out:
+        for bi in range(0, len(todo), batch):
+            idxs = todo[bi : bi + batch]
+            chunk = [windows[i] for i in idxs]
             enc = tokenizer(
                 chunk, return_tensors="pt", padding=True, truncation=True, max_length=1600
             ).to("cuda")
             with torch.autocast("cuda", torch.bfloat16):
                 gen = model.generate(**enc, max_new_tokens=3200, num_beams=1)
-            preds.extend(tokenizer.batch_decode(gen, skip_special_tokens=True))
-            if (i // batch) % 50 == 0:
-                print(f"[label] {i + len(chunk)}/{len(windows)}", flush=True)
+            batch_preds = tokenizer.batch_decode(gen, skip_special_tokens=True)
+            for i, pred in zip(idxs, batch_preds):
+                saved[i] = pred
+                prog_out.write(_json.dumps({"i": i, "pred": pred}, ensure_ascii=False) + "\n")
+            if len(saved) % 400 < batch:
+                prog_out.flush()
+                datasets_volume.commit()
+                print(f"[label] {len(saved)}/{len(windows)} (committed)", flush=True)
+    datasets_volume.commit()
 
     kept = 0
-    out_dir.mkdir(parents=True, exist_ok=True)
     with (out_dir / "news.txt").open("w", encoding="utf-8") as f:
-        for pred in preds:
-            pred = pred.strip()
+        for i in range(len(windows)):
+            pred = saved.get(i, "").strip()
             if not pred or len(pred) < 40:
                 continue
             f.write(pred + "\n")

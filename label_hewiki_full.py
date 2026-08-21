@@ -98,32 +98,54 @@ def label_shard(shard: int) -> list[list[str]]:
         s2 = src.replace(" ", "")
         return any(s2[i : i + 40] in test_windows for i in range(0, max(1, len(s2) - 40), 20))
 
-    pairs: list[list[str]] = []
+    import json as _json
+    prog = Path(f"/datasets/hebrew-hewiki-dicta/shard_{shard}_progress.jsonl")
+    prog.parent.mkdir(parents=True, exist_ok=True)
+    done_idx: set[int] = set()
+    pairs_by_idx: dict[int, list[str]] = {}
+    if prog.exists():
+        for line in prog.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                row = _json.loads(line)
+                done_idx.add(row["li"])
+                pairs_by_idx[row["li"]] = [row["src"], row["tgt"]]
+        print(f"[shard {shard}] resuming: {len(done_idx)} lines already labeled", flush=True)
+
+    todo = [li for li in range(len(lines)) if li not in done_idx]
     batch_size = 32
     t0 = time.time()
-    for i in range(0, len(lines), batch_size):
-        batch = lines[i : i + batch_size]
-        try:
-            predictions = model.predict(batch, tokenizer)
-        except Exception as e:
-            print(f"[shard {shard}] batch error: {e}", flush=True)
-            continue
-        for src_line, pred in zip(batch, predictions):
-            if not pred or not pred.strip():
+    with prog.open("a", encoding="utf-8") as prog_out:
+        for bi in range(0, len(todo), batch_size):
+            idxs = todo[bi : bi + batch_size]
+            batch = [lines[li] for li in idxs]
+            try:
+                predictions = model.predict(batch, tokenizer)
+            except Exception as e:
+                print(f"[shard {shard}] batch error: {e}", flush=True)
                 continue
-            norm = _normalize(pred.strip())
-            if norm is None:
-                continue
-            src, target = norm
-            if contaminated(src):
-                continue
-            pairs.append([src, target])
-        n = i // batch_size + 1
-        if n % 100 == 0:
-            rate = len(pairs) / max(1.0, time.time() - t0)
-            print(f"[shard {shard}] {n}/{(len(lines) + batch_size - 1) // batch_size} kept={len(pairs)} "
-                  f"{rate:.1f}/s", flush=True)
-    return pairs
+            for li, src_line, pred in zip(idxs, batch, predictions):
+                done_idx.add(li)
+                if not pred or not pred.strip():
+                    prog_out.write(_json.dumps({"li": li}) + "\n")
+                    continue
+                norm = _normalize(pred.strip())
+                if norm is None:
+                    prog_out.write(_json.dumps({"li": li}) + "\n")
+                    continue
+                src, target = norm
+                if contaminated(src):
+                    prog_out.write(_json.dumps({"li": li}) + "\n")
+                    continue
+                pairs_by_idx[li] = [src, target]
+                prog_out.write(_json.dumps(
+                    {"li": li, "src": src, "tgt": target}, ensure_ascii=False) + "\n")
+            n = len(done_idx)
+            if n % 3200 < batch_size:
+                prog_out.flush()
+                datasets_volume.commit()
+                print(f"[shard {shard}] {n}/{len(lines)} kept={len(pairs_by_idx)} (committed)", flush=True)
+    datasets_volume.commit()
+    return [pairs_by_idx[li] for li in sorted(pairs_by_idx)]
 
 
 @app.function(
