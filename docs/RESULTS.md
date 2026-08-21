@@ -292,3 +292,12 @@ knowledge injection, not policy sharpening. Inference contract is
 UNCHANGED from r5 (no TAG prefix at inference = plain diacritization;
 1400B windows). r6 REPLACES r5 as the Arabic teacher for distillation.
 Script: train_arabic_r6.py.
+
+### r6 out-of-domain — WikiNews-2024 multi-ref (2026-08-21)
+
+r6 full-mode **WER 19.8191 / DER 12.4613** (no-CE: WER 14.6571 /
+DER 13.7271) — beats BOTH r5 (20.52/12.72) and r3 (19.99/12.60).
+The r5-era paragraph-specialization OOD trade-off is erased: the
+morph aux-task improved in-domain AND out-of-domain. r6 strictly
+dominates all measured surfaces. r7's OOD gate denominator is
+therefore 19.82/12.46 (r6), not r5's number.
