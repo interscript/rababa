@@ -302,3 +302,12 @@ The r5-era paragraph-specialization OOD trade-off is erased: the
 morph aux-task improved in-domain AND out-of-domain. r6 strictly
 dominates all measured surfaces. r7's OOD gate denominator is
 therefore 19.82/12.46 (r6), not r5's number.
+
+### r6 beam-4 probe (2026-08-23) — NEGATIVE
+
+Beam-4 on the identical windowed harness: **Total DER 2.5588 /
+Morph DER 1.5379** vs greedy 2.5793/1.5317 — noise-level change
+both ways. Beam stays UNSHIPPED for Arabic: greedy posteriors are
+already sharp (consistent with the knowledge-injection diagnosis),
+and beam would cost ~4x inference. The Hebrew beam gain (12 DER
+points) does not transfer. Script: eval_arabic_r6_beam4.py.

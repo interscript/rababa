@@ -45,9 +45,11 @@ first cross-language transplant.
       (init from s46-best if it beats s45, else s45), aux up x4.
 - [ ] Gate: beat s45/s46 DER on the identical beam-4 harness.
 
-## 4. Arabic r6 beam-4 probe (1h A10G, queued on GPU budget)
+## 4. Arabic r6 beam-4 probe — CLOSED (negative)
 All Arabic numbers are greedy; Hebrew gained 12 DER points from
 beam. If beam helps r6, ship beam — free quality, zero training.
+DONE (2026-08-23): beam-4 Total DER 2.5588 vs greedy 2.5793, Morph
+1.5379 vs 1.5317 — noise both ways. Greedy stays (4x cheaper).
 
 ## 5. Delivery (agent-side per manifest; our job: keep teachers stable)
 - [ ] IMF v1 export + index registration: urdu-diac d2, khmer
