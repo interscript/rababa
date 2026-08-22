@@ -37,7 +37,10 @@ that r6's aux-task fixed. The template is validated; this is its
 first cross-language transplant.
 - [ ] Ground a Hebrew morph labeler (Dicta morph disambiguator /
       HebPipe-class POS+morph) — must run offline-ish on Modal.
-- [ ] Label knesset + hewiki lines with morph tags (A10G, ~3h).
+- [x] Label knesset + hewiki lines with morph tags (A10G, ~3h).
+      DONE: 200K knesset lines → /datasets/hebrew-morph/train.jsonl
+      (dictabert-morph, segmented src + per-token tags, 100% keep
+      after prefix-split fix; hewiki morph not needed for s47 v1).
 - [ ] train_hebrew_s47.py: s45 recipe + TAG-prefixed morph stream
       (init from s46-best if it beats s45, else s45), aux up x4.
 - [ ] Gate: beat s45/s46 DER on the identical beam-4 harness.
