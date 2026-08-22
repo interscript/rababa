@@ -98,8 +98,14 @@ def label_shard(shard: int) -> dict:
                 continue
             for li, res in zip(idxs, results):
                 done_idx.add(li)
+                # dictabert-morph splits prefixed words into separate token
+                # entries ("ב|ישראל" -> 2 tokens), so len(toks) never matches
+                # text.split() on real text. The token list IS the ground truth.
                 toks = res.get("tokens") or []
-                if not toks or len(toks) != len(res.get("text", "").split()):
+                bad = not toks or not all(
+                    isinstance(t.get("token"), str) and t.get("pos") for t in toks
+                )
+                if bad:
                     out.write(json.dumps({"li": li}) + "\n")
                     continue
                 tags = [_tag(t) for t in toks]
