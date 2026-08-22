@@ -24,7 +24,7 @@ TARGET_LINES = 200_000
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .pip_install("torch==2.5.1", "transformers==4.46.3", "huggingface_hub>=0.24")
+    .pip_install("torch==2.5.1", "transformers==4.38.0", "huggingface_hub>=0.24")
     .workdir("/opt/rababa")
 )
 
@@ -143,6 +143,8 @@ def finalize() -> dict:
 
 @app.local_entrypoint()
 def main():
-    list(label_shard.map(range(N_SHARDS)))
+    # two waves of 3: stay inside the workspace GPU-concurrency budget
+    list(label_shard.map(range(0, 3)))
+    list(label_shard.map(range(3, N_SHARDS)))
     print(finalize.remote())
 
