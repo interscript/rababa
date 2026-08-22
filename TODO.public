@@ -13,11 +13,15 @@ inherent vowels and reduced homographic orthography, which rules
 cannot restore. Deliverable: a model that romanizes INCOMPLETE input.
 - [ ] Rules-vs-ML audit on the 895-word split (full orthography):
       run the yaml map, publish both numbers honestly.
-- [ ] Vowel-strip augmentation: strip vowel signs/coeng from src,
+- [x] Vowel-strip augmentation: strip vowel signs/coeng from src,
       keep full tgt; train Khmer v2 on (full→full) + (stripped→full).
       This is a new CAPABILITY (restoration), measured by a
       stripped-input benchmark where rules structurally cannot run.
+      DONE (run-002-restore): stripped 19.22% word_acc / 39.41 CER
+      (rules 0.0%); full 53.18/28.27 (−5.8pp vs v1 58.99).
 - [ ] Ship decision: map for full orthography, v2 for reduced.
+      Recommended exactly that; optional parked lever = v1-init
+      two-stage curriculum to reclaim the 5.8pp.
 
 ## 2. Urdu: anchor the claim (zero GPU)
 - [ ] Find the official UDD (gold-standard Urdu diacritization)
