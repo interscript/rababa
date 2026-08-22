@@ -32,3 +32,15 @@ OOD gap needs domain data, not morphology.
   majority + gold 2014 news keeps ID anchored; the ID gate is the
   hard stop against entrenchment.
 - No RL, no LLM labels.
+
+## DEFERRED (2026-08-22)
+
+r6's verified OOD sweep (WikiNews-2024 full 19.82/12.46 — beats r3
+AND r5) absorbed this workstream's purpose: there is no OOD deficit
+left to repair. r7 as designed costs 20h of A100-80GB for marginal
+OOD gains with ID-regression risk, and its concurrent A100 footprint
+is exactly what triggers Modal workspace evictions. News labeling
+stopped at 5,600/13,987 windows — all committed and resumable on the
+volume (label_progress.jsonl), and train_arabic_r7.py is ready with
+--init-run run-006-morph. Reopen ONLY if a news-heavy client use
+case emerges or Arabic OOD regresses in the wild.
