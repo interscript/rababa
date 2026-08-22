@@ -33,6 +33,8 @@ image = (
         "transformers==4.46.3",
         "pandas",
         "pyarrow",
+        "pyarabic",
+        "prettytable",
     )
     .add_local_file("sadeed_evaluator.py", "/opt/rababa/sadeed_evaluator.py", copy=True)
     .add_local_dir("data/sadeed-diac-25", "/opt/rababa/data/sadeed-diac-25", copy=True)
