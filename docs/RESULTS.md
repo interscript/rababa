@@ -280,6 +280,13 @@ now: run-002-d2. Script: train_urdu_d2.py.
 
 ## Arabic r6 — morphological aux-task (iʿrāb supervision) ★ NEW CANONICAL TEACHER (2026-08-21)
 
+### r6 verdict table (SadeedDiac-25, 2026-08-21)
+
+| Model | Total DER | Morph DER | Protocol |
+|---|---|---|---|
+| **r6 (greedy, canonical)** | **2.5793** | **1.5317** | windowed zero-skip, 1400B |
+| r5 | 2.6775 | 1.5965 | windowed zero-skip, 1400B |
+
 `rababa_arabic_byt5/run-006-morph/best` (HF, rababa-checkpoints): r5's
 plain stream + TAG-prefixed morph stream (qalsadi 300K lines, 68.6%
 exact case/tense), two-format multitask on one ByT5-base, upsampled

@@ -1,15 +1,27 @@
 # SOTA Benchmark — rababa + secryst vs Published Results
 
-> **Date**: 2026-08-09. All our results measured via `modal run modal_app.py::evaluate`.
-> SOTA results from published papers and shared task leaderboards.
+> **Current state: 2026-08-23.** The tables below the line are the
+> 2026-08-09 historical baseline (char-encoder era) kept for
+> provenance. Everything since moved to ByT5 seq2seq teachers.
 
-## Summary table
+## Current verdict table
 
-| Language | Our model | Our metric | Our result | SOTA result | SOTA model | Gap |
-|---|---|---|---|---|---|---|
-| **Arabic** | rababa_arabic (5M) | DER | **2.42%** | 1.2% | Sadeed (1.5B) | 2.0× |
-| **Hebrew** | rababa_hebrew (24M) | DER | **66.0%** | ~2-5% | Dicta/D-Nikud | 13-33× |
-| **Thai** | secryst_thai_ipa (25M) | PER | **2.18%** | ~6% | Historical | **BETTER** |
+| Language | Canonical model | Metric | Ours | Published SOTA | Notes |
+|---|---|---|---|---|---|
+| **Arabic diacritization** | r6 morph-aux (ByT5-base) | DER, SadeedDiac-25 | **2.5793** (Morph 1.5317) | 1.2% (Sadeed, 1.5B LLM) | 2.1× gap at ~300× fewer params; OOD WikiNews-2024 19.82 WER/12.46 DER; beam-4 flat → greedy contract |
+| **Hebrew diacritization** | s46 phonikud+hewiki (ByT5-base) | DER, Nakdimon | **16.43** (beam-4) | ~1-3% (Dicta proprietary / D-Nikud) | honest gap remains; s47 morph-aux pending; Nakdimon itself ~8 DER open baseline |
+| **Thai G2P** | umt5 continued-FT | PER | **1.73** | ~5-6% historical | frozen — better than published baselines |
+| **Persian homograph** | v1 GE2PE | SB HA ezafe-norm | **77.34%** | 76.89% (HomoRich) | frozen — at/above published |
+| **Urdu diacritization** | d2 (ByT5-base) | CER | **5.77** | no public gold | within-corpus caveat; CLE gold inquiry pending |
+| **Khmer G2P** | v1 ByT5-small (full) + v2 (restoration) | word_acc | **58.99%** full / **19.22%** stripped | rules: 58.6%/0.0% | v2 is the only system that runs on reduced orthography |
+
+Technique verdicts baked in: knowledge injection (morph aux-task r6)
+beats RL (RAFT/GRPO flat-to-negative ×3, RAG probe negative ×1);
+weak-pretrain→gold-FT curriculum (s45→s46) corrects machine-labeled
+teachers; beam search helps only where posteriors are soft (Hebrew
+yes, Arabic no).
+
+---
 
 ## Arabic diacritization
 
