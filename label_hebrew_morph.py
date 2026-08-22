@@ -147,10 +147,22 @@ def finalize() -> dict:
     return {"labeled": n_lines}
 
 
+@app.function(timeout=30 * 60, volumes={"/datasets": datasets_volume})
+def check_shards() -> list[str]:
+    import os
+
+    datasets_volume.reload()
+    return sorted(os.listdir("/datasets/hebrew-morph"))
+
+
 @app.local_entrypoint()
 def main():
     # two waves of 3: stay inside the workspace GPU-concurrency budget
+    print("before wave 1:", check_shards.remote(), flush=True)
     list(label_shard.map(range(0, 3)))
+    print("after wave 1:", check_shards.remote(), flush=True)
     list(label_shard.map(range(3, N_SHARDS)))
+    print("after wave 2:", check_shards.remote(), flush=True)
     print(finalize.remote())
+    print("after finalize:", check_shards.remote(), flush=True)
 
