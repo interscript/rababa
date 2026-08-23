@@ -37,11 +37,11 @@ diacritization — see `results/sadeed-glm-5-2/README.md`.)
 ## Other languages (best checkpoints)
 
 - Hebrew diacritization: ByT5-base **s46 phonikud+hewiki, 16.43% DER**
-  (s45: 16.58; s43: 17.46; Nakdimon test, beam-4) —
+  (s45: 16.58; s43: 17.46; Nakdimon test, beam-4; greedy 16.44 ≈
+  beam) —
   `/checkpoints/rababa_hebrew/run-s46-phonikud-plus/run-002-gold-ft/best`.
-  s47 (morph aux transplant, dictabert-morph TAG stream) training —
-  if it beats 16.43 it becomes canonical; check
-  `docs/RESULTS.md` for the verdict.
+  s47 (morph aux transplant) CLOSED NEGATIVE 2026-08-23: 16.53 vs
+  16.43 — the r6 template is not portable as-is; teacher line closed.
 - Urdu diacritization: d2 **5.77 CER / 52.47% word-acc (within-corpus;
   no public gold — CLE Pakistan inquiry pending)** —
   `/checkpoints/rababa_urdu_byt5/run-002-d2/best` on

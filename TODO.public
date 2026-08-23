@@ -30,20 +30,25 @@ cannot restore. Deliverable: a model that romanizes INCOMPLETE input.
       found: label the claim "within-corpus, no gold available"
       everywhere it appears.
 
-## 3. Hebrew s47: transplant the r6 morph template (the big swing)
+## 3. Hebrew s47: transplant the r6 morph template — CLOSED (negative)
 Hebrew's 16.58 residual is plausibly morphology (nikud encodes
 gender/number/agreement) — the same shape as Arabic's iʿrāb residual
 that r6's aux-task fixed. The template is validated; this is its
 first cross-language transplant.
-- [ ] Ground a Hebrew morph labeler (Dicta morph disambiguator /
+- [x] Ground a Hebrew morph labeler (Dicta morph disambiguator /
       HebPipe-class POS+morph) — must run offline-ish on Modal.
+      DONE: dictabert-morph (probe + labels verified).
 - [x] Label knesset + hewiki lines with morph tags (A10G, ~3h).
       DONE: 200K knesset lines → /datasets/hebrew-morph/train.jsonl
       (dictabert-morph, segmented src + per-token tags, 100% keep
       after prefix-split fix; hewiki morph not needed for s47 v1).
-- [ ] train_hebrew_s47.py: s45 recipe + TAG-prefixed morph stream
+- [x] train_hebrew_s47.py: s45 recipe + TAG-prefixed morph stream
       (init from s46-best if it beats s45, else s45), aux up x4.
-- [ ] Gate: beat s45/s46 DER on the identical beam-4 harness.
+- [x] Gate: beat s45/s46 DER on the identical beam-4 harness.
+      RESULT (2026-08-23): s47 16.53 vs s46 16.43 — FAILED.
+      r6's aux-task win is not template-portable; Arabic's residual
+      was iʿrāb-shaped, Hebrew's is not. s46 stays canonical; line
+      closed (no s48).
 
 ## 4. Arabic r6 beam-4 probe — CLOSED (negative)
 All Arabic numbers are greedy; Hebrew gained 12 DER points from

@@ -171,10 +171,10 @@ construction.
 
 ### Best result
 
-| Model | DER (beam=4, standard) | Note |
-|---|---|---|
-| **s46 phonikud+hewiki (production)** | **16.43%** | s45 recipe + hewiki weak garnish (73.8K Dicta-labeled wiki lines in stage 1). Verified 2026-08-22, 5,095 test examples, `run-s46-phonikud-plus/run-002-gold-ft/best`. Marginal −0.15pp over s45; new best |
-| s45 phonikud curriculum | 16.58% | stage 1: 1.5M phonikud knesset weak-pretrain (machine-labeled, deduped, decontaminated); stage 2: s43 gold recipe verbatim. Verified 2026-08-20, 5,095 test examples, `run-s45-phonikud/run-002-gold-ft/best` |
+| Model | DER (beam=4, standard) | DER greedy | Note |
+|---|---|---|---|
+| **s46 phonikud+hewiki (production)** | **16.43%** | **16.44%** | s45 recipe + hewiki weak garnish (73.8K Dicta-labeled wiki lines in stage 1). Verified 2026-08-22/23, 5,095 test examples, `run-s46-phonikud-plus/run-002-gold-ft/best`. Greedy ≈ beam-4 → the shipped runtime path delivers reference quality. New best |
+| s45 phonikud curriculum | 16.58% | — | stage 1: 1.5M phonikud knesset weak-pretrain (machine-labeled, deduped, decontaminated); stage 2: s43 gold recipe verbatim. Verified 2026-08-20, 5,095 test examples, `run-s45-phonikud/run-002-gold-ft/best` |
 | s43 | 17.46% | previous best single model |
 | v2 | 17.3% | original recipe (22K data); checkpoint has loading quirks under new transformers |
 | s44 | 17.65% | seed replica |
@@ -188,7 +188,22 @@ construction.
 - All ByT5-base (580M), seq2seq, 3 epochs, beam=4 at inference
 - Eval scripts: `eval_hebrew_v4_beam4.py`, `analyze_hebrew_errors.py`
 
+### Hebrew s47 — morph aux transplant — CLOSED NEGATIVE (2026-08-23)
+
+The r6 template's first cross-language move: dictabert-morph TAG
+stream (100K knesset lines ×4, segmented src + per-token tags) +
+gold×2 + 200K weak pairs, init from s46, LR 2e-5, 1 epoch.
+**DER 16.53 (beam-4, 5,095 examples)** vs init s46's 16.43 — no gain.
+
+Read: the r6 aux-task win is not template-portable as-is. Arabic's
+residual was word-final case endings (iʿrāb), which POS+feats
+supervision directly disambiguates; Hebrew's 16.4 residual is not
+decomposable the same way by gender/number/person tags. **s46 stays
+canonical; Hebrew teacher line closed** (no s48 — money discipline).
+Checkpoint: `run-s47-morph/best`.
+
 ### Error analysis (v4/s43/s44, analyze_hebrew_errors.py)
+
 
 | Error type | Count (v4) | Share |
 |---|---|---|
