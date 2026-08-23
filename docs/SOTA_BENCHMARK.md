@@ -12,7 +12,7 @@
 | **Hebrew diacritization** | s46 phonikud+hewiki (ByT5-base) | DER, Nakdimon | **16.43** (beam-4) | ~1-3% (Dicta proprietary / D-Nikud) | honest gap remains; s47 morph-aux pending; Nakdimon itself ~8 DER open baseline |
 | **Thai G2P** | umt5 continued-FT | PER | **1.73** | ~5-6% historical | frozen — better than published baselines |
 | **Persian homograph** | v1 GE2PE | SB HA ezafe-norm | **77.34%** | 76.89% (HomoRich) | frozen — at/above published |
-| **Urdu diacritization** | d2 (ByT5-base) | CER | **5.77** | no public gold | within-corpus caveat; CLE gold inquiry pending |
+| **Urdu diacritization** | urd-diac-1.0 (shipped, ByT5-small) | CER / word_acc | **3.74 / 67.51** | no public gold | cross-lineage comparable eval 2026-08-23: beats d2 (5.94/51.95) on the same harness; CLE gold inquiry pending |
 | **Khmer G2P** | v1 ByT5-small (full) + v2 (restoration) | word_acc | **58.99%** full / **19.22%** stripped | rules: 58.6%/0.0% | v2 is the only system that runs on reduced orthography |
 
 Technique verdicts baked in: knowledge injection (morph aux-task r6)

@@ -42,10 +42,16 @@ diacritization — see `results/sadeed-glm-5-2/README.md`.)
   `/checkpoints/rababa_hebrew/run-s46-phonikud-plus/run-002-gold-ft/best`.
   s47 (morph aux transplant) CLOSED NEGATIVE 2026-08-23: 16.53 vs
   16.43 — the r6 template is not portable as-is; teacher line closed.
-- Urdu diacritization: d2 **5.77 CER / 52.47% word-acc (within-corpus;
-  no public gold — CLE Pakistan inquiry pending)** —
-  `/checkpoints/rababa_urdu_byt5/run-002-d2/best` on
-  `rababa-checkpoints`. d1 (6.40) superseded.
+- Urdu diacritization: **urd-diac-1.0 (shipped, ByT5-small) is the
+  champion — CER 3.74 / word_acc 67.51** on urdu-diacrit/test.jsonl
+  (comparable eval 2026-08-23, both models under the 5.14.1 export
+  stack). d2 (`rababa_urdu_byt5/run-002-d2`, ByT5-base) measured
+  5.94/51.95 on the SAME harness — it is the rababa-lineage best
+  only, not the cross-lineage best; do not ship it over 1.0.
+  Version trap: the urd-diac-1.0 checkpoint generates EMPTY strings
+  under transformers 4.46.3 — evaluate legacy checkpoints under their
+  export stack (torch 2.12.1 / transformers 5.14.1). No public gold;
+  CLE Pakistan inquiry pending.
 - Persian G2P: `persian_g2p/run-001/best` (v1, 77.34% SB HA ezafe-norm;
   RAFT run tied — v1 remains canonical). FROZEN — no more training.
 - Thai G2P: umt5 continued-fine-tune, **1.7260% PER** (public baseline

@@ -23,11 +23,19 @@ image = (
     .pip_install("torch==2.5.1", "transformers==4.46.3", "editdistance", "tqdm")
 )
 
+# the shipped urd-diac-1.0 checkpoint was saved/validated under the
+# export stack (torch 2.12.1 / transformers 5.14.1); under 4.46.3 it
+# generates EMPTY strings. evaluate each model under its own stack.
+image514 = (
+    modal.Image.debian_slim(python_version="3.11")
+    .pip_install("torch==2.12.1", "transformers==5.14.1", "editdistance", "tqdm")
+)
+
 app = modal.App("rababa-urdu-comparable", image=image)
 
 MODELS = {
-    "urd_diacit_run001_shipped": "/volumes/udiac/urdu_diacrit/run-001/best",
-    "d2_rababa_urdu_byt5": "/volumes/ckpts/rababa_urdu_byt5/run-002-d2/best",
+    "urd_diacit_run001_shipped": ("/volumes/udiac/urdu_diacrit/run-001/best", image514),
+    "d2_rababa_urdu_byt5": ("/volumes/ckpts/rababa_urdu_byt5/run-002-d2/best", image),
 }
 
 
@@ -40,16 +48,8 @@ MODELS = {
         "/volumes/ckpts": checkpoints_volume,
     },
 )
-def evaluate() -> dict:
+def load_pairs() -> list[list[str]]:
     import json
-    from pathlib import Path
-
-    import editdistance
-    import torch
-    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-
-    for v in (urdu_volume, udiac_volume, checkpoints_volume):
-        v.reload()
 
     pairs = []
     with open("/datasets/urdu-diacrit/test.jsonl", encoding="utf-8") as f:
@@ -58,34 +58,62 @@ def evaluate() -> dict:
             if line:
                 row = json.loads(line)
                 if row.get("src") and row.get("tgt"):
-                    pairs.append((row["src"].strip(), row["tgt"].strip()))
+                    pairs.append([row["src"].strip(), row["tgt"].strip()])
     print(f"[data] {len(pairs)} test pairs", flush=True)
+    return pairs
 
-    results = {}
-    for name, ckpt in MODELS.items():
-        tok = AutoTokenizer.from_pretrained(ckpt)
-        model = AutoModelForSeq2SeqLM.from_pretrained(ckpt).to("cuda")
-        model.eval()
-        preds: list[str] = []
-        with torch.no_grad():
-            for i in range(0, len(pairs), 64):
-                chunk = pairs[i : i + 64]
-                enc = tok([s for s, _ in chunk], return_tensors="pt", padding=True,
-                          truncation=True, max_length=256).to("cuda")
-                gen = model.generate(**enc, max_new_tokens=256, num_beams=1)
-                preds.extend(tok.batch_decode(gen, skip_special_tokens=True))
-        total_ed = total_len = exact = 0
-        for (_, tgt), pred in zip(pairs, preds):
-            total_ed += editdistance.eval(pred.strip(), tgt)
-            total_len += len(tgt)
-            exact += int(pred.strip() == tgt)
-        res = {"cer": 100 * total_ed / max(1, total_len), "word_acc": 100 * exact / len(pairs)}
-        results[name] = res
-        print(f"[{name}] CER={res['cer']:.2f} word_acc={res['word_acc']:.2f}", flush=True)
-        del model
-        torch.cuda.empty_cache()
 
-    return results
+@app.function(
+    gpu="A10G",
+    timeout=2 * 60 * 60,
+    image=image514,
+    volumes={
+        "/datasets": urdu_volume,
+        "/volumes/udiac": udiac_volume,
+        "/volumes/ckpts": checkpoints_volume,
+    },
+)
+def eval_model(ckpt: str) -> dict:
+    import editdistance
+    import torch
+    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+
+    for v in (urdu_volume, udiac_volume, checkpoints_volume):
+        v.reload()
+
+    pairs = [(s, t) for s, t in load_pairs.remote()]
+    tok = AutoTokenizer.from_pretrained(ckpt)
+    model = AutoModelForSeq2SeqLM.from_pretrained(ckpt).to("cuda")
+    model.eval()
+    preds: list[str] = []
+    with torch.no_grad():
+        for i in range(0, len(pairs), 64):
+            chunk = pairs[i : i + 64]
+            enc = tok([s for s, _ in chunk], return_tensors="pt", padding=True,
+                      truncation=True, max_length=256).to("cuda")
+            gen = model.generate(**enc, max_new_tokens=256, num_beams=1)
+            preds.extend(tok.batch_decode(gen, skip_special_tokens=True))
+    total_ed = total_len = exact = 0
+    for (_, tgt), pred in zip(pairs, preds):
+        total_ed += editdistance.eval(pred.strip(), tgt)
+        total_len += len(tgt)
+        exact += int(pred.strip() == tgt)
+    res = {"cer": 100 * total_ed / max(1, total_len), "word_acc": 100 * exact / len(pairs)}
+    print(f"[{ckpt}] CER={res['cer']:.2f} word_acc={res['word_acc']:.2f}", flush=True)
+    return res
+
+
+@app.function(
+    gpu="A10G",
+    timeout=2 * 60 * 60,
+    volumes={
+        "/datasets": urdu_volume,
+        "/volumes/udiac": udiac_volume,
+        "/volumes/ckpts": checkpoints_volume,
+    },
+)
+def evaluate() -> dict:
+    return {name: eval_model.remote(ckpt) for name, (ckpt, _img) in MODELS.items()}
 
 
 @app.local_entrypoint()
