@@ -353,4 +353,10 @@ def train() -> dict:
 
 @app.local_entrypoint()
 def main():
-    train.remote()
+    # spawn (fire-and-forget): the run must not be cancellable by a
+    # workstation network flap — two client-side disconnects killed
+    # attached runs before this change. Resume/checkpoint guards make
+    # relaunch idempotent.
+    handle = train.spawn()
+    print(f"spawned {handle.object_id}; completion = EVAL_DONE marker at "
+          f"rababa_checkpoints:{RUN}/EVAL_DONE", flush=True)
