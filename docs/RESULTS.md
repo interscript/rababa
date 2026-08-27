@@ -333,3 +333,33 @@ both ways. Beam stays UNSHIPPED for Arabic: greedy posteriors are
 already sharp (consistent with the knowledge-injection diagnosis),
 and beam would cost ~4x inference. The Hebrew beam gain (12 DER
 points) does not transfer. Script: eval_arabic_r6_beam4.py.
+
+## Arabic r8 — IPA aux-task (phonemic supervision): controlled negative vs morph (2026-08-27)
+
+The controlled experiment the r6 claim needed: r8 differs from r6 in
+EXACTLY one variable — the aux stream's output representation. Stream B
+renders the SAME r5-units as broad-phonemic IPA (deterministic converter,
+arabic_to_ipa.py) instead of qalsadi morphology; same ~25% aux share,
+same seeded sample, same init (r5), same 1-epoch A100 schedule.
+
+### r8 verdict table (SadeedDiac-25, windowed zero-skip, 1400B, full 1,200)
+
+| Model | Total DER | Morph DER | Protocol |
+|---|---|---|---|
+| **r6 (morph aux, canonical)** | **2.5793** | **1.5317** | windowed zero-skip |
+| r8 (IPA aux) | 2.6588 | 1.5783 | windowed zero-skip |
+| r5 (no aux) | 2.6775 | 1.5965 | windowed zero-skip |
+
+IPA-stream probe (200 held-out domain units): **CER 0.0230, EM 62/200**
+— the model genuinely learned the second projection, so the comparison
+is not confounded by a failed aux task.
+
+Read: IPA aux helps over no-aux (−0.019pp Total DER) but loses to
+morphological aux (r8 is +0.080pp worse than r6). Phonemic supervision
+is NOT the active ingredient in the r6 win; lexical/morphological
+knowledge (iʿrāb) is. The "diacritization helped by phonemes" hypothesis
+survives only in its weak form (a structured auxiliary projection beats
+none) and fails in its strong form (phonemic specifically). r6 stays the
+canonical Arabic teacher. Script: train_arabic_r8.py; artifacts:
+rababa_arabic_byt5/run-008-ipa (EVAL_DONE, ipa_probe.json,
+sadeed_preds_windowed.csv).

@@ -334,4 +334,8 @@ def train(init_run: str | None = None) -> dict:
 
 @app.local_entrypoint()
 def main(init_run: str | None = None):
-    train.remote(init_run=init_run)
+    # spawn (fire-and-forget): r8's two client-side disconnects killed
+    # attached runs; resume/EVAL_DONE guards make relaunch idempotent
+    handle = train.spawn(init_run=init_run)
+    print(f"spawned {handle.object_id}; completion = EVAL_DONE marker at "
+          f"rababa_checkpoints:rababa_arabic_byt5/run-007-news/EVAL_DONE", flush=True)
