@@ -218,4 +218,7 @@ def label() -> dict:
 
 @app.local_entrypoint()
 def main():
-    label.remote()
+    # spawn: disconnect-immune (workstation network flaps cancelled
+    # attached runs); resumable via label_progress.jsonl
+    handle = label.spawn()
+    print(f"spawned {handle.object_id}", flush=True)
