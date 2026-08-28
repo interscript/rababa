@@ -334,6 +334,26 @@ already sharp (consistent with the knowledge-injection diagnosis),
 and beam would cost ~4x inference. The Hebrew beam gain (12 DER
 points) does not transfer. Script: eval_arabic_r6_beam4.py.
 
+## Arabic r7 — news-domain adaptation: NEW BEST ID RESULT (2026-08-28)
+
+Init from r6, anchor r5-units + 13,986 news units (0.85% mix) + 400
+gold-2014 lines. Windowed zero-skip, full 1,200 paragraphs:
+
+| Model | Total DER | Morph DER | Protocol |
+|---|---|---|---|
+| **r7 (news-domain)** | **2.2864** | **1.3343** | windowed zero-skip |
+| r6 (morph aux) | 2.5793 | 1.5317 | windowed zero-skip |
+| r5 | 2.6775 | 1.5965 | windowed zero-skip |
+
+**−0.29pp over r6** — the news mix (teacher-labeled news units + a
+small gold anchor) improved IN-DOMAIN substantially, not just OOD.
+Best dedicated model under this protocol (behind Claude-3.7-Sonnet's
+published 1.3941; ahead of GLM-5.2 2.6911 by a wider margin now).
+Canonical-teacher promotion pending the WikiNews-2024 OOD check
+(r7's design goal; gate: beat r6's 19.82/12.46) — running.
+Artifacts: rababa_arabic_byt5/run-007-news (EVAL_DONE,
+sadeed_preds_windowed.csv). Script: train_arabic_r7.py.
+
 ## Arabic r8 — IPA aux-task (phonemic supervision): controlled negative vs morph (2026-08-27)
 
 The controlled experiment the r6 claim needed: r8 differs from r6 in
