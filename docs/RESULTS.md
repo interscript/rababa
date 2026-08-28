@@ -339,6 +339,8 @@ points) does not transfer. Script: eval_arabic_r6_beam4.py.
 Init from r6, anchor r5-units + 13,986 news units (0.85% mix) + 400
 gold-2014 lines. Windowed zero-skip, full 1,200 paragraphs:
 
+### r7 verdict table (SadeedDiac-25, 2026-08-28)
+
 | Model | Total DER | Morph DER | Protocol |
 |---|---|---|---|
 | **r7 (news-domain)** | **2.2864** | **1.3343** | windowed zero-skip |
@@ -347,6 +349,8 @@ gold-2014 lines. Windowed zero-skip, full 1,200 paragraphs:
 
 **−0.29pp over r6** — the news mix (teacher-labeled news units + a
 small gold anchor) improved IN-DOMAIN substantially, not just OOD.
+
+### r7 OOD verdict table — WikiNews-2024 multi-ref (2026-08-28)
 
 Out-of-domain, WikiNews-2024 multi-ref (QCRI protocol, full mode):
 
