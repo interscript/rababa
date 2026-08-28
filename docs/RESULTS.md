@@ -334,7 +334,7 @@ already sharp (consistent with the knowledge-injection diagnosis),
 and beam would cost ~4x inference. The Hebrew beam gain (12 DER
 points) does not transfer. Script: eval_arabic_r6_beam4.py.
 
-## Arabic r7 — news-domain adaptation: NEW BEST ID RESULT (2026-08-28)
+## Arabic r7 — news-domain adaptation: NEW CANONICAL TEACHER (2026-08-28)
 
 Init from r6, anchor r5-units + 13,986 news units (0.85% mix) + 400
 gold-2014 lines. Windowed zero-skip, full 1,200 paragraphs:
@@ -347,12 +347,23 @@ gold-2014 lines. Windowed zero-skip, full 1,200 paragraphs:
 
 **−0.29pp over r6** — the news mix (teacher-labeled news units + a
 small gold anchor) improved IN-DOMAIN substantially, not just OOD.
-Best dedicated model under this protocol (behind Claude-3.7-Sonnet's
-published 1.3941; ahead of GLM-5.2 2.6911 by a wider margin now).
-Canonical-teacher promotion pending the WikiNews-2024 OOD check
-(r7's design goal; gate: beat r6's 19.82/12.46) — running.
-Artifacts: rababa_arabic_byt5/run-007-news (EVAL_DONE,
-sadeed_preds_windowed.csv). Script: train_arabic_r7.py.
+
+Out-of-domain, WikiNews-2024 multi-ref (QCRI protocol, full mode):
+
+| Model | WER | DER |
+|---|---|---|
+| **r7** | **17.3794** | **11.8273** |
+| r6 | 19.8191 | 12.4613 |
+| r5 | 20.52 | 12.72 |
+
+**r7 sweeps: best ID and best OOD of the teacher lineage — r7
+REPLACES r6 as the canonical Arabic teacher** (artifacts:
+rababa_arabic_byt5/run-007-news/best). On the SadeedDiac-25 leaderboard
+it is the best dedicated model under the protocol, behind only
+Claude-3.7-Sonnet's published 1.3941, now well clear of GLM-5.2 (2.6911).
+Future student distillations take r7 as teacher. Script:
+train_arabic_r7.py; artifacts: EVAL_DONE, sadeed_preds_windowed.csv,
+wikinews_multiref_r7.json.
 
 ## Arabic r8 — IPA aux-task (phonemic supervision): controlled negative vs morph (2026-08-27)
 
