@@ -350,7 +350,7 @@ gold-2014 lines. Windowed zero-skip, full 1,200 paragraphs:
 **−0.29pp over r6** — the news mix (teacher-labeled news units + a
 small gold anchor) improved IN-DOMAIN substantially, not just OOD.
 
-### r7 OOD verdict table — WikiNews-2024 multi-ref (2026-08-28)
+### r7 OOD verdict table (WikiNews-2024 multiref, 2026-08-28)
 
 Out-of-domain, WikiNews-2024 multi-ref (QCRI protocol, full mode):
 
