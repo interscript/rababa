@@ -21,7 +21,9 @@ setuptools.setup(
     author_email="open.source@ribose.com",
     license="MIT",
     description="Rababa for Arabic diacriticization",
-    # packages=['rababa'],
+    packages=setuptools.find_namespace_packages(
+        include=["util*", "modules*"]
+    ),
     url="https://www.interscript.org",
     python_requires=">=3.6, <4",
     project_urls={

@@ -16,7 +16,6 @@ module Rababa
         def initialize(input_chars, target_chars,
           cleaner_type,
           reverse_input)
-
           # cleaner fcts
           @cleaner = get_text_cleaner(cleaner_type)
 
@@ -69,7 +68,6 @@ module Rababa
         def initialize(cleaner_type = "basic_cleaners",
           reverse_input: false,
           reverse_target: false)
-
           input_chars = "بض.غىهظخة؟:طس،؛فندؤلوئآك-يذاصشحزءمأجإ ترقعث".chars
           target_chars = ALL_POSSIBLE_HARAQAT.keys
 
@@ -86,7 +84,6 @@ module Rababa
         def initialize(cleaner_type = "basic_cleaners",
           reverse_input: false,
           reverse_target: false)
-
           super
           @start_symbol_id = @target_symbol_to_id["s"]
         end

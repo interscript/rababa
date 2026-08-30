@@ -1,6 +1,12 @@
+import unicodedata
 from collections.abc import Iterable, Iterator
 from functools import lru_cache
 from typing import NamedTuple
+
+
+def name_of(c: str) -> str:
+    return unicodedata.name(c, f"U+{ord(c):04X}")
+
 
 # "rafe" denotes a letter to which it would have been valid to add a diacritic of some category
 # but instead it is decided not to. This makes the metrics less biased.

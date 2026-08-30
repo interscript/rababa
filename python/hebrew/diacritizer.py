@@ -3,7 +3,6 @@ import tqdm
 from config_manager import ConfigManager
 from dataset import DiacritizationDataset, collate_fn
 from torch.utils.data import DataLoader
-
 from util import nakdimon_dataset  # as dataset
 from util import nakdimon_hebrew_model as hebrew
 from util import nakdimon_utils as utils

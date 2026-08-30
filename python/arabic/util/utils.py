@@ -6,6 +6,7 @@ from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from diacritization_evaluation import der, wer
 from torch import nn
 from util.decorators import ignore_exception
 
@@ -113,17 +114,6 @@ def plot_multi_head(model, path, global_step):
         display_attention(decoder_attentions[0][0], path, global_step, f"decoder-layer{i + 1}")
     for i in range(len(encoder_attentions)):
         display_attention(encoder_attentions[0][0], path, global_step, f"encoder-layer {i + 1}")
-
-
-def make_src_mask(src, pad_idx=0):
-
-    # src = [batch size, src len]
-
-    src_mask = (src != pad_idx).unsqueeze(1).unsqueeze(2)
-
-    # src_mask = [batch size, 1, 1, src len]
-
-    return src_mask
 
 
 def get_angles(pos, i, model_dim):

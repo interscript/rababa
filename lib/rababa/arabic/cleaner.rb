@@ -6,7 +6,7 @@ module Rababa
       # filter arabic only + basic cleaner
       def clean(text)
         text = text.chars.select { |c| VALID_ARABIC.include? c }.join
-        text = super(text)
+        text = super
         text.strip
       end
     end

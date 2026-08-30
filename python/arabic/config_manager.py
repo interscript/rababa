@@ -240,7 +240,7 @@ class ConfigManager:
     def get_loss_type(self):
         try:
             loss_type = LossType[self.config["loss_type"]]
-        except:
+        except KeyError:
             raise Exception(f"The loss type is not correct {self.config['loss_type']}")
         return loss_type
 

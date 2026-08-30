@@ -1,8 +1,7 @@
 from typing import Optional
 
-from util.constants import ALL_POSSIBLE_HARAQAT
-
 from util import text_cleaners
+from util.constants import ALL_POSSIBLE_HARAQAT
 
 
 class TextEncoder:
