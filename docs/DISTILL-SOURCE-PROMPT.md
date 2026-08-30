@@ -15,6 +15,10 @@ General rules (unchanged):
 - NEW standing verdict: RL variants (RAFT/GRPO/GTPO) are all flat or
   negative on these teachers — do not retrain or RL-polish a teacher,
   and treat teacher outputs (not any RL variant) as the label source.
+  Data-side knowledge injection WORKS: r6's morph aux-task is the
+  template (aux supervision >> policy sharpening).
+- r6 VERDICT LANDED (2026-08-21): 2.5793/1.5317, replaces r5. The
+  "in flight" caveat is void.
 - SUCCESSORS IN FLIGHT (2026-08-20): r6 Arabic morph aux-task
   (run-006-morph, resumed from checkpoint-6000 after a preemption;
   ~15h remaining). Standing rule: it does not replace r5 until a
@@ -23,20 +27,21 @@ General rules (unchanged):
   Thai scaleup600k 1.7260% PER — section 4; Hebrew s45 16.58% DER —
   section 2.)
 
-## 1. Arabic diacritizer — r5 paragraph-context (580M ByT5-base) ★ NEW CANONICAL
-- Path: `/checkpoints/rababa_arabic_byt5/run-005-context/best` (HF)
-- Quality: **2.6775 DER (CE) / 1.5965 (w/o CE)** on SadeedDiac-25,
-  windowed zero-skip at 1400B — beats our verified GLM-5.2 reproduction
-  (2.6911/1.7179). This is the strongest Arabic teacher we will ship.
+## 1. Arabic diacritizer — r6 morph aux-task (580M ByT5-base) ★ CANONICAL (2026-08-21)
+- Path: `/checkpoints/rababa_arabic_byt5/run-006-morph/best` (HF)
+- Quality: **2.5793 DER (CE) / 1.5317 (w/o CE)** on SadeedDiac-25,
+  windowed zero-skip at 1400B — beats r5 (2.6775/1.5965). VERIFIED
+  2026-08-21; r6 replaces r5 per this update.
 - Contract: input undiacritized Arabic text → output same text with
   haraqat. Context matters: feed up to 1400 bytes per call and window
   longer documents at word boundaries (see `eval_sadeed_windowed.py`).
   Generation cap = 2x window bytes (diacritized output is 1.4–1.6x
   input). For short inputs (≤600B) behavior matches r3.
 - Parity harness: Misraj evaluator (`sadeed_evaluator.py`) on the full
-  1,200-paragraph benchmark, zero skips. Student target: ≤ 3.18 DER
-  (CE) windowed (= teacher +5pp-equivalent; scale from 2.68).
-- `run-005-context/best` is RELEASE-FROZEN. GTPO-GRPO run-001 was flat
+  1,200-paragraph benchmark, zero skips. Student target: ≤ 3.07 DER
+  (CE) windowed (= teacher +5pp-equivalent; scale from 2.58).
+- `run-005-context/best` remains available as the fallback teacher;
+  r6's inference contract is identical (no TAG prefix at inference). GTPO-GRPO run-001 was flat
   vs r5 — do NOT use it as teacher. The 10M char-encoder
   (`rababa_arabic_v2/run-001/best.pt`, 3.2495/1.8072) remains the
   embedded-tier teacher if the student must be tiny.
