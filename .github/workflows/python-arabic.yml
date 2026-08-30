@@ -50,6 +50,10 @@ jobs:
 
   train:
     runs-on: ubuntu-latest
+    env:
+      # tensorboard's generated descriptors predate protobuf 4; the pure-python
+      # implementation tolerates them without pinning protobuf
+      PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
     strategy:
       fail-fast: false
       matrix:
