@@ -1,43 +1,47 @@
-"""Arabic r6 — morphological aux-task training (iʿrāb supervision).
+"""Arabic r8 — IPA aux-task training (phonemic supervision).
 
-Diagnosis: 33% of residual errors are word-final case endings; the
-Total-vs-Morph DER gap (2.68 vs 1.60) makes iʿrāb roughly half the
-problem. qalsadi-labeled corpus (300k lines, 68.6% exact case/tense +
-26.3% coarse POS) now exists on the volume. The RL campaign proved the
-residual is knowledge-limited — so we ADD knowledge via an auxiliary
-task, not policy sharpening.
+Experiment: the phonological-layer claim, made controlled. r6 showed a
+morphological auxiliary task moves DER (2.6775 -> 2.5793). r8 swaps the
+aux content for a PHONEMIC projection: the same r5 paragraph units,
+rendered as broad-phonemic IPA by a deterministic converter
+(arabic_to_ipa.py). Same text, two output formats — isolating one
+variable: what the auxiliary representation contributes.
 
-Design: two-format multitask on one ByT5.
-- Stream A (plain): r5's paragraph units verbatim (cached r5-units).
-- Stream B (tagged): morph lines joined into ~1000B units; input gets
-  an ASCII "TAG: " prefix (byte model => perfectly distinguishable),
-  target = diacritized text + " ||| " + per-word tags. Deterministic:
-  inference without the prefix always yields plain diacritization.
-B is upsampled x4 to ~25% of the mix. Init from r5 best, A100-80GB,
-r5-proven batch 2/accum 15. Eval: windowed zero-skip at 1400B.
+Design (r6 verbatim except the aux stream):
+- Stream A (plain): r5's paragraph units (cached r5-units) — identical.
+- Stream B (tagged): "IPA: " + undiacritized unit -> IPA of the
+  diacritized unit. Same units as Stream A (seeded sample sized to the
+  ~25% aux share r6 used), NOT new text.
+- Init from r5 best (as r6 did — so r6 vs r8 differ ONLY in aux
+  content), A100-80GB, r5-proven batch 2/accum 15, 1 epoch.
+- Eval: windowed zero-skip at 1400B (r6 harness verbatim) + a bonus
+  IPA-stream CER probe (did the model learn the second projection?).
+
+Baselines: r5 2.6775 / r6 (morph aux) 2.5793.
 
 Usage:
-    modal run --detach train_arabic_r6.py
+    modal run --detach train_arabic_r8.py
 """
 
 from __future__ import annotations
 
-import json
 import random
 import re
 from pathlib import Path
 
 import modal
 
+from arabic_to_ipa import to_ipa
+
 datasets_volume = modal.Volume.from_name("rababa-datasets", create_if_missing=True)
 checkpoints_volume = modal.Volume.from_name("rababa-checkpoints", create_if_missing=True)
 
-RUN = "rababa_arabic_byt5/run-006-morph"
+RUN = "rababa_arabic_byt5/run-008-ipa"
 INIT_RUN = "rababa_arabic_byt5/run-005-context"
 UNIT_BYTES = 1400
-TAG_UNIT_BYTES = 1000
-TAG_UPSAMPLE = 4
+AUX_SHARE = 0.25  # match r6's effective tagged share
 N_VAL = 2_000
+IPA_PROBE_N = 200
 
 DIACRITICS_RE = re.compile("[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]")
 
@@ -51,39 +55,17 @@ image = (
         "tqdm",
         "pyarrow",
         "pyarabic",
+        "editdistance",
         "prettytable",
     )
     .add_local_file("sadeed_evaluator.py", "/opt/rababa/sadeed_evaluator.py", copy=True)
+    .add_local_file("arabic_to_ipa.py", "/opt/rababa/arabic_to_ipa.py", copy=True)
     .add_local_dir("data/sadeed-diac-25", "/opt/rababa/data/sadeed-diac-25", copy=True)
     .workdir("/opt/rababa")
     .env({"PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"})
 )
 
-app = modal.App("rababa-arabic-r6", image=image)
-
-
-def join_tagged(rows: list[dict], budget: int) -> list[tuple[str, str, str]]:
-    """Join consecutive morph-labeled lines into <=budget-byte tagged units."""
-    units: list[tuple[str, str, str]] = []
-    cur_src: list[str] = []
-    cur_gold: list[str] = []
-    cur_tags: list[str] = []
-    n = 0
-    for r in rows:
-        src, gold, tags = r["src"], r["gold"], r["tags"]
-        if not src or len(src.split()) != len(tags):
-            continue
-        c = len(src.encode("utf-8")) + 1
-        if cur_src and n + c > budget:
-            units.append((" ".join(cur_src), " ".join(cur_gold), " ".join(cur_tags)))
-            cur_src, cur_gold, cur_tags, n = [], [], [], 0
-        cur_src.append(src)
-        cur_gold.append(gold)
-        cur_tags.extend(tags)
-        n += c
-    if cur_src:
-        units.append((" ".join(cur_src), " ".join(cur_gold), " ".join(cur_tags)))
-    return units
+app = modal.App("rababa-arabic-r8", image=image)
 
 
 def make_pair(unit: str) -> tuple[str, str] | None:
@@ -93,6 +75,18 @@ def make_pair(unit: str) -> tuple[str, str] | None:
     if len(src.encode("utf-8")) > 1450 or len(unit.encode("utf-8")) > 1450:
         return None
     return src, unit
+
+
+def make_ipa_pair(unit: str) -> tuple[str, str] | None:
+    src = DIACRITICS_RE.sub("", unit)
+    if not src:
+        return None
+    ipa = to_ipa(unit)
+    if not ipa.strip():
+        return None
+    if len(src.encode("utf-8")) > 1450 or len(ipa.encode("utf-8")) > 1050:
+        return None
+    return "IPA: " + src, ipa
 
 
 @app.function(
@@ -126,30 +120,28 @@ def train() -> dict:
     random.Random(42).shuffle(domain)
     random.Random(42).shuffle(replay)
 
-    print("[data] loading morph-labeled lines...", flush=True)
-    morph_rows = [
-        json.loads(l)
-        for l in Path("/datasets/arabic-morph/train.jsonl").read_text(encoding="utf-8").splitlines()
-        if l.strip()
-    ]
-    tagged_units = join_tagged(morph_rows, TAG_UNIT_BYTES)
-    print(f"[data] {len(tagged_units)} tagged units from {len(morph_rows)} lines", flush=True)
-
     pairs: list[tuple[str, str]] = []
     pairs.extend(p for p in (make_pair(u) for u in domain) if p)
     pairs.extend(p for p in (make_pair(u) for u in replay) if p)
-    tagged_pairs: list[tuple[str, str]] = []
-    for src, gold, tags in tagged_units:
-        if len(gold.encode("utf-8")) > TAG_UNIT_BYTES + 450:
-            continue
-        tagged_pairs.append(("TAG: " + src, gold + " ||| " + tags))
-    pairs.extend(tagged_pairs * TAG_UPSAMPLE)
+    n_plain = len(pairs)
+
+    # aux stream: the SAME units in IPA, seeded sample at r6's aux share
+    aux_pool = [p for p in (make_ipa_pair(u) for u in domain) if p]
+    k = int(n_plain * AUX_SHARE / (1 - AUX_SHARE))
+    tagged_pairs = random.Random(43).sample(aux_pool, min(k, len(aux_pool)))
+    pairs.extend(tagged_pairs)
     random.Random(42).shuffle(pairs)
-    print(f"[data] plain={len(domain)+len(replay)} tagged={len(tagged_pairs)} (x{TAG_UPSAMPLE}) total={len(pairs)}", flush=True)
+    print(f"[data] plain={n_plain} ipa-aux={len(tagged_pairs)} "
+          f"aux-share={len(tagged_pairs)/len(pairs):.2%} total={len(pairs)}", flush=True)
 
     combined = [l.strip() for l in Path("/datasets/arabic-combined/train.txt").read_text(encoding="utf-8").splitlines() if l.strip()]
     random.Random(42).shuffle(combined)
     val_pairs = [p for p in (make_pair(l) for l in combined[:N_VAL]) if p][:200]
+
+    # held-out IPA probe units: end of the domain pool (shuffled seed 42)
+    probe_units = [u for u in domain[-IPA_PROBE_N:]]
+    probe_refs = [(DIACRITICS_RE.sub("", u), to_ipa(u)) for u in probe_units]
+    probe_refs = [p for p in probe_refs if p[0] and p[1]]
 
     init = str(Path("/checkpoints") / INIT_RUN / "best")
     print(f"[init] {init}", flush=True)
@@ -222,7 +214,7 @@ def train() -> dict:
     tokenizer.save_pretrained(str(best))
     checkpoints_volume.commit()
 
-    # ---- windowed zero-skip eval at the training context size ----
+    # ---- windowed zero-skip eval at the training context size (r6 verbatim) ----
     import pandas as pd
     import pyarrow.parquet as pq
     from difflib import SequenceMatcher
@@ -279,7 +271,6 @@ def train() -> dict:
         all_windows.extend(ws)
     print(f"[eval] {len(inputs)} paragraphs -> {len(all_windows)} windows", flush=True)
 
-    # resumable generation: append per-window predictions to the volume
     import json as _json
     prog = Path("/checkpoints") / RUN / "eval_progress.jsonl"
     saved: dict[int, str] = {}
@@ -313,14 +304,14 @@ def train() -> dict:
     checkpoints_volume.commit()
     preds = [saved[i] for i in range(len(all_windows))]
 
-    k = 0
+    k_par = 0
     paragraphs = []
     for text, c in zip(inputs, counts):
-        stitched = " ".join(preds[k : k + c])
-        k += c
+        stitched = " ".join(preds[k_par : k_par + c])
+        k_par += c
         paragraphs.append(project_haraqat(stitched, text))
 
-    csv_path = Path("/tmp/sadeed_r6_windowed.csv")
+    csv_path = Path("/tmp/sadeed_r8_windowed.csv")
     pd.DataFrame({"gt": outputs, "pred": paragraphs}).to_csv(csv_path, index=False, header=False)
     (Path("/checkpoints") / RUN / "sadeed_preds_windowed.csv").write_text(
         csv_path.read_text(), encoding="utf-8")
@@ -328,16 +319,44 @@ def train() -> dict:
 
     from sadeed_evaluator import ArabicDiacritizationEvaluator as E
 
-    print("\n===== r6 morph aux-task, windowed zero-skip =====", flush=True)
+    print("\n===== r8 IPA aux-task, windowed zero-skip (vs r5 2.6775 / r6-morph 2.5793) =====", flush=True)
     E.report_errors_on_csv_file(
         str(csv_path), ground_truth_column_index=0, predicted_column_index=1, has_header=False,
         gt_missing_diacritic_is_error=False)
 
+    # ---- bonus: IPA-stream probe (second-projection capability) ----
+    import editdistance
+
+    probe_srcs = ["IPA: " + s for s, _ in probe_refs]
+    probe_outs: list[str] = []
+    with torch.no_grad():
+        for bi in range(0, len(probe_srcs), 4):
+            batch = probe_srcs[bi : bi + 4]
+            enc = tokenizer(batch, return_tensors="pt", padding=True, truncation=True,
+                            max_length=1600).to(device)
+            with torch.autocast("cuda", torch.bfloat16):
+                gen = trainer.model.generate(**enc, max_new_tokens=1050, num_beams=1)
+            probe_outs.extend(tokenizer.batch_decode(gen, skip_special_tokens=True))
+    tot_ed = sum(editdistance.eval(p, r) for (_, r), p in zip(probe_refs, probe_outs))
+    tot_len = sum(len(r) for _, r in probe_refs)
+    em = sum(1 for (_, r), p in zip(probe_refs, probe_outs) if p == r)
+    print(f"\n===== r8 IPA-stream probe: CER {tot_ed / max(tot_len, 1):.4f} "
+          f"EM {em}/{len(probe_refs)} =====", flush=True)
+    (Path("/checkpoints") / RUN / "ipa_probe.json").write_text(_json.dumps({
+        "cer": tot_ed / max(tot_len, 1), "em": em, "n": len(probe_refs),
+    }), encoding="utf-8")
+
     done_marker.touch()
     checkpoints_volume.commit()
-    return {"run": RUN}
+    return {"run": RUN, "ipa_probe_cer": tot_ed / max(tot_len, 1), "ipa_probe_em": em}
 
 
 @app.local_entrypoint()
 def main():
-    train.remote()
+    # spawn (fire-and-forget): the run must not be cancellable by a
+    # workstation network flap — two client-side disconnects killed
+    # attached runs before this change. Resume/checkpoint guards make
+    # relaunch idempotent.
+    handle = train.spawn()
+    print(f"spawned {handle.object_id}; completion = EVAL_DONE marker at "
+          f"rababa_checkpoints:{RUN}/EVAL_DONE", flush=True)

@@ -1,28 +1,28 @@
-"""Arabic r6 — morphological aux-task training (iʿrāb supervision).
+"""Arabic r7 — news-domain adaptation (OOD repair).
 
-Diagnosis: 33% of residual errors are word-final case endings; the
-Total-vs-Morph DER gap (2.68 vs 1.60) makes iʿrāb roughly half the
-problem. qalsadi-labeled corpus (300k lines, 68.6% exact case/tense +
-26.3% coarse POS) now exists on the volume. The RL campaign proved the
-residual is knowledge-limited — so we ADD knowledge via an auxiliary
-task, not policy sharpening.
+r5 paragraph-context specialized to SadeedDiac and trades ~0.5 DER
+out-of-domain (WikiNews-2024 multi-ref: r5 20.52/12.72 vs r3
+19.99/12.60). r7 adapts the domain: cached r5-units (replay — protects
+the ID anchor) plus a news mix from label_arabic_news.py
+(r5-pseudo-labeled modern news, x3 upsampled, and WikiNews-2014 GOLD
+x4 — 2014 shares documents with Tashkeela-era text, NOT with the 2024
+probe corpus).
 
-Design: two-format multitask on one ByT5.
-- Stream A (plain): r5's paragraph units verbatim (cached r5-units).
-- Stream B (tagged): morph lines joined into ~1000B units; input gets
-  an ASCII "TAG: " prefix (byte model => perfectly distinguishable),
-  target = diacritized text + " ||| " + per-word tags. Deterministic:
-  inference without the prefix always yields plain diacritization.
-B is upsampled x4 to ~25% of the mix. Init from r5 best, A100-80GB,
-r5-proven batch 2/accum 15. Eval: windowed zero-skip at 1400B.
+Init: r6-best if r6 verified better on SadeedDiac, else r5
+(override with --init-run). Batch 2/accum 15 (r5-proven at 1400B).
+
+Gates (both required to replace the init model):
+- SadeedDiac-25 windowed zero-skip DER within +0.1 of the init model;
+- WikiNews-2024 multi-ref improves (run eval_wikinews_multiref.py
+  with --model-dir pointing at this run's best).
 
 Usage:
-    modal run --detach train_arabic_r6.py
+    modal run --detach train_arabic_r7.py
+    modal run --detach train_arabic_r7.py --init-run rababa_arabic_byt5/run-006-morph
 """
 
 from __future__ import annotations
 
-import json
 import random
 import re
 from pathlib import Path
@@ -32,11 +32,11 @@ import modal
 datasets_volume = modal.Volume.from_name("rababa-datasets", create_if_missing=True)
 checkpoints_volume = modal.Volume.from_name("rababa-checkpoints", create_if_missing=True)
 
-RUN = "rababa_arabic_byt5/run-006-morph"
-INIT_RUN = "rababa_arabic_byt5/run-005-context"
+RUN = "rababa_arabic_byt5/run-007-news"
+DEFAULT_INIT = "rababa_arabic_byt5/run-005-context"
 UNIT_BYTES = 1400
-TAG_UNIT_BYTES = 1000
-TAG_UPSAMPLE = 4
+NEWS_UPSAMPLE = 3
+GOLD_UPSAMPLE = 4
 N_VAL = 2_000
 
 DIACRITICS_RE = re.compile("[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]")
@@ -59,31 +59,7 @@ image = (
     .env({"PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"})
 )
 
-app = modal.App("rababa-arabic-r6", image=image)
-
-
-def join_tagged(rows: list[dict], budget: int) -> list[tuple[str, str, str]]:
-    """Join consecutive morph-labeled lines into <=budget-byte tagged units."""
-    units: list[tuple[str, str, str]] = []
-    cur_src: list[str] = []
-    cur_gold: list[str] = []
-    cur_tags: list[str] = []
-    n = 0
-    for r in rows:
-        src, gold, tags = r["src"], r["gold"], r["tags"]
-        if not src or len(src.split()) != len(tags):
-            continue
-        c = len(src.encode("utf-8")) + 1
-        if cur_src and n + c > budget:
-            units.append((" ".join(cur_src), " ".join(cur_gold), " ".join(cur_tags)))
-            cur_src, cur_gold, cur_tags, n = [], [], [], 0
-        cur_src.append(src)
-        cur_gold.append(gold)
-        cur_tags.extend(tags)
-        n += c
-    if cur_src:
-        units.append((" ".join(cur_src), " ".join(cur_gold), " ".join(cur_tags)))
-    return units
+app = modal.App("rababa-arabic-r7", image=image)
 
 
 def make_pair(unit: str) -> tuple[str, str] | None:
@@ -95,12 +71,29 @@ def make_pair(unit: str) -> tuple[str, str] | None:
     return src, unit
 
 
+def _init_choice(explicit: str | None) -> str:
+    if explicit:
+        return explicit
+    r6_eval = Path("/checkpoints/rababa_arabic_byt5/run-006-morph/final_eval.json")
+    r6_done = Path("/checkpoints/rababa_arabic_byt5/run-006-morph/EVAL_DONE")
+    if r6_done.exists() and r6_eval.exists():
+        import json
+
+        try:
+            der = json.loads(r6_eval.read_text()).get("sadeed_der_ce")
+            if der is not None and der < 2.6775:
+                return "rababa_arabic_byt5/run-006-morph"
+        except Exception:
+            pass
+    return DEFAULT_INIT
+
+
 @app.function(
     gpu="A100-80GB",
     timeout=24 * 60 * 60,
     volumes={"/datasets": datasets_volume, "/checkpoints": checkpoints_volume},
 )
-def train() -> dict:
+def train(init_run: str | None = None) -> dict:
     import torch
     from torch.utils.data import Dataset
     from transformers import (
@@ -119,40 +112,41 @@ def train() -> dict:
     if done_marker.exists():
         return {"run": RUN, "status": "already-done"}
 
+    news_dir = Path("/datasets/arabic-news-r5")
+    if not (news_dir / "DONE").exists():
+        return {"run": RUN, "status": "waiting-for-label_arabic_news"}
+
+    init_run = _init_choice(init_run)
+    print(f"[init] {init_run}", flush=True)
+
     print("[data] loading cached r5 paragraph units...", flush=True)
     cache = Path("/datasets/r5-units")
     domain = [l for l in (cache / "domain.txt").read_text(encoding="utf-8").splitlines() if l.strip()]
     replay = [l for l in (cache / "replay.txt").read_text(encoding="utf-8").splitlines() if l.strip()]
-    random.Random(42).shuffle(domain)
-    random.Random(42).shuffle(replay)
 
-    print("[data] loading morph-labeled lines...", flush=True)
-    morph_rows = [
-        json.loads(l)
-        for l in Path("/datasets/arabic-morph/train.jsonl").read_text(encoding="utf-8").splitlines()
-        if l.strip()
-    ]
-    tagged_units = join_tagged(morph_rows, TAG_UNIT_BYTES)
-    print(f"[data] {len(tagged_units)} tagged units from {len(morph_rows)} lines", flush=True)
+    news = [l for l in (news_dir / "news.txt").read_text(encoding="utf-8").splitlines() if l.strip()]
+    gold = [l for l in (news_dir / "wikinews2014_gold.txt").read_text(encoding="utf-8").splitlines() if l.strip()]
+    print(f"[data] r5-units={len(domain) + len(replay)} news={len(news)} gold2014={len(gold)}", flush=True)
 
     pairs: list[tuple[str, str]] = []
-    pairs.extend(p for p in (make_pair(u) for u in domain) if p)
-    pairs.extend(p for p in (make_pair(u) for u in replay) if p)
-    tagged_pairs: list[tuple[str, str]] = []
-    for src, gold, tags in tagged_units:
-        if len(gold.encode("utf-8")) > TAG_UNIT_BYTES + 450:
-            continue
-        tagged_pairs.append(("TAG: " + src, gold + " ||| " + tags))
-    pairs.extend(tagged_pairs * TAG_UPSAMPLE)
+    for unit in domain + replay:
+        p = make_pair(unit)
+        if p:
+            pairs.append(p)
+    n_anchor = len(pairs)
+    for unit in news * NEWS_UPSAMPLE + gold * GOLD_UPSAMPLE:
+        p = make_pair(unit)
+        if p:
+            pairs.append(p)
     random.Random(42).shuffle(pairs)
-    print(f"[data] plain={len(domain)+len(replay)} tagged={len(tagged_pairs)} (x{TAG_UPSAMPLE}) total={len(pairs)}", flush=True)
+    print(f"[data] anchor={n_anchor} news-mix={len(pairs) - n_anchor} "
+          f"news-share={(len(pairs) - n_anchor) / len(pairs):.2%}", flush=True)
 
-    combined = [l.strip() for l in Path("/datasets/arabic-combined/train.txt").read_text(encoding="utf-8").splitlines() if l.strip()]
+    combined = [l for l in Path("/datasets/arabic-combined/train.txt").read_text(encoding="utf-8").splitlines() if l.strip()]
     random.Random(42).shuffle(combined)
     val_pairs = [p for p in (make_pair(l) for l in combined[:N_VAL]) if p][:200]
 
-    init = str(Path("/checkpoints") / INIT_RUN / "best")
-    print(f"[init] {init}", flush=True)
+    init = str(Path("/checkpoints") / init_run / "best")
     tokenizer = AutoTokenizer.from_pretrained(init)
     model = AutoModelForSeq2SeqLM.from_pretrained(init)
 
@@ -222,7 +216,7 @@ def train() -> dict:
     tokenizer.save_pretrained(str(best))
     checkpoints_volume.commit()
 
-    # ---- windowed zero-skip eval at the training context size ----
+    # ---- ID gate: windowed zero-skip SadeedDiac (r6 harness verbatim) ----
     import pandas as pd
     import pyarrow.parquet as pq
     from difflib import SequenceMatcher
@@ -320,7 +314,7 @@ def train() -> dict:
         k += c
         paragraphs.append(project_haraqat(stitched, text))
 
-    csv_path = Path("/tmp/sadeed_r6_windowed.csv")
+    csv_path = Path("/tmp/sadeed_r7_windowed.csv")
     pd.DataFrame({"gt": outputs, "pred": paragraphs}).to_csv(csv_path, index=False, header=False)
     (Path("/checkpoints") / RUN / "sadeed_preds_windowed.csv").write_text(
         csv_path.read_text(), encoding="utf-8")
@@ -328,16 +322,20 @@ def train() -> dict:
 
     from sadeed_evaluator import ArabicDiacritizationEvaluator as E
 
-    print("\n===== r6 morph aux-task, windowed zero-skip =====", flush=True)
+    print("\n===== r7 news-domain, windowed zero-skip (ID gate) =====", flush=True)
     E.report_errors_on_csv_file(
         str(csv_path), ground_truth_column_index=0, predicted_column_index=1, has_header=False,
         gt_missing_diacritic_is_error=False)
 
     done_marker.touch()
     checkpoints_volume.commit()
-    return {"run": RUN}
+    return {"run": RUN, "init": init_run}
 
 
 @app.local_entrypoint()
-def main():
-    train.remote()
+def main(init_run: str | None = None):
+    # spawn (fire-and-forget): r8's two client-side disconnects killed
+    # attached runs; resume/EVAL_DONE guards make relaunch idempotent
+    handle = train.spawn(init_run=init_run)
+    print(f"spawned {handle.object_id}; completion = EVAL_DONE marker at "
+          f"rababa_checkpoints:rababa_arabic_byt5/run-007-news/EVAL_DONE", flush=True)

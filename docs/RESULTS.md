@@ -171,9 +171,10 @@ construction.
 
 ### Best result
 
-| Model | DER (beam=4, standard) | Note |
-|---|---|---|
-| **s45 phonikud curriculum (production)** | **16.58%** | stage 1: 1.5M phonikud knesset weak-pretrain (machine-labeled, deduped, decontaminated); stage 2: s43 gold recipe verbatim. Verified 2026-08-20, 5,095 test examples, `run-s45-phonikud/run-002-gold-ft/best` |
+| Model | DER (beam=4, standard) | DER greedy | Note |
+|---|---|---|---|
+| **s46 phonikud+hewiki (production)** | **16.43%** | **16.44%** | s45 recipe + hewiki weak garnish (73.8K Dicta-labeled wiki lines in stage 1). Verified 2026-08-22/23, 5,095 test examples, `run-s46-phonikud-plus/run-002-gold-ft/best`. Greedy ≈ beam-4 → the shipped runtime path delivers reference quality. New best |
+| s45 phonikud curriculum | 16.58% | — | stage 1: 1.5M phonikud knesset weak-pretrain (machine-labeled, deduped, decontaminated); stage 2: s43 gold recipe verbatim. Verified 2026-08-20, 5,095 test examples, `run-s45-phonikud/run-002-gold-ft/best` |
 | s43 | 17.46% | previous best single model |
 | v2 | 17.3% | original recipe (22K data); checkpoint has loading quirks under new transformers |
 | s44 | 17.65% | seed replica |
@@ -187,7 +188,22 @@ construction.
 - All ByT5-base (580M), seq2seq, 3 epochs, beam=4 at inference
 - Eval scripts: `eval_hebrew_v4_beam4.py`, `analyze_hebrew_errors.py`
 
+### Hebrew s47 — morph aux transplant — CLOSED NEGATIVE (2026-08-23)
+
+The r6 template's first cross-language move: dictabert-morph TAG
+stream (100K knesset lines ×4, segmented src + per-token tags) +
+gold×2 + 200K weak pairs, init from s46, LR 2e-5, 1 epoch.
+**DER 16.53 (beam-4, 5,095 examples)** vs init s46's 16.43 — no gain.
+
+Read: the r6 aux-task win is not template-portable as-is. Arabic's
+residual was word-final case endings (iʿrāb), which POS+feats
+supervision directly disambiguates; Hebrew's 16.4 residual is not
+decomposable the same way by gender/number/person tags. **s46 stays
+canonical; Hebrew teacher line closed** (no s48 — money discipline).
+Checkpoint: `run-s47-morph/best`.
+
 ### Error analysis (v4/s43/s44, analyze_hebrew_errors.py)
+
 
 | Error type | Count (v4) | Share |
 |---|---|---|
@@ -224,3 +240,161 @@ construction.
   - `/checkpoints/rababa_hebrew_byt5_v2|v4|s43|s44/run-001/best`
 - Prediction cache: `/datasets/hebrew-pred-cache/{v2,v4,s43,s44}.jsonl`
 - Corpora: `/datasets/hebrew-v4/{train,val,test}.jsonl` (50,433/2,654/1,864)
+
+## RAG homograph probe (Persian v1) — CLOSED NEGATIVE (2026-08-20)
+
+Retrieval few-shot (k=3 char-3gram cosine over the 445K v1 train
+sentences, candidates restricted to same-homograph contexts, beam-4,
+identical SentenceBench scoring): **26.07% ezafe-norm vs the 77.34%
+baseline (−51.3pp)**. Baseline reproduced exactly (77.3400, n=203),
+validating the harness. Contamination check: 4 exact test-sentence
+overlaps found in train and excluded.
+
+Interpretation: v1 was never trained with multi-example prompts, so
+the few-shot prefix is a hard format shift — the collapse is a prompt
+artifact as much as a knowledge result. Verdict per the pre-committed
+decision rule (<+0.5pp): the lever is closed for inference-time use;
+any revisit must be train-time retrieval conditioning, budgeted as a
+new experiment, not a polish of this one. Artifacts:
+persian_g2p/rag_probe_result.json, rababa-farsi/eval_persian_rag_probe.py.
+
+## Urdu d1 — ByT5-base + Arabic-r5 cross-lingual init (2026-08-20) ★ NEW BEST
+
+`rababa_urdu_byt5/run-001-d1` (HF `best/` on rababa-checkpoints):
+ByT5-base initialized from the Arabic r5 paragraph-context teacher,
+1 epoch over the 573K Urdu pair corpus (alignment-filtered, deduped;
+weak machine labels — comparative eval, not absolute).
+
+**CER 6.40% / word accuracy 47.43% (greedy, n=11,714)** vs the shipped
+Urdu model's 14.77% CER — 2.3x reduction from architecture + teacher
+init alone. Caveat: both train and test labels derive from our Arabic
+model + G2P back-projection, so this is a within-corpus comparison;
+a human-labeled Urdu gold set remains the missing evaluation. Next
+lever if wanted: gold corpus (none verifiable exists in our stack),
+or paragraph-context windowing for Urdu. Script: train_urdu_d1.py.
+
+### Urdu d1 beam-4 re-eval — flat (2026-08-20)
+
+beam4: CER 6.53% / word_acc 47.97% vs greedy 6.57% / 46.99%
+(re-run; original verdict 6.40/47.43). Unlike Hebrew s45 (beam worth
+12 DER points), Urdu gains nothing from beam — the G2P-back-projected
+weak labels are near-deterministic, so greedy is already confident.
+Per TODO 06 rule (<55% word_acc): d2 launched (one epoch at 1e-5 from
+d1, run-002-d2); corpus-label consistency is the expected ceiling.
+
+## Urdu d2 — continuous low-LR second epoch (2026-08-20) ★ NEW BEST
+
+`rababa_urdu_byt5/run-002-d2` (best on volume): 1 epoch at LR 1e-5
+from run-001-d1, identical test protocol.
+
+**CER 5.77% / word_acc 52.47%** (greedy, n=11,714) vs d1 6.40/47.43 —
+CER down 0.63pp, word_acc up 5.0pp. The weak-corpus ceiling is higher
+than d1 alone reached; the standing rule remains that absolute
+numbers are within-corpus (machine labels both sides). Best model
+now: run-002-d2. Script: train_urdu_d2.py.
+
+## Arabic r6 — morphological aux-task (iʿrāb supervision) ★ NEW CANONICAL TEACHER (2026-08-21)
+
+### r6 verdict table (SadeedDiac-25, 2026-08-21)
+
+| Model | Total DER | Morph DER | Protocol |
+|---|---|---|---|
+| **r6 (greedy, canonical)** | **2.5793** | **1.5317** | windowed zero-skip, 1400B |
+| r5 | 2.6775 | 1.5965 | windowed zero-skip, 1400B |
+
+`rababa_arabic_byt5/run-006-morph/best` (HF, rababa-checkpoints): r5's
+plain stream + TAG-prefixed morph stream (qalsadi 300K lines, 68.6%
+exact case/tense), two-format multitask on one ByT5-base, upsampled
+x4 to ~25% of the mix, init from r5, 1 epoch, A100-80GB.
+
+**Total DER (CE) 2.5793 / Morphological DER 1.5317** on
+SadeedDiac-25, windowed zero-skip at 1400B — vs r5's 2.6775/1.5965.
+Both components improved; the diagnosis (33% of residual = word-final
+case endings; Total-vs-Morph gap) is confirmed and the fix is
+knowledge injection, not policy sharpening. Inference contract is
+UNCHANGED from r5 (no TAG prefix at inference = plain diacritization;
+1400B windows). r6 REPLACES r5 as the Arabic teacher for distillation.
+Script: train_arabic_r6.py.
+
+### r6 out-of-domain — WikiNews-2024 multi-ref (2026-08-21)
+
+r6 full-mode **WER 19.8191 / DER 12.4613** (no-CE: WER 14.6571 /
+DER 13.7271) — beats BOTH r5 (20.52/12.72) and r3 (19.99/12.60).
+The r5-era paragraph-specialization OOD trade-off is erased: the
+morph aux-task improved in-domain AND out-of-domain. r6 strictly
+dominates all measured surfaces. r7's OOD gate denominator is
+therefore 19.82/12.46 (r6), not r5's number.
+
+### r6 beam-4 probe (2026-08-23) — NEGATIVE
+
+Beam-4 on the identical windowed harness: **Total DER 2.5588 /
+Morph DER 1.5379** vs greedy 2.5793/1.5317 — noise-level change
+both ways. Beam stays UNSHIPPED for Arabic: greedy posteriors are
+already sharp (consistent with the knowledge-injection diagnosis),
+and beam would cost ~4x inference. The Hebrew beam gain (12 DER
+points) does not transfer. Script: eval_arabic_r6_beam4.py.
+
+## Arabic r7 — news-domain adaptation: NEW CANONICAL TEACHER (2026-08-28)
+
+Init from r6, anchor r5-units + 13,986 news units (0.85% mix) + 400
+gold-2014 lines. Windowed zero-skip, full 1,200 paragraphs:
+
+### r7 verdict table (SadeedDiac-25, 2026-08-28)
+
+| Model | Total DER | Morph DER | Protocol |
+|---|---|---|---|
+| **r7 (news-domain)** | **2.2864** | **1.3343** | windowed zero-skip |
+| r6 (morph aux) | 2.5793 | 1.5317 | windowed zero-skip |
+| r5 | 2.6775 | 1.5965 | windowed zero-skip |
+
+**−0.29pp over r6** — the news mix (teacher-labeled news units + a
+small gold anchor) improved IN-DOMAIN substantially, not just OOD.
+
+### r7 OOD verdict table — WikiNews-2024 multi-ref (2026-08-28)
+
+Out-of-domain, WikiNews-2024 multi-ref (QCRI protocol, full mode):
+
+| Model | WER | DER |
+|---|---|---|
+| **r7** | **17.3794** | **11.8273** |
+| r6 | 19.8191 | 12.4613 |
+| r5 | 20.52 | 12.72 |
+
+**r7 sweeps: best ID and best OOD of the teacher lineage — r7
+REPLACES r6 as the canonical Arabic teacher** (artifacts:
+rababa_arabic_byt5/run-007-news/best). On the SadeedDiac-25 leaderboard
+it is the best dedicated model under the protocol, behind only
+Claude-3.7-Sonnet's published 1.3941, now well clear of GLM-5.2 (2.6911).
+Future student distillations take r7 as teacher. Script:
+train_arabic_r7.py; artifacts: EVAL_DONE, sadeed_preds_windowed.csv,
+wikinews_multiref_r7.json.
+
+## Arabic r8 — IPA aux-task (phonemic supervision): controlled negative vs morph (2026-08-27)
+
+The controlled experiment the r6 claim needed: r8 differs from r6 in
+EXACTLY one variable — the aux stream's output representation. Stream B
+renders the SAME r5-units as broad-phonemic IPA (deterministic converter,
+arabic_to_ipa.py) instead of qalsadi morphology; same ~25% aux share,
+same seeded sample, same init (r5), same 1-epoch A100 schedule.
+
+### r8 verdict table (SadeedDiac-25, windowed zero-skip, 1400B, full 1,200)
+
+| Model | Total DER | Morph DER | Protocol |
+|---|---|---|---|
+| **r6 (morph aux, canonical)** | **2.5793** | **1.5317** | windowed zero-skip |
+| r8 (IPA aux) | 2.6588 | 1.5783 | windowed zero-skip |
+| r5 (no aux) | 2.6775 | 1.5965 | windowed zero-skip |
+
+IPA-stream probe (200 held-out domain units): **CER 0.0230, EM 62/200**
+— the model genuinely learned the second projection, so the comparison
+is not confounded by a failed aux task.
+
+Read: IPA aux helps over no-aux (−0.019pp Total DER) but loses to
+morphological aux (r8 is +0.080pp worse than r6). Phonemic supervision
+is NOT the active ingredient in the r6 win; lexical/morphological
+knowledge (iʿrāb) is. The "diacritization helped by phonemes" hypothesis
+survives only in its weak form (a structured auxiliary projection beats
+none) and fails in its strong form (phonemic specifically). r6 stays the
+canonical Arabic teacher. Script: train_arabic_r8.py; artifacts:
+rababa_arabic_byt5/run-008-ipa (EVAL_DONE, ipa_probe.json,
+sadeed_preds_windowed.csv).
