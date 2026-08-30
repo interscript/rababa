@@ -12,9 +12,12 @@ reasoning_effort is required for glm-5.3+ models: absent or
 unrecognized values silently default to MAX reasoning there — the
 2026-08-17 finding was that reasoning mode burns minutes per long
 paragraph, so a missing parameter turns a ~1h run into days. GLM-5.2
-and earlier disable reasoning via thinking.type=disabled, which
-GLM-5.3+ ignores. Passing an effort sends both knobs and warns if the
-response still carries reasoning_content (the disable didn't take).
+and earlier disable reasoning via thinking.type=disabled; GLM-5.3+
+rejects that parameter outright (verified 2026-08-31: HTTP 400 code
+1210, valid reasoning_effort values are exactly low, high, max —
+thinking cannot be disabled at all). An effort therefore sends ONLY
+reasoning_effort, and any response still carrying reasoning_content
+warns that it did not take.
 
 Usage:
     python eval_sadeed_glm.py [model_id] [reasoning_effort]
@@ -72,10 +75,14 @@ def call(session: requests.Session, key: str, text: str, tries: int = 5) -> str:
         "messages": [{"role": "user", "content": PROMPT.format(t=text)}],
         "temperature": 0,
         "max_tokens": 8192,
-        "thinking": {"type": "disabled"},
     }
     if EFFORT:
+        # glm-5.3+ rejects thinking.type=disabled outright (HTTP 400,
+        # code 1210: "This model always engages in thinking"); valid
+        # reasoning_effort values are low, high, max.
         payload["reasoning_effort"] = EFFORT
+    else:
+        payload["thinking"] = {"type": "disabled"}
     for attempt in range(tries):
         try:
             r = session.post(BASE, json=payload, timeout=300)
