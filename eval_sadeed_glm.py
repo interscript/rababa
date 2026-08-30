@@ -8,8 +8,18 @@ LLM rows used) and the projected zero-skip variant.
 Checkpoints every response to CKPT so the run resumes after
 interruption. Key read from ~/.zai-api-key (never printed).
 
+reasoning_effort is required for glm-5.3+ models: absent or
+unrecognized values silently default to MAX reasoning there — the
+2026-08-17 finding was that reasoning mode burns minutes per long
+paragraph, so a missing parameter turns a ~1h run into days. GLM-5.2
+and earlier disable reasoning via thinking.type=disabled, which
+GLM-5.3+ ignores. Passing an effort sends both knobs and warns if the
+response still carries reasoning_content (the disable didn't take).
+
 Usage:
-    python eval_sadeed_glm.py [model_id]   # default glm-5.2
+    python eval_sadeed_glm.py [model_id] [reasoning_effort]
+    # default glm-5.2; glm-5.3* refuses to run without an effort value
+    # e.g. python eval_sadeed_glm.py glm-5.3-flash low
 """
 
 from __future__ import annotations
@@ -26,8 +36,15 @@ import pyarrow.parquet as pq
 import requests
 
 MODEL = sys.argv[1] if len(sys.argv) > 1 else "glm-5.2"
+EFFORT = sys.argv[2] if len(sys.argv) > 2 else None
+if MODEL.startswith("glm-5.3") and not EFFORT:
+    sys.exit(
+        f"refusing to run {MODEL}: absent/unrecognized reasoning_effort "
+        "silently defaults to MAX (minutes per paragraph). Pass an effort "
+        f"value, e.g.: python eval_sadeed_glm.py {MODEL} low")
 DIAC = re.compile("[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]")
-CKPT = Path(f"/tmp/sadeed_glm_{MODEL.replace('.', '_')}.jsonl")
+CKPT = Path(f"/tmp/sadeed_glm_{MODEL.replace('.', '_')}"
+            + (f"_{EFFORT}" if EFFORT else "") + ".jsonl")
 OUT_DIR = Path("results") / f"sadeed-{MODEL.replace('.', '-')}"
 BASE = "https://api.z.ai/api/paas/v4/chat/completions"
 
@@ -50,20 +67,27 @@ def clean(txt: str) -> str:
 
 
 def call(session: requests.Session, key: str, text: str, tries: int = 5) -> str:
+    payload = {
+        "model": MODEL,
+        "messages": [{"role": "user", "content": PROMPT.format(t=text)}],
+        "temperature": 0,
+        "max_tokens": 8192,
+        "thinking": {"type": "disabled"},
+    }
+    if EFFORT:
+        payload["reasoning_effort"] = EFFORT
     for attempt in range(tries):
         try:
-            r = session.post(BASE, json={
-                "model": MODEL,
-                "messages": [{"role": "user", "content": PROMPT.format(t=text)}],
-                "temperature": 0,
-                "max_tokens": 8192,
-                "thinking": {"type": "disabled"},
-            }, timeout=300)
+            r = session.post(BASE, json=payload, timeout=300)
             if r.status_code in (429, 500, 502, 503, 504):
                 time.sleep(5 * (attempt + 1))
                 continue
             r.raise_for_status()
-            return clean(r.json()["choices"][0]["message"]["content"])
+            message = r.json()["choices"][0]["message"]
+            if message.get("reasoning_content"):
+                print(f"[glm] WARNING: reasoning_content present — "
+                      f"reasoning disable not honored by {MODEL}", flush=True)
+            return clean(message["content"])
         except requests.RequestException:
             if attempt == tries - 1:
                 return ""
@@ -81,7 +105,8 @@ def main() -> None:
             row = json.loads(line)
             done[row["idx"]] = row["pred"]
     todo = [i for i in range(len(inputs)) if i not in done]
-    print(f"[glm] model={MODEL} done={len(done)} todo={len(todo)}", flush=True)
+    print(f"[glm] model={MODEL} effort={EFFORT or 'thinking-disabled'} "
+          f"done={len(done)} todo={len(todo)}", flush=True)
 
     session = requests.Session()
     session.headers.update({"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
