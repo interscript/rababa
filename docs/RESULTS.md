@@ -59,7 +59,19 @@ protocol, zero skipped paragraphs.
   current generic frontier model achieves under a neutral protocol.
   Our 580M model trails GLM-5.2 by only ~0.3 DER and **splits metrics
   with it on the zero-skip protocol** (r3 better w/o case endings).
-  GLM-5.3: key denied access (HTTP 403).
+- **GLM-5.3-Flash verification (2026-08-31)**: the 403 cleared; first
+  measurement on the benchmark (**8.5721/6.5335** raw, **8.7978/6.6368**
+  zero-skip; WER 30.84/24.16 raw; `results/sadeed-glm-5-3-flash/`).
+  Protocol-matched except where the API forces a delta: the model
+  REJECTS disabled thinking (HTTP 400 code 1210) — reasoning cannot be
+  turned off, only dialed to low/high/max — so this ran at
+  `reasoning_effort=low`, the nearest analog to plain completion.
+  ~3.4x worse DER than GLM-5.2 and behind Sadeed-1.5B, driven by
+  Quranic-convention orthography (dagger-alif forms the GT does not
+  use, 9.8% not-fully-diacritized words) — a generalist regression on
+  classical-knowledge output conventions, recorded as a dedicated-model
+  data point. Zero empty responses after purging 140 checkpoint rows
+  the pre-fix payload had retried into empty strings.
 
 - **r3 = r2 + 1 epoch on the decontaminated Misraj corpus (1M lines) +
   150k MSA replay**: best non-frontier-LLM result on the benchmark;
