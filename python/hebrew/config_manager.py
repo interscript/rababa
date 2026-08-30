@@ -180,7 +180,7 @@ class ConfigManager:
             optimizer_stat_dict = saved_model["optimizer_state_dict"] if load_optimizer else None
             global_step = saved_model["global_step"] + 1
 
-        except:
+        except Exception:
             print("model_path:: ", model_path)
             print("WARNING:: Model not found under model_state_dict,")
             print("starting with a fresh model.")
@@ -244,6 +244,6 @@ class ConfigManager:
     def get_loss_type(self):
         try:
             loss_type = LossType[self.config["loss_type"]]
-        except:
+        except KeyError:
             raise Exception(f"The loss type is not correct {self.config['loss_type']}")
         return loss_type

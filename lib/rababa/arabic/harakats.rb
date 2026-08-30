@@ -24,7 +24,7 @@ module Rababa
         elsif ALL_POSSIBLE_HARAQAT.include?(reversed_full_haraqah) && correct_reversed
           out = reversed_full_haraqah
         else
-          val = full_haraqah.map { |diac| \
+          val = full_haraqah.map { |diac|
             ALL_POSSIBLE_HARAQAT[diac]
           }.join("|")
 

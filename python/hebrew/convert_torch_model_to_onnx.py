@@ -4,6 +4,7 @@ import numpy as np
 import onnx
 import onnxruntime
 import torch
+import yaml
 from diacritizer import Diacritizer
 
 """
