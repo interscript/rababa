@@ -432,6 +432,27 @@ row here does not belong in the paper.
 | Hebrew rows (s46 16.43 / DictaBERT 35.63) | Nakdimon Biblical test, run by us | beam-4 (ours) / vendor default | per-evaluator | ours yes; Dicta run-by-us on their artifact |
 | Tencent Hy4-preview (win/tie/loss vs GLM 5.3 / Kimi K3) | 203 tasks, 163 internal experts, blind pairwise | `reasoning_effort` default high (`no_think` via template kwargs) | unstated | no — internal blind pairwise |
 
+## Statistical footing for the headline deltas (2026-09-01)
+
+Paired bootstrap (paragraphs as resampling units, 10,000 resamples,
+seed 42) on the per-paragraph prediction CSVs — every pair below is
+the same 1,200 SadeedDiac-25 paragraphs, zero unpaired. Scorer note:
+the per-paragraph scorer is a simplified letters-aligned haraqat
+comparison of the projected CSVs, so its aggregates differ from the
+official Misraj DER (2.2864/2.5793/2.6911/8.7978 stay canonical);
+the deltas and significance carry over because the pairing is
+identical.
+
+| comparison | delta (pp) | bootstrap 95% CI | one-sided p |
+|---|---|---|---|
+| r7 vs r6 | −0.367 | [−0.467, −0.278] | <1e-4 — improvement is real |
+| r7 vs GLM-5.2 (projected) | +0.539 (GLM worse) | [+0.202, +0.939] | 0.0003 — our teacher leads |
+| GLM-5.3-Flash vs GLM-5.2 (projected) | +7.966 | [+7.520, +8.368] | <1e-4 — the frontier regression is overwhelming |
+
+Policy (B1 of the improvement plan): every delta quoted in docs or
+the paper carries its CI or an explicit note that the run predates
+the policy (this table is the start).
+
 Standing rules this ledger enforces: full-set-only student numbers;
 subset figures labeled at first publication; every LLM row discloses
 temperature, reasoning knob, and max tokens; resumed checkpoints are
