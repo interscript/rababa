@@ -111,6 +111,15 @@ def main() -> None:
         for line in CKPT.read_text(encoding="utf-8").splitlines():
             row = json.loads(line)
             done[row["idx"]] = row["pred"]
+        # exhausted retries checkpoint as empty strings; resuming them
+        # as "done" silently scores them as all-error rows (the 2026-
+        # 08-31 GLM-5.3-Flash run read 15.96 DER with 140 such rows)
+        empties = [i for i, pred in done.items() if not pred.strip()]
+        for i in empties:
+            del done[i]
+        if empties:
+            print(f"[glm] dropping {len(empties)} empty checkpoint rows "
+                  "for retry", flush=True)
     todo = [i for i in range(len(inputs)) if i not in done]
     print(f"[glm] model={MODEL} effort={EFFORT or 'thinking-disabled'} "
           f"done={len(done)} todo={len(todo)}", flush=True)
