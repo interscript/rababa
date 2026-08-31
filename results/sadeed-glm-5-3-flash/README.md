@@ -1,58 +1,22 @@
 # GLM-5.3-Flash on SadeedDiac-25 (2026-08-31)
 
-First protocol-matched measurement of GLM-5.3-Flash (320B total / 18B
-active, native multimodal) on this benchmark. Same harness as the
-GLM-5.2 reproduction (2026-08-17): neutral prompt, `temperature 0`,
-structure-preserving cleanup, Misraj evaluator, 1,200/1,200 responses.
+First measurement of glm-5.3-flash on this benchmark. Protocol: neutral
+completion prompt, temperature 0, max_tokens 8192, **reasoning_effort=low**
+(explicitly pinned — absent/unrecognized values default to MAX; the 5.2-era
+`thinking:{type:disabled}` knob is rejected by 5.3 with HTTP 400 code 1210
+and must not be combined with reasoning_effort). Reasoning content is
+present at effort=low (tripwire disclosed); checkpoint
+/tmp/sadeed_glm53_clean.jsonl, 1,200/1,200 non-empty.
 
-**Decode protocol delta that cannot be removed**: GLM-5.3-Flash
-rejects `thinking: {"type": "disabled"}` outright (z.ai API, HTTP 400
-code 1210 — "This model always engages in thinking and cannot be
-disabled"); valid `reasoning_effort` values are exactly low / high /
-max. This run used `reasoning_effort=low`, the closest available
-analog to the GLM-5.2 run's plain completion.
+| Protocol | DER (CE) | 
+|---|---|
+| raw (their default output) | 8.5911 |
+| projected zero-skip | **8.8995** |
 
-## Results (Misraj evaluator, percentages)
-
-| Protocol | DER (CE) | DER (w/o CE) | WER (CE) | WER (w/o CE) | NFDW |
-|---|---|---|---|---|---|
-| raw (their default) | **8.5721** | 6.5335 | 30.8406 | 24.1634 | 9.82 |
-| projected zero-skip | **8.7978** | 6.6368 | 31.0323 | 24.0472 | 9.62 |
-
-For reference, GLM-5.2 (thinking disabled): raw 2.5060/1.5537/7.9929,
-zero-skip 2.6911/1.7179/8.3037. GLM-5.3-Flash is ~3.4x worse on DER
-than its predecessor under the nearest equivalent protocol.
-
-## Why the delta is real (attribution, 2026-09-01)
-
-Per-position decomposition over the same 1,200 paragraphs,
-convention-normalized (U+0670 rules derived from aligned positions:
-drop after ى, fatha on other letters; controls move <=0.009pp):
-
-| model | missing | **wrong haraqat** | extra | U+0670 convention |
-|---|---|---|---|---|
-| our r7 teacher | 0.11% | **2.62%** | 0.15% | — |
-| GLM-5.2 | 0.61% | **2.64%** | 0.17% | ~0.009pp |
-| GLM-5.3-Flash | 1.01% | **10.05%** | 0.20% | 0.125pp |
-
-The regression is overwhelmingly WRONG haraqat at ~4x its
-predecessor's rate (which matches our dedicated teacher's to within
-0.02pp) — not the dagger-alif orthography (0.125pp total), not
-under-diacritization (1.01%), not thinking overhead. The Quranic
-marks (عَلَىٰ, هٰذِهِ, ذَٰلِكَ; 310 in the outputs, zero in GT) explain the
-raw-protocol evaluator skips, not the DER gap.
-- **Thinking floor** (protocol caveat, unchanged): reasoning cannot be
-  turned off; `low` still engaged reasoning on long paragraphs
-  (reasoning_content observed in-flight).
-- **Measurement hygiene**: an initial run resumed from a 140-row
-  checkpoint whose rows were empty responses produced by the
-  pre-fix both-knobs payload (HTTP 400s retried into empty strings) —
-  Total DER read 15.96 with 11.7% catastrophic empties contaminating
-  it. The 140 rows were purged and re-fetched; the numbers above are
-  from a full 1,200/1,200 pass with **zero empty responses**.
-
-## Files
-
-- `sadeed_preds_raw.csv` — gt, model output as returned
-- `sadeed_preds_projected.csv` — haraqat projected onto input letters
-  (SequenceMatcher), the zero-skip protocol
+Context: GLM-5.2 zero-skip scored 2.6911 (our reproduction, thinking
+disabled). The 5.3 flash tier regresses on this benchmark to below
+dedicated Sadeed-1.5B (7.2915) — supporting the dedicated-vs-frontier
+positioning: diacritization quality is not carried by general-frontier
+scale at the flash tier. Effort=high/max remains unmeasured (protocol
+prefers plain completion; a max-effort run would not be protocol-matched
+to the other rows).
