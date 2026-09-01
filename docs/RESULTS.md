@@ -66,12 +66,19 @@ protocol, zero skipped paragraphs.
   REJECTS disabled thinking (HTTP 400 code 1210) — reasoning cannot be
   turned off, only dialed to low/high/max — so this ran at
   `reasoning_effort=low`, the nearest analog to plain completion.
-  ~3.4x worse DER than GLM-5.2 and behind Sadeed-1.5B, driven by
-  Quranic-convention orthography (dagger-alif forms the GT does not
-  use, 9.8% not-fully-diacritized words) — a generalist regression on
-  classical-knowledge output conventions, recorded as a dedicated-model
-  data point. Zero empty responses after purging 140 checkpoint rows
-  the pre-fix payload had retried into empty strings.
+  ~3.4x worse DER than GLM-5.2 and behind Sadeed-1.5B. Attribution
+  (2026-09-01, per-position decomposition over the same 1,200
+  paragraphs, convention-normalized): **wrong-haraqat rate 10.05% vs
+  GLM-5.2's 2.64%** — which matches our r7 teacher's 2.62% almost
+  exactly — while missing is 1.01%, extra 0.20%, and the entire
+  dagger-alif (U+0670) convention effect is 0.125pp (310 marks, zero
+  in GT; rules derived from the aligned positions: drop after ى,
+  fatha elsewhere; controls r7/G-5.2 move <=0.009pp). The regression
+  is genuine mark errors, not orthographic convention — the frontier
+  generalist lost core classical-Arabic knowledge its predecessor
+  had. The dagger-alif observation explains the raw-mode skip flood,
+  not the DER gap. Zero empty responses after purging 140 checkpoint
+  rows the pre-fix payload had retried into empty strings.
 
 - **r3 = r2 + 1 epoch on the decontaminated Misraj corpus (1M lines) +
   150k MSA replay**: best non-frontier-LLM result on the benchmark;
