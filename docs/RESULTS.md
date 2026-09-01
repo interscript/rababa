@@ -433,6 +433,29 @@ behind 5.2 (CI [-18,028, -14,685] error positions). The dedicated-
 model thesis gains its cleanest form: the newest generalist
 generation lost classical-Arabic mark knowledge its predecessor had.
 
+## Hebrew s46 on the Dicta test corpora (2026-09-01)
+
+The disclosed modern-text gap, measured (eval_hebrew_dicta.py, TODO
+07; corpora: Dicta ACL 2020, public domain, on
+rababa-datasets:dicta-test/):
+
+| corpus | s46 greedy DER | examples | GT density |
+|---|---|---|---|
+| Modern (HebrewWiki) | **0.5209** | 253 | 0.79 marks/letter |
+| Poetry | **0.2377** | 959 | 0.79 |
+| Rabbinic (Bet Yosef) | **0.4523** | 164 | 0.81 |
+
+Protocol: line-level units (<=512 chars), greedy, the same seq2seq_der
+harness as the Nakdimon row; corpora are densely vocalized (~0.8
+marks/letter), so the low DERs are not a sparsity artifact. NOT
+directly comparable to D-Nikud's published DEC (token-level metric,
+their splits) without protocol mapping — recorded as our-row-only.
+Interpretation: s46 is strong across modern, poetry, and rabbinic
+line-level registers; the Hebrew campaign's weak surface is
+specifically the Naknimon-style paragraph-level Biblical/Rabbinic
+test (16.44) — register coverage, not a general modern-text gap.
+dicta_eval.json beside the checkpoint carries the raw result.
+
 ## Comparison protocol ledger (2026-09-01)
 
 Every external comparison we cite, rowed by what was actually run.
