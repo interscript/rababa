@@ -418,6 +418,21 @@ canonical Arabic teacher. Script: train_arabic_r8.py; artifacts:
 rababa_arabic_byt5/run-008-ipa (EVAL_DONE, ipa_probe.json,
 sadeed_preds_windowed.csv).
 
+## GLM-5.3 (full) on SadeedDiac-25 (2026-09-01)
+
+**9.8971/7.8219 zero-skip, 9.9760/7.9285 raw** (Misraj;
+`results/sadeed-glm-5-3/`; 1,200/1,200, zero empties — 41 retry
+sentinels caught by the #65 guard). reasoning_effort=low: glm-5.3
+rejects disabled thinking with the same 400/1210 as Flash. The 5.x
+generation regression is family-wide: GLM-5.2 2.6911 -> Flash 8.7978
+(wrong haraqat 10.05%) -> full 5.3 9.8971 (missing 3.75%, wrong
+8.59%) — while GLM-5.2's wrong-rate (2.64%) matches our dedicated
+580M teacher (2.62%) to within 0.02pp. Flash significantly better
+than the full model (bootstrap CI excludes zero); both decisively
+behind 5.2 (CI [-18,028, -14,685] error positions). The dedicated-
+model thesis gains its cleanest form: the newest generalist
+generation lost classical-Arabic mark knowledge its predecessor had.
+
 ## Comparison protocol ledger (2026-09-01)
 
 Every external comparison we cite, rowed by what was actually run.
@@ -433,6 +448,7 @@ row here does not belong in the paper.
 | our client students (4.822 / 8.259) | same | same | same; full-set-only publication rule | yes |
 | GLM-5.2 (2.5060 raw / 2.6911 zero-skip) | same evaluator | temp 0, `thinking.type=disabled` (plain completion) | raw: word-structure skips; zero-skip: projected | yes — script + CSVs (results/sadeed-glm-5-2/) |
 | GLM-5.3-Flash (8.5721 raw / 8.7978 zero-skip) | same evaluator | temp 0, `reasoning_effort=low` (thinking CANNOT be disabled — API 400 code 1210) | same; dagger-alif convention skips; 0 empty responses after sentinel purge | yes — script + CSVs (results/sadeed-glm-5-3-flash/) |
+| GLM-5.3 (9.9760 raw / 9.8971 zero-skip) | same evaluator | temp 0, `reasoning_effort=low` (same 400/1210 rejection) | same; 41 sentinels caught + refetched, 0 empties final | yes — script + CSVs (results/sadeed-glm-5-3/) |
 | Claude-3.7-Sonnet (1.3941) | published number | their protocol, undisclosed to us | unknown | no — vendor-published |
 | Gemini-Flash-2.0 (3.1926) / GPT-4 (3.8645) | published numbers | theirs | unknown | no — vendor-published |
 | Sadeed-1.5B (7.2915) | published, same benchmark | theirs (their repo reports 1.2 under its own split — not comparable) | unknown | partially — paper + code, split differs |
