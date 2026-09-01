@@ -23,17 +23,27 @@ For reference, GLM-5.2 (thinking disabled): raw 2.5060/1.5537/7.9929,
 zero-skip 2.6911/1.7179/8.3037. GLM-5.3-Flash is ~3.4x worse on DER
 than its predecessor under the nearest equivalent protocol.
 
-## Why the delta is real but protocol-shaped
+## Why the delta is real (attribution, 2026-09-01)
 
-- **Orthography**: the model emits Quranic-convention marks (dagger
-  alif: عَلَىٰ, هٰذِهِ, ذَٰلِكَ; also بِهِۦ) where the benchmark's GT uses
-  plain MSA forms. The evaluator skips whole sentences on word
-  mismatches (survivorship in raw mode); surviving dagger-alif words
-  count as diacritic errors. Not-fully-diacritized words run 9.8%.
-- **Thinking floor**: reasoning cannot be turned off, so the
-  plain-completion protocol the published LLM rows used is not
-  expressible for this model; `low` still engaged reasoning on long
-  paragraphs (reasoning_content observed in-flight).
+Per-position decomposition over the same 1,200 paragraphs,
+convention-normalized (U+0670 rules derived from aligned positions:
+drop after ى, fatha on other letters; controls move <=0.009pp):
+
+| model | missing | **wrong haraqat** | extra | U+0670 convention |
+|---|---|---|---|---|
+| our r7 teacher | 0.11% | **2.62%** | 0.15% | — |
+| GLM-5.2 | 0.61% | **2.64%** | 0.17% | ~0.009pp |
+| GLM-5.3-Flash | 1.01% | **10.05%** | 0.20% | 0.125pp |
+
+The regression is overwhelmingly WRONG haraqat at ~4x its
+predecessor's rate (which matches our dedicated teacher's to within
+0.02pp) — not the dagger-alif orthography (0.125pp total), not
+under-diacritization (1.01%), not thinking overhead. The Quranic
+marks (عَلَىٰ, هٰذِهِ, ذَٰلِكَ; 310 in the outputs, zero in GT) explain the
+raw-protocol evaluator skips, not the DER gap.
+- **Thinking floor** (protocol caveat, unchanged): reasoning cannot be
+  turned off; `low` still engaged reasoning on long paragraphs
+  (reasoning_content observed in-flight).
 - **Measurement hygiene**: an initial run resumed from a 140-row
   checkpoint whose rows were empty responses produced by the
   pre-fix both-knobs payload (HTTP 400s retried into empty strings) —
