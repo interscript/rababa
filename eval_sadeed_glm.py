@@ -132,7 +132,8 @@ def main() -> None:
             return i, call(session, key, inputs[i])
 
         n_written = 0
-        with ThreadPoolExecutor(max_workers=8) as ex:
+        workers = int(os.environ.get("GLM_WORKERS", "8"))
+        with ThreadPoolExecutor(max_workers=workers) as ex:
             futures = {ex.submit(work, i): i for i in todo}
             for fut in as_completed(futures):
                 i, pred = fut.result()
