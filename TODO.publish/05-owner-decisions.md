@@ -11,21 +11,26 @@ instruction naming it.
 1. **GKD ordering** — the last registered training lever (SOTA
    strategy 2025: "GKD is next"). Runs after E6's verdict so the
    rung ladder stays one-variable-at-a-time. Owner decides: launch
-   now, after E6, or wait for the E5/E6 writeup.
-2. **glm-4.7 partial-coverage policy** — if the 429 wall never
-   clears: record as partial-coverage row with disclosure, or drop
-   the row. (Default per protocol honesty: disclose coverage in the
-   row itself.)
-3. **ara-diac-small-2.x release** — iff E6 passes the gate
-   (<= 4.5218). Version number is always the owner's decision
-   (rubygems lesson applies to model indices too).
+   now, after E6, or wait for the E5/E6 writeup. (E6 now closed
+   failed 2026-09-02 — see TODO.publish/02.)
+2. **glm-4.7 partial-coverage policy** — RESOLVED: the fetch
+   completed 1,200/1,200 (12 passes), full row recorded.
+3. **ara-diac-small-2.x release** — RESOLVED for E6 (gate failed,
+   no release). G2a (4.5701) has its own export entry (ml #136);
+   G2b pending. Version numbers remain the owner's.
 4. **head32 swap-in shape** — in-place + index-v2 vs parallel
    `-int8-head32` ids. Five-of-five rebuilds done with flip CIs;
    swap-in is a release-side act.
 5. **fp16 index entries for ara-diac-2.0** — export-side, low risk,
    owner sequencing.
-6. **rababa PR backlog** — #51/#52/#53/#48/#49/#26 (from
-   TODO.training-work/08).
+6. **rababa dependency-security decision (56 Dependabot alerts)** —
+   see TODO.publish/06 for the memo: keep-frozen+dismiss (A) vs
+   bump+re-record legacy goldens (B, via PRs #51-53) vs root-floor
+   raises (C). Evidence: #52/#53 fail on Ruby golden mismatches at
+   torch 2.13 = the re-validation gate firing.
+7. **rababa PR backlog** — #48 (user's Modernize, green), #26
+   (user's 2021 rspec PR), #49 (merged 2026-09). User's own PRs
+   untouched by design.
 
 ## Standing constraints (do not re-derive)
 
