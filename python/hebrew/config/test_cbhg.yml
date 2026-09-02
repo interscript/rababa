@@ -10,6 +10,7 @@ n_training_examples: 5 # Using a small number for testing
 n_test_examples: null  # null load all test examples
 n_validation_examples: null # null load all validation examples
 train_file_name: "test.txt"
+eval_file_name: "test.txt"
 test_file_name: "test.txt"
 is_data_preprocessed: false
 data_separator: '|'
