@@ -9,6 +9,7 @@ from torch import nn, optim
 from torch.cuda.amp import autocast
 from torch.utils.tensorboard.writer import SummaryWriter
 from tqdm import trange
+from util import nakdimon_dataset, nakdimon_metrics
 from util.learning_rates import LearningRateDecay
 from util.utils import (
     count_parameters,
@@ -16,8 +17,6 @@ from util.utils import (
     # plot_alignment,
     repeater,
 )
-
-from util import nakdimon_dataset, nakdimon_metrics
 
 # Make wandb optional
 try:

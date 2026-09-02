@@ -2,7 +2,6 @@ import random
 
 import numpy as np
 import torch
-
 from util import nakdimon_hebrew_model as hebrew
 from util import nakdimon_utils as utils
 
