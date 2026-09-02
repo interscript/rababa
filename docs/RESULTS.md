@@ -456,6 +456,30 @@ specifically the Naknimon-style paragraph-level Biblical/Rabbinic
 test (16.44) — register coverage, not a general modern-text gap.
 dicta_eval.json beside the checkpoint carries the raw result.
 
+Vendor cross-reference (verified 2026-09-02): D-Nikud (arXiv
+2402.00075) publishes NO numbers on these three corpora — the
+paper's tables are its internal 5% splits (Table 2, CHA/WOR) and
+the Nakdimon test pipeline (Table 3); the repo README carries no
+numbers either. TODO 07's "D-Nikud's published numbers on the same
+sets" premise was wrong (corrected there). The nearest vendor
+surface is the paper's Nakdimon test-set table — DEC/CHA/WOR/VOC:
+D-Nikud 98.39/97.15/90.76/93.44, Nakdan (Dicta) 97.95/96.77/94.11/
+94.92, Nakdimon 97.91/96.37/89.75/91.64, Morfix 96.84/94.92/90.38/
+92.39, Snopi 91.29/85.84/76.45/78.91 — ledgered below as
+vendor-published. These are token-level macro accuracies under
+their decode on their split; not mappable to DER without re-running
+their systems, so no cross-metric comparison is drawn.
+
+Protocol note (angle brackets): the corpora README's intended
+protocol removes the matres-lectionis angle brackets from the input
+and checks their removal in the output. Our harness keeps brackets
+in both input and GT (`seq2seq_der` parses them as units; the model
+sees them and can copy them through), so the matres-removal
+subtask is not tested and bracket units sit in the denominator.
+Numbers stand as recorded, our-row-only; a README-conformant re-run
+(bracket letters stripped) is the follow-up if this surface becomes
+load-bearing.
+
 ## Comparison protocol ledger (2026-09-01)
 
 Every external comparison we cite, rowed by what was actually run.
@@ -476,6 +500,7 @@ row here does not belong in the paper.
 | Gemini-Flash-2.0 (3.1926) / GPT-4 (3.8645) | published numbers | theirs | unknown | no — vendor-published |
 | Sadeed-1.5B (7.2915) | published, same benchmark | theirs (their repo reports 1.2 under its own split — not comparable) | unknown | partially — paper + code, split differs |
 | Hebrew rows (s46 16.43 / DictaBERT 35.63) | Nakdimon Biblical test, run by us | beam-4 (ours) / vendor default | per-evaluator | ours yes; Dicta run-by-us on their artifact |
+| D-Nikud Nakdimon-test table (DEC/CHA/WOR/VOC, 5 systems incl. Nakdan/Nakdimon) | Nakdimon test set, their evaluation flow | theirs, undisclosed to us | unknown | no — vendor-published (arXiv 2402.00075 Table 3); no D-Nikud numbers exist on the Dicta ACL 2020 corpora |
 | Tencent Hy4-preview (win/tie/loss vs GLM 5.3 / Kimi K3) | 203 tasks, 163 internal experts, blind pairwise | `reasoning_effort` default high (`no_think` via template kwargs) | unstated | no — internal blind pairwise |
 
 ## Statistical footing for the headline deltas (2026-09-01)
