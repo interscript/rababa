@@ -1,8 +1,12 @@
 # 04 — Label-scale rung (A1a): diversify the student's domain mix
 
-Status: TO BUILD. The E2/E3/E4 factorial attributes the remaining
-~2.0pp of client-tier gap to domain coverage; the current mix is
-news-heavy (r5-units/domain.txt + replay.txt, teacher-labeled by r7).
+Status: COMPLETE (2026-09-02) — **GATE FAILED: 5.8057** (gate
+<=4.5218; control 4.8218; worse than E5's 5.0853). NOT ADOPTED.
+Swapping 8k news units for classical Tashkeela at constant 30k
+total HURT (−0.98pp vs control); teacher reproduced at 2.289.
+Verdict recorded in EXPERIMENTS.md E6 + PUBLICATION-NOTES §8/§B
+(the E5/E6 data-vs-architecture negative pair). Direction shifts to
+the add side (G2b, 48k total, in flight). See TODO.publish/02.
 
 ## Design
 

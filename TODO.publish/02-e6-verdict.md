@@ -1,10 +1,15 @@
 # 02 — E6 verdict (constant-budget register diversification)
 
-Status: IN FLIGHT (2026-09-02). Training COMPLETE — all 11,073 steps,
-final CE ~0.003-0.008 (run-008-tashkeela-mix; /tmp/e6_distill2.log).
-`modal_distill.py::main` does not chain the final eval, so
-`evaluate_der` was launched separately (/tmp/e6_evalder.log,
-resumable, writes final_eval.json).
+Status: COMPLETE (2026-09-02). Training finished all 11,073 steps;
+`evaluate_der` (launched separately — `main` doesn't chain it)
+returned **student 5.8057 / teacher 2.289** (n=1200). **GATE FAILED
+at 5.8057** (gate <=4.5218, control 4.8218, E5's failed 5.0853);
+NOT ADOPTED. Paired bootstrap student−teacher +3.2388pp, CI
+[2.939, 3.575]. Prediction (4.45-4.75) missed. Recorded:
+EXPERIMENTS.md E6 status, PUBLICATION-NOTES §8 negative pair
+(E5+E6) + Paper-B paragraph (the causal test failed in the swap
+direction; G2b's 48k add is the live test). ara-diac-small-2.x
+material NOT triggered — release question moot.
 
 ## Registered (EXPERIMENTS.md, gate before launch)
 
