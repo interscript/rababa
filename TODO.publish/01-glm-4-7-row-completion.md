@@ -1,12 +1,18 @@
 # 01 — glm-4.7-flash SadeedDiac-25 row completion
 
-Status: IN FLIGHT (2026-09-02). Fetch state: 992/1,200 distinct rows
-landed, 208 still empty after three passes — the endpoint sits behind
-sustained 429s (code 1305; thinking-disabled accepted, plain
-completion inexpressible). Clean single fetch pass running
-(/tmp/glm47_eval4.log; the #65 guard drops the 208 empties on
-resume). Interim tables from contaminated interleaved passes are
-VOID — only the final full-fetch tables count.
+Status: COMPLETE (2026-09-02). 1,200/1,200, zero empties after 12
+resumable passes past sustained 429s (sentinels 249 -> 208 -> 79 ->
+37 -> 20 -> 13 -> 6 -> 4 -> 2 -> 0). Final: **13.0035 raw /
+13.2256 zero-skip** (w/o-CE 10.0510/10.3206; NFDW 17.60 raw).
+Attribution (validated scorer — reproduces the #69 series exactly:
+5.2 wrong 2.64%, 5.3 missing 3.75/wrong 8.59): **missing 6.67%,
+wrong 9.01%, extra 0.96%** — the only family member regressing on
+both axes; U+0670 convention effect 0.04pp. Bootstrap vs GLM-5.2:
++7.945pp, CI [+7.516, +8.370], p<1e-4. Regression axis complete:
+5.2 2.5060 -> 5.3-Flash 8.5721 -> 5.3 9.9760 -> 4.7-flash 13.0035
+raw. Recorded: results dir + RESULTS.md section/ledger/bootstrap
+rows; paper.adoc row; site note amended (interscript.github.io
+#149).
 
 ## Protocol
 

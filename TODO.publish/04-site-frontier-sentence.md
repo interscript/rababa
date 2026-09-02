@@ -1,9 +1,11 @@
 # 04 — Site frontier sentence (interscript.org ml page)
 
-Status: BLOCKED on TODO.publish/01 (needs the full regression axis).
-The ml.astro page exists on interscript.org (rebrand 2026-08); what
-it lacks is the one-line frontier-context claim that the GLM sweep
-now substantiates.
+Status: COMPLETE (2026-09-02). Frontier-context note merged on the
+site ledger section (interscript.github.io #147), amended with the
+fourth row glm-4.7-flash 13.00 raw DER (#149) — wording "the rest of
+the family" since 4.7 is a predecessor generation. Links
+rababa/docs/RESULTS.md for the disclosed rows. Site guard (34/34),
+astro check, full unit suite (255/255) green on both PRs.
 
 ## The claim (draft, number slots to fill from 01)
 

@@ -1,10 +1,11 @@
 # 02 — GLM-4.7-Flash row completion
 
-Status: IN FLIGHT (2026-09-01). Old API semantics verified by probe:
-thinking.type=disabled ACCEPTED (plain completion expressible), but
-the endpoint sits behind sustained 429s (code 1305) — running at
-GLM_WORKERS=1, ~2 rows/min aggregate; ETA overnight. Checkpoint
-resumes; empties self-heal (#65).
+Status: COMPLETE (2026-09-02) — 1,200/1,200 after 12 resumable
+passes past sustained 429s (sentinels 249 -> ... -> 0). 13.0035 raw
+/ 13.2256 zero-skip; attribution missing 6.67 / wrong 9.01 / extra
+0.96; bootstrap vs GLM-5.2 +7.945pp CI [+7.516, +8.370]. RESULTS +
+ledger + paper row + site amendment landed. Full record:
+TODO.publish/01.
 
 ## Remaining steps
 
