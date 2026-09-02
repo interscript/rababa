@@ -1,0 +1,30 @@
+= ADR-0001: Run scripts are provenance artifacts
+Status: Accepted (2026-08-29)
+
+== Context
+
+The windowed zero-skip Sadeed protocol (split at word boundaries, 2x
+window generation cap, haraqat projection) was pasted verbatim into
+`train_arabic_r5.py` through `train_arabic_r8.py`. `docs/RESULTS.md`
+cites those scripts as the record of what produced each published
+number. ml-models now owns one deep, tested copy of the protocol
+(`src/harness/sadeed.py`), vendored here as `sadeed_harness.py`.
+
+== Decision
+
+- Past run scripts (r5-r8, eval_*) are **never rewritten** to consume
+  the shared harness: they are provenance artifacts. Their inline
+  copies stand as historical record of what ran.
+- New run scripts (r9+) import `sadeed_harness` — no new inline copies
+  of the protocol.
+- Protocol changes land in `sadeed_harness.py` (kept in sync with
+  ml-models `src/harness/sadeed.py`) and are noted in the RESULTS
+  section of any future run.
+
+== Consequences
+
+- The four inline copies remain in the tree deliberately; architecture
+  reviews should not re-suggest rewriting them.
+- The harness carries its own unit tests in ml-models; a vendored copy
+  that drifts from the source is a bug — sync both or vendor via
+  submodule later.

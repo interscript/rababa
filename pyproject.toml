@@ -1,0 +1,85 @@
+# Modern rababa packaging (PEP 621).
+#
+# The legacy `python/` directory contains the 2021 CBHG training code.
+# This package (`src/rababa/`) is the modern replacement: Modal-native,
+# OmegaConf-configured, PyTorch 2.x, ONNX-exported.
+#
+# Both coexist during the migration. New work happens here; `python/`
+# is reference-only and will be archived once parity is verified.
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rababa"
+version = "0.3.0.dev0"
+description = "Modern Arabic / Hebrew diacritization — Modal-native training + ONNX inference"
+requires-python = ">=3.11"
+license = { text = "BSD-2-Clause" }
+authors = [{ name = "Ribose Inc.", email = "open.source@ribose.com" }]
+
+dependencies = [
+  "torch>=2.6,<3",
+  "numpy>=1.26,<3",
+  "omegaconf>=2.3,<3",
+  "onnx>=1.22",
+  "onnxruntime>=1.20",
+  "tqdm>=4.66.3",
+  "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+train = [
+  "transformers>=4.46",
+  "datasets>=3.0",
+  "wandb>=0.18",
+  "tensorboard>=2.18",
+]
+modal = [
+  "modal>=0.71",
+]
+tflite = [
+  "litert-torch>=0.9",
+  "ai-edge-quantizer>=0.8",
+]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.8",
+  "mypy>=1.13",
+]
+
+[project.scripts]
+rababa-pretrain = "rababa.cli:pretrain_main"
+rababa-train = "rababa.cli:train_main"
+rababa-export = "rababa.cli:export_main"
+rababa-evaluate = "rababa.cli:evaluate_main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rababa"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["python", "models", "data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "RUF"]
+ignore = ["E501"]  # formatter handles line length
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B011"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+exclude = ["python/", "build/", "dist/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]

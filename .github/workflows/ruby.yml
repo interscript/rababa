@@ -1,26 +1,9 @@
-name: Ruby CI
+name: ruby
 
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'lib/**'
-      - 'spec/**'
-      - 'Gemfile'
-      - 'rababa.gemspec'
-      - '.github/workflows/ruby.yml'
   pull_request:
-    paths:
-      - 'lib/**'
-      - 'spec/**'
-      - 'Gemfile'
-      - 'rababa.gemspec'
-      - '.github/workflows/ruby.yml'
-
-# Cancel in-progress runs for the same workflow and branch
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -28,21 +11,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby-version: ['2.7', '3.0', '3.1', '3.2', '3.3']
+        ruby-version: ["3.3", "3.4"]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1.171.0
-      with:
-        ruby-version: ${{ matrix.ruby-version }}
-        bundler-cache: true
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
 
-    - name: Run rake
-      run: |
-        bundle exec rake
+      - name: Run rake
+        run: bundle exec rake
 
-    - name: Run standardrb (use bundle exec standardrb --fix)
-      run: |
-        bundle exec standardrb
+      - name: Run standardrb
+        run: bundle exec standardrb

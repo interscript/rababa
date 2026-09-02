@@ -1,22 +1,21 @@
-import torch
-import pickle
 import multiprocessing
 import random
 
 import numpy as np
-import yaml
-from diacritizer import Diacritizer
 import onnx
 import onnxruntime
+import torch
+import yaml
+from diacritizer import Diacritizer
 
 
 def main():
     """
-        Key Params:
-            max_len:
-                is the max length for the arabic strings to be diacritized
-            batch size:
-                has to do with the model training and usage
+    Key Params:
+        max_len:
+            is the max length for the arabic strings to be diacritized
+        batch size:
+            has to do with the model training and usage
     """
 
     d_params = yaml.safe_load(open("config/convert_torch_onnx.yml"))
@@ -27,7 +26,6 @@ def main():
     model_kind_str = d_params["model_kind_str"]
     onnx_model_filename = d_params["onnx_model_filename"]
 
-
     """
         example and mock data:
         we found that populating all the data, removing the zeros gives better results.
@@ -35,7 +33,6 @@ def main():
 
     src = torch.Tensor([[1 for i in range(max_len)] for i in range(batch_size)]).long()
     lengths = torch.Tensor([max_len for i in range(batch_size)]).long()
-
 
     """
         Instantiate Diacritization model
@@ -48,7 +45,6 @@ def main():
     dia.model.eval()
     # run model
     torch_out = dia.model(src, lengths)
-
 
     """
         Load ONNX libs and export models into onnx
@@ -72,7 +68,6 @@ def main():
 
     print("Model printed in rel. path:", onnx_model_filename)
 
-
     """
         Load ONNX versions of model
     """
@@ -86,7 +81,6 @@ def main():
 
     # onnx inputs and outputs names
     # ort_session.get_inputs(), ort_session.get_outputs()
-
 
     """
         Run ONNX model on sample data
@@ -105,7 +99,6 @@ def main():
     print("src:: ", src.detach().numpy().astype(np.int64))
     print("lengths: ", lengths.detach().numpy().astype(np.int64))
 
-
     for i in range(batch_size):
         np.testing.assert_allclose(
             torch_out["diacritics"][i].detach().numpy(),
@@ -118,7 +111,6 @@ def main():
         "\n!!!Exported model has been tested with ONNXRuntime, result looks good within given tolerance!!!"
     )
 
-
     vec = [[41, 12, 40] for i in range(batch_size)]
     src = torch.Tensor(vec).long()
 
@@ -128,7 +120,6 @@ def main():
         ort_session.get_inputs()[0].name: src.detach().numpy().astype(np.int64),
         ort_session.get_inputs()[1].name: lengths.detach().numpy().astype(np.int64),
     }
-
 
     ort_outs = ort_session.run(None, ort_inputs)
 
@@ -142,17 +133,15 @@ def main():
             atol=1e-03,
         )
 
-
     """
         Test ONNX model on randomized data
     """
 
-    test_id = 0
+    # test_id = 0
 
     print("***** Test MAX size :: Random Boolean vectors: *****")
 
     for test_run in range(3):
-
         vec = [[random.randint(0, 1) for i in range(max_len)] for i in range(batch_size)]
         src = torch.Tensor(vec).long()
         lengths = torch.Tensor([max_len for i in range(batch_size)]).long()
@@ -179,11 +168,9 @@ def main():
         print("test :: ", test_run)
         print("Result looks good within given tolerance!!!")
 
-
     print("***** Test MAX size :: Random float, vectors within 0:16 *****")
 
     for test_run in range(3):
-
         vec = [[random.randint(0, 17) for i in range(max_len)] for i in range(batch_size)]
         src = torch.Tensor(vec).long()
         torch_out = dia.model(src, lengths)
@@ -206,11 +193,9 @@ def main():
         print("test :: ", test_run)
         print("Result looks good within given tolerance!!!")
 
-
     print("***** Test Dynamical sizes :: Random Boolean vectors: *****")
 
     for l in [2, 10, 40, 100, 150]:
-
         print("length:: ", l)
 
         vec = [[1 for i in range(l)] for i in range(batch_size)]  # random.randint(0,1)
@@ -239,11 +224,9 @@ def main():
         print("test :: ", l)
         print("Result looks good within given tolerance!!!")
 
-
     print("***** Test Dynamical sizes :: Random float, vectors within 0:16 *****")
 
     for l in [2, 10, 40, 100, 150]:
-
         vec = [[random.randint(0, 17) for i in range(l)] for i in range(batch_size)]
         src = torch.Tensor(vec).long()
         lengths = torch.Tensor([l for i in range(batch_size)]).long()

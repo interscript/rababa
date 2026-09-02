@@ -1,22 +1,20 @@
-
 import argparse
-import random
 import multiprocessing
+import random
 
 import numpy as np
 import torch
 
 # Make wandb optional
 try:
-    import wandb
+    import wandb  # noqa: F401 — availability probe
+
     WANDB_AVAILABLE = True
 except ImportError:
     WANDB_AVAILABLE = False
     print("Warning: wandb not available, training will proceed without logging to wandb")
 
-from trainer import (
-    CBHGTrainer
-)
+from trainer import CBHGTrainer
 
 SEED = 1234
 random.seed(SEED)
@@ -44,7 +42,7 @@ def main():
     parser = train_parser()
     args = parser.parse_args()
 
-    if args.model_kind in ['baseline',"cbhg"]:
+    if args.model_kind in ["baseline", "cbhg"]:
         trainer = CBHGTrainer(args.config, args.model_kind)
     else:
         raise ValueError("The model kind is not supported")

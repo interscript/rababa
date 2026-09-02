@@ -1,25 +1,20 @@
 import os
-from typing import Dict
 
-from diacritization_evaluation import der, wer
 import torch
-from torch import nn
-from torch import optim
-from torch.cuda.amp import autocast
-from torch.utils.tensorboard.writer import SummaryWriter
-from tqdm import tqdm
-from tqdm import trange
-
 from config_manager import ConfigManager
 from dataset import load_iterators
+from diacritization_evaluation import der, wer
 from diacritizer import Diacritizer
-from util.learning_rates import LearningRateDecay
 from options import OptimizerType
+from torch import nn, optim
+from torch.cuda.amp import autocast
+from torch.utils.tensorboard.writer import SummaryWriter
+from tqdm import trange
+from util.learning_rates import LearningRateDecay
 from util.utils import (
     categorical_accuracy,
     count_parameters,
     initialize_weights,
-    plot_alignment,
     repeater,
 )
 
@@ -33,9 +28,7 @@ class GeneralTrainer(Trainer):
     def __init__(self, config_path: str, model_kind: str) -> None:
         self.config_path = config_path
         self.model_kind = model_kind
-        self.config_manager = ConfigManager(
-            config_path=config_path, model_kind=model_kind
-        )
+        self.config_manager = ConfigManager(config_path=config_path, model_kind=model_kind)
         self.config = self.config_manager.config
         self.losses = []
         self.lr = 0
@@ -81,7 +74,7 @@ class GeneralTrainer(Trainer):
         if self.model_kind in ["cbhg", "baseline"]:
             self.diacritizer = Diacritizer(self.config_path, self.model_kind)
         else:
-            print('model not found')
+            print("model not found")
             exit()
 
     def initialize_model(self):
@@ -99,7 +92,6 @@ class GeneralTrainer(Trainer):
         tqdm.display(f"loss: {step_results['loss']}", pos=3)
         for pos, n_steps in enumerate(self.config["n_steps_avg_losses"]):
             if len(self.losses) > n_steps:
-
                 self.summary_manager.add_scalar(
                     f"loss/loss-{n_steps}",
                     sum(self.losses[-n_steps:]) / n_steps,
@@ -163,10 +155,8 @@ class GeneralTrainer(Trainer):
             tqdm.update()
 
         summary_texts = []
-        orig_path = os.path.join(self.config_manager.prediction_dir, f"original.txt")
-        predicted_path = os.path.join(
-            self.config_manager.prediction_dir, f"predicted.txt"
-        )
+        orig_path = os.path.join(self.config_manager.prediction_dir, "original.txt")
+        predicted_path = os.path.join(self.config_manager.prediction_dir, "predicted.txt")
 
         with open(orig_path, "w", encoding="utf8") as file:
             for sentence in all_orig:
@@ -180,18 +170,12 @@ class GeneralTrainer(Trainer):
             if i > len(all_predicted):
                 break
 
-            summary_texts.append(
-                (f"eval-text/{i}", f"{ all_orig[i]} |->  {all_predicted[i]}")
-            )
+            summary_texts.append((f"eval-text/{i}", f"{all_orig[i]} |->  {all_predicted[i]}"))
 
         results["DER"] = der.calculate_der_from_path(orig_path, predicted_path)
-        results["DER*"] = der.calculate_der_from_path(
-            orig_path, predicted_path, case_ending=False
-        )
+        results["DER*"] = der.calculate_der_from_path(orig_path, predicted_path, case_ending=False)
         results["WER"] = wer.calculate_wer_from_path(orig_path, predicted_path)
-        results["WER*"] = wer.calculate_wer_from_path(
-            orig_path, predicted_path, case_ending=False
-        )
+        results["WER*"] = wer.calculate_wer_from_path(orig_path, predicted_path, case_ending=False)
         tqdm.reset()
         return results, summary_texts
 
@@ -210,9 +194,7 @@ class GeneralTrainer(Trainer):
         for batch_inputs in repeater(train_iterator):
             tqdm.set_description(f"Global Step {self.global_step}")
             if self.config["use_decay"]:
-                self.lr = self.adjust_learning_rate(
-                    self.optimizer, global_step=self.global_step
-                )
+                self.lr = self.adjust_learning_rate(self.optimizer, global_step=self.global_step)
             self.optimizer.zero_grad()
             if self.device == "cuda" and self.config["use_mixed_precision"]:
                 with autocast():
@@ -220,9 +202,7 @@ class GeneralTrainer(Trainer):
                     scaler.scale(step_results["loss"]).backward()
                     scaler.unscale_(self.optimizer)
                     if self.config.get("CLIP"):
-                        torch.nn.utils.clip_grad_norm_(
-                            self.model.parameters(), self.config["CLIP"]
-                        )
+                        torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config["CLIP"])
 
                     scaler.step(self.optimizer)
 
@@ -233,9 +213,7 @@ class GeneralTrainer(Trainer):
                 loss = step_results["loss"]
                 loss.backward()
                 if self.config.get("CLIP"):
-                    torch.nn.utils.clip_grad_norm_(
-                        self.model.parameters(), self.config["CLIP"]
-                    )
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config["CLIP"])
                 self.optimizer.step()
 
             self.losses.append(step_results["loss"].item())
@@ -261,21 +239,12 @@ class GeneralTrainer(Trainer):
 
             if self.global_step % self.config["evaluate_frequency"] == 0:
                 loss, acc = self.evaluate(validation_iterator, tqdm_eval)
-                self.summary_manager.add_scalar(
-                    "evaluate/loss", loss, global_step=self.global_step
-                )
-                self.summary_manager.add_scalar(
-                    "evaluate/acc", acc, global_step=self.global_step
-                )
-                tqdm.display(
-                    f"Evaluate {self.global_step}: accuracy, {acc}, loss: {loss}", pos=8
-                )
+                self.summary_manager.add_scalar("evaluate/loss", loss, global_step=self.global_step)
+                self.summary_manager.add_scalar("evaluate/acc", acc, global_step=self.global_step)
+                tqdm.display(f"Evaluate {self.global_step}: accuracy, {acc}, loss: {loss}", pos=8)
                 self.model.train()
 
-            if (
-                self.global_step % self.config["evaluate_with_error_rates_frequency"]
-                == 0
-            ):
+            if self.global_step % self.config["evaluate_with_error_rates_frequency"] == 0:
                 error_rates, summery_texts = self.evaluate_with_error_rates(
                     validation_iterator, tqdm_error_rates
                 )
@@ -326,7 +295,7 @@ class GeneralTrainer(Trainer):
 
             tqdm.update()
 
-    def run_one_step(self, batch_inputs: Dict[str, torch.Tensor]):
+    def run_one_step(self, batch_inputs: dict[str, torch.Tensor]):
         batch_inputs["src"] = batch_inputs["src"].to(self.device)
         batch_inputs["lengths"] = batch_inputs["lengths"].to("cpu")
         batch_inputs["target"] = batch_inputs["target"].to(self.device)
@@ -343,8 +312,7 @@ class GeneralTrainer(Trainer):
         predictions = predictions.view(-1, predictions.shape[-1])
         targets = targets.view(-1)
 
-        loss = self.criterion(predictions.to(self.device),
-                              targets.to(self.device))
+        loss = self.criterion(predictions.to(self.device), targets.to(self.device))
         outputs.update({"loss": loss})
         return outputs
 
@@ -352,9 +320,7 @@ class GeneralTrainer(Trainer):
         pass
 
     def load_model(self, model_path: str = None, load_optimizer: bool = True):
-        with open(
-            self.config_manager.base_dir / f"{self.model_kind}_network.txt", "w"
-        ) as file:
+        with open(self.config_manager.base_dir / f"{self.model_kind}_network.txt", "w") as file:
             file.write(str(self.model))
 
         if model_path is None:
@@ -366,8 +332,11 @@ class GeneralTrainer(Trainer):
             last_model_path = model_path
 
         print(f"loading from {last_model_path}")
-        saved_model = torch.load(last_model_path) if torch.cuda.is_available() \
-            else torch.load(last_model_path, map_location=torch.device('cpu'))
+        saved_model = (
+            torch.load(last_model_path)
+            if torch.cuda.is_available()
+            else torch.load(last_model_path, map_location=torch.device("cpu"))
+        )
         self.model.load_state_dict(saved_model["model_state_dict"])
         if load_optimizer:
             self.optimizer.load_state_dict(saved_model["optimizer_state_dict"])

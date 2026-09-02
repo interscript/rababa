@@ -1,12 +1,10 @@
 import argparse
-from diacritizer import Diacritizer
-from itertools import repeat
-import random
 import multiprocessing
+import random
 
 import numpy as np
 import torch
-
+from diacritizer import Diacritizer
 
 SEED = 1234
 random.seed(SEED)
@@ -34,9 +32,9 @@ def main():
         raise ValueError("text or text_file params required!")
 
     if args.model_kind == "cbhg":
-        diacritizer = Diacritizer(args.config, args.model_kind, 'log_dir')
+        diacritizer = Diacritizer(args.config, args.model_kind, "log_dir")
     elif args.model_kind == "baseline":
-        diacritizer = Diacritizer(args.config, args.model_kind, 'log_dir')
+        diacritizer = Diacritizer(args.config, args.model_kind, "log_dir")
     else:
         raise ValueError("The model kind is not supported")
 

@@ -1,0 +1,77 @@
+# rababa_hebrew_sota_v5 — Hebrew SOTA v5 (gentler class imbalance fix).
+#
+# v3 with class_weights=true + focal_gamma=2.0 → DER 90.6% (WORSE than baseline 66%).
+# Diagnosis: aggressive class weights + focal make model over-predict rare classes
+# even when uncertain → catastrophic niqqud DER.
+#
+# v5 uses GENTLER imbalance handling:
+#   - focal_gamma=1.0 (halved from 2.0). Lin et al. recommend 1-2 for
+#     imbalanced tasks; 2 is too aggressive for our scale.
+#   - class_weights=false (skip — focal alone should be enough)
+#   - Keep EMA, AdaMuon, early stopping (these don't cause issues)
+#   - Skip pretrain init (v3 showed it causes early instability)
+#
+# Hypothesis: gentle focal loss (gamma=1.0) is the right amount of imbalance
+# correction without overshooting into over-rare-class prediction.
+
+name: rababa_hebrew_sota_v5
+description: Hebrew SOTA v5 — gentle focal (gamma=1.0) + EMA + AdaMuon, no class weights.
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 200
+
+model:
+  arch: modern_multi_head
+  dim: 384
+  layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.1
+  max_len: 512
+  batch_size: 32
+  head_sizes: [16, 3, 4]
+  kv_heads: 2
+  qk_norm: true
+  norm_type: rmsnorm
+  rope_base: 1000000.0
+  ffn_type: moe
+  moe:
+    n_experts: 8
+    expert_dim: 384
+    top_k: 2
+    shared_experts: 0
+
+train:
+  epochs: 15
+  batch_size: 32
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 1000
+  grad_clip: 1.0
+  fp16: true
+  label_smoothing: 0.1
+  init_from_pretrain: null
+  optimizer: muon
+  muon_lr: 0.01
+  muon_momentum: 0.95
+  ns_steps: 5
+  qk_clip_every: 50
+  qk_clip_tau_init: 8.0
+  qk_clip_tau_final: 1.0
+  # ---- v5: gentle imbalance ----
+  focal_gamma: 1.0  # halved from v3
+  class_weights: false  # skip — focal alone
+  # ---- keep working stack ----
+  ema_decay: 0.999
+  adamuon_beta: 0.99
+  normuon_enabled: true
+  early_stopping_patience: 4
+
+eval:
+  v0.1.0_max_der: 0.12
+  v0.5.0_max_der: 0.08
+  v1.0.0_max_der: 0.06

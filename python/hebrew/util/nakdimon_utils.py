@@ -1,14 +1,12 @@
-
-from typing import List, Iterable
-
-import sys
 import contextlib
 import os
+import sys
+from collections.abc import Iterable
 
 import numpy as np
 
 
-def iterate_files(base_paths: Iterable[str]) -> List[str]:
+def iterate_files(base_paths: Iterable[str]) -> list[str]:
     for name in base_paths:
         if not os.path.isdir(name):
             yield name
@@ -20,20 +18,20 @@ def iterate_files(base_paths: Iterable[str]) -> List[str]:
 
 
 def read_file(filename):
-    with open(filename, 'r', encoding='utf-8') as f:
+    with open(filename, encoding="utf-8") as f:
         return f.read()
 
 
 # from: https://stackoverflow.com/a/45735618/2289509
 @contextlib.contextmanager
-def smart_open(filename: str, mode: str = 'r', *args, **kwargs):
+def smart_open(filename: str, mode: str = "r", *args, **kwargs):
     """Open files and i/o streams transparently."""
-    if filename == '-':
-        if 'r' in mode:
+    if filename == "-":
+        if "r" in mode:
             stream = sys.stdin
         else:
             stream = sys.stdout
-        if 'b' in mode:
+        if "b" in mode:
             fh = stream.buffer
         else:
             fh = stream
@@ -69,7 +67,7 @@ def pad_sequences(sequences, maxlen, dtype, value) -> np.ndarray:
         if not len(s):
             continue  # empty list/array was found
         trunc = s[:maxlen]
-        x[idx, :len(trunc)] = np.asarray(trunc, dtype=dtype)
+        x[idx, : len(trunc)] = np.asarray(trunc, dtype=dtype)
     return x
 
 

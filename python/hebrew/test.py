@@ -1,11 +1,10 @@
 import argparse
-import random
 import multiprocessing
-from tester import DiacritizationTester
+import random
 
 import numpy as np
 import torch
-
+from tester import DiacritizationTester
 
 SEED = 1234
 random.seed(SEED)

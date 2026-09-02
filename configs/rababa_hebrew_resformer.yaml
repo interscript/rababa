@@ -1,0 +1,91 @@
+# rababa_hebrew_resformer — Hebrew + ResFormer + DS-V4-Flash + Muon variants.
+#
+# Built on rababa_hebrew_dsv4 (DS-V4 Tier 1) + adds:
+#   - ResFormer (arXiv:2410.17897, ACL 2025): value residual V_n = λ_1·V_1 + λ_2·V_n.
+#     16% param-efficiency gain on SlimPajama. Sparse variant (only last 2
+#     layers get V_1, λ_1=5) addresses overfitting we saw in DS-V4 A/B.
+#   - Spectral Cap Muon (2026): caps Frobenius norm of orthogonalized updates
+#     to prevent NaN explosions (history of router instability on Hebrew).
+#   - HTMuon (arXiv:2603.10067, ACL 2026): heavy-tail spectral correction
+#     α-blends orthogonalized update with raw momentum. Better generalization
+#     on small datasets (Hebrew has limited training data).
+#
+# Saves to /checkpoints/rababa_hebrew_resformer/ + metrics-hebrew_resformer-train.jsonl
+# so we can A/B against rababa_hebrew (baseline) and rababa_hebrew_dsv4.
+
+name: rababa_hebrew_resformer
+description: Hebrew diacritization + ResFormer + DS-V4-Flash + Muon variants (A/B variant).
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 200
+
+model:
+  arch: modern_multi_head
+  dim: 384
+  layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.1
+  max_len: 512
+  batch_size: 32
+  head_sizes: [16, 3, 4]
+  # ---- v0.6.0 Qwen3 stack (same as baseline) ----
+  kv_heads: 2
+  qk_norm: true
+  norm_type: rmsnorm
+  rope_base: 1000000.0
+  ffn_type: moe
+  moe:
+    n_experts: 8
+    expert_dim: 384
+    top_k: 2
+    shared_experts: 0
+    # ---- DS-V4-Flash §2.1: Sqrt(Softplus) MoE affinity ----
+    affinity_type: sqrt_softplus
+  # ---- DS-V4-Flash §4.2.3: SwiGLU Clamping ----
+  swiglu_clamp_max: 10.0
+  # ---- DS-V4-Flash §2.3.3, Eq. 27: Attention Sink ----
+  use_sink: true
+  # ---- ResFormer (arXiv:2410.17897, ACL 2025) ----
+  # Sparse mode: only last 2 of 6 layers receive V_1 with λ_1=5.0.
+  # Paper Table 3 shows this beats Learnable-ResFormer (2.687 vs 2.705).
+  resformer:
+    mode: sparse
+    n_last_layers: 2
+    lambda1: 5.0
+    lambda2: 1.0
+
+train:
+  epochs: 15
+  batch_size: 32
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  fp16: true
+  label_smoothing: 0.1
+  init_from_pretrain: null
+  optimizer: muon
+  muon_lr: 0.02
+  muon_momentum: 0.95
+  # ---- DS-V4-Flash §2.4: Hybrid Newton-Schulz (10 steps) ----
+  ns_steps: 10
+  qk_clip_every: 50
+  qk_clip_tau_init: 8.0
+  qk_clip_tau_final: 1.0
+  # ---- Spectral Cap Muon (2026): cap update Frobenius norm ----
+  # 1.2 = ~1.2x the typical orthogonalized-update norm. Conservative starting point.
+  spectral_cap: 1.2
+  # ---- HTMuon (arXiv:2603.10067): heavy-tail correction ----
+  # α=0.05 = 5% raw momentum blended in. Small starting point; HTMuon paper
+  # recommends lower α for small datasets.
+  heavy_tail_alpha: 0.05
+
+eval:
+  v0.1.0_max_der: 0.12
+  v0.5.0_max_der: 0.08
+  v1.0.0_max_der: 0.06

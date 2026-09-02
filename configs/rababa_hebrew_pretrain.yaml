@@ -1,0 +1,57 @@
+# rababa_hebrew_pretrain — MLM pretraining config.
+#
+# Char-level masked-LM on undiacritized Modern Hebrew (Nakdimon corpus).
+# Uses the modern DS4/K3 encoder stack.
+
+name: rababa_hebrew_pretrain
+description: Hebrew char-level MLM pretraining (modern stack).
+kind: rababa_hebrew_mlm
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  mask_prob: 0.15
+  max_len: 512
+
+model:
+  arch: modern_multi_head
+  dim: 384
+  layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.1
+  max_len: 512
+  batch_size: 64
+  head_sizes: [16, 3, 4]
+  # ---- v0.6.0 Qwen3 stack (matches supervised config) ----
+  kv_heads: 2
+  qk_norm: true
+  # Zero-centered RMSNorm disabled — unstable in our setup (NaN after few epochs).
+  norm_type: rmsnorm
+  rope_base: 1000000.0
+  ffn_type: moe
+  moe:
+    n_experts: 8
+    expert_dim: 384
+    top_k: 2
+    shared_experts: 0
+
+train:
+  epochs: 15
+  batch_size: 64
+  learning_rate: 5.0e-4
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  fp16: true
+  optimizer: muon
+  muon_lr: 0.02
+  muon_momentum: 0.95
+  ns_steps: 5
+  scheduler: cosine
+  # MTP pretrain objective (DS4).
+  pretrain_method: mtp
+  mtp_n_predict: 2
+
+eval:
+  v0.1.0_max_val_loss: 2.5

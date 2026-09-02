@@ -1,13 +1,12 @@
 """
 Some custom modules that are used by the TTS model
 """
-from typing import List
+
 from copy import deepcopy
 
 import torch
-from torch import nn
-
 from modules.layers import BatchNormConv1d
+from torch import nn
 
 
 class Prenet(nn.Module):
@@ -19,17 +18,12 @@ class Prenet(nn.Module):
     in_dim (int): the input dim
     """
 
-    def __init__(
-        self, in_dim: int, prenet_depth: List[int] = [256, 128], dropout: int = 0.5
-    ):
-        """ Initializing the prenet module """
+    def __init__(self, in_dim: int, prenet_depth: list[int] = [256, 128], dropout: int = 0.5):
+        """Initializing the prenet module"""
         super().__init__()
         in_sizes = [in_dim] + prenet_depth[:-1]
         self.layers = nn.ModuleList(
-            [
-                nn.Linear(in_size, out_size)
-                for (in_size, out_size) in zip(in_sizes, prenet_depth)
-            ]
+            [nn.Linear(in_size, out_size) for (in_size, out_size) in zip(in_sizes, prenet_depth)]
         )
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(dropout)
@@ -91,7 +85,7 @@ class CBHG(nn.Module):
         in_dim: int,
         out_dim: int,
         K: int,
-        projections: List[int],
+        projections: list[int],
         highway_layers: int = 4,
     ):
         """Initializing the CBHG module
@@ -100,7 +94,7 @@ class CBHG(nn.Module):
         out_dim (int): the output size
         k (int): number of filters
         """
-        super(CBHG, self).__init__()
+        super().__init__()
 
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -109,37 +103,40 @@ class CBHG(nn.Module):
             [
                 deepcopy(
                     BatchNormConv1d(
-                    in_dim,
-                    in_dim,
-                    kernel_size=k,
-                    stride=1,
-                    padding=k // 2,
-                    activation=self.relu,
-                ))
+                        in_dim,
+                        in_dim,
+                        kernel_size=k,
+                        stride=1,
+                        padding=k // 2,
+                        activation=self.relu,
+                    )
+                )
                 for k in range(1, K + 1)
             ]
         )
         k = 2
         self.trafo_test = BatchNormConv1d(
-                    in_dim,
-                    in_dim,
-                    kernel_size=k,
-                    stride=1,
-                    padding=k // 2,
-                    activation=self.relu,
-                )
-        
+            in_dim,
+            in_dim,
+            kernel_size=k,
+            stride=1,
+            padding=k // 2,
+            activation=self.relu,
+        )
+
         self.trafo = deepcopy(self.trafo_test)
-        
+
         self.max_pool1d = nn.MaxPool1d(kernel_size=2, stride=1, padding=1)
 
         in_sizes = [K * in_dim] + projections[:-1]
         activations = [self.relu] * (len(projections) - 1) + [None]
         self.conv1d_projections = nn.ModuleList(
             [
-                deepcopy(BatchNormConv1d(
-                    in_size, out_size, kernel_size=3, stride=1, padding=1, activation=ac
-                ))
+                deepcopy(
+                    BatchNormConv1d(
+                        in_size, out_size, kernel_size=3, stride=1, padding=1, activation=ac
+                    )
+                )
                 for (in_size, out_size, ac) in zip(in_sizes, projections, activations)
             ]
         )
@@ -167,7 +164,7 @@ class CBHG(nn.Module):
         # (B, T_in, in_dim)
         # Back to the original shape
         x = x.transpose(1, 2)
-        
+
         if x.size(-1) != self.in_dim:
             x = self.pre_highway(x)
 
@@ -175,7 +172,7 @@ class CBHG(nn.Module):
         x += inputs
         for highway in self.highways:
             x = highway(x)
-            
+
         if input_lengths is not None:
             x = nn.utils.rnn.pack_padded_sequence(x, input_lengths, batch_first=True)
 
@@ -185,5 +182,5 @@ class CBHG(nn.Module):
 
         if input_lengths is not None:
             outputs, _ = nn.utils.rnn.pad_packed_sequence(outputs, batch_first=True)
-        
+
         return outputs

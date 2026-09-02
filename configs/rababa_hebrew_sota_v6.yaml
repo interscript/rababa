@@ -1,0 +1,78 @@
+# rababa_hebrew_sota_v6 — Clean additive SOTA test (no class imbalance techniques).
+#
+# v3 (class_weights + focal=2.0) gave DER 90% (worse than baseline 66%).
+# v5 (focal=1.0 only) still testing.
+# v6 strips ALL class imbalance techniques — tests pure optimizer-side + EMA improvements.
+#
+# Stack:
+#   - muon_lr=0.01 (half baseline, fixes drift)
+#   - early_stopping_patience=4 (locks in best epoch)
+#   - AdaMuon + NorMuon (optimizer-side)
+#   - EMA decay=0.999 (Polyak averaging)
+#   - NO class weights, NO focal, NO pretrain init
+#
+# Hypothesis: if v6 DER ≈ baseline (66%), then optimizer improvements don't
+# help DER — the bottleneck is model capacity / data, not optimization.
+# If v6 DER < baseline, then optimizer improvements are real.
+
+name: rababa_hebrew_sota_v6
+description: Hebrew SOTA v6 — clean optimizer + EMA test (no imbalance techniques).
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 200
+
+model:
+  arch: modern_multi_head
+  dim: 384
+  layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.1
+  max_len: 512
+  batch_size: 32
+  head_sizes: [16, 3, 4]
+  kv_heads: 2
+  qk_norm: true
+  norm_type: rmsnorm
+  rope_base: 1000000.0
+  ffn_type: moe
+  moe:
+    n_experts: 8
+    expert_dim: 384
+    top_k: 2
+    shared_experts: 0
+
+train:
+  epochs: 15
+  batch_size: 32
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 1000
+  grad_clip: 1.0
+  fp16: true
+  label_smoothing: 0.1
+  init_from_pretrain: null
+  optimizer: muon
+  muon_lr: 0.01
+  muon_momentum: 0.95
+  ns_steps: 5
+  qk_clip_every: 50
+  qk_clip_tau_init: 8.0
+  qk_clip_tau_final: 1.0
+  # ---- v6: clean optimizer + EMA only ----
+  adamuon_beta: 0.99
+  normuon_enabled: true
+  ema_decay: 0.999
+  early_stopping_patience: 4
+  # ---- explicitly disabled ----
+  class_weights: false
+  focal_gamma: 0.0
+
+eval:
+  v0.1.0_max_der: 0.12
+  v0.5.0_max_der: 0.08
+  v1.0.0_max_der: 0.06

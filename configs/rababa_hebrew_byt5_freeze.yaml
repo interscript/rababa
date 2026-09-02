@@ -1,0 +1,38 @@
+# rababa_hebrew_byt5_freeze — ByT5-small with encoder freezing.
+#
+# ByT5-small got 17.07% DER. ByT5-Base overfit (18.36%). TACL paper
+# (Edman et al. 2024) showed freezing 25% of encoder layers prevents
+# overfitting in low-resource fine-tuning. ByT5-small has 12 encoder
+# blocks; freezing first 3 (25%) preserves pretrained representations.
+#
+# Also uses lower LR (3e-4 → 2e-4) for gentler fine-tuning.
+
+name: rababa_hebrew_byt5_freeze
+description: Hebrew diacritization via ByT5-small with encoder freezing
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 512
+
+model:
+  arch: byt5_hebrew
+  model_name: google/byt5-small
+  max_len: 512
+  freeze_encoder_layers: 3
+
+train:
+  epochs: 20
+  batch_size: 8
+  learning_rate: 2.0e-4
+  weight_decay: 0.01
+  warmup_steps: 500
+  grad_clip: 1.0
+  label_smoothing: 0.1
+
+eval:
+  v0.1.0_max_der: 0.15
+  v0.5.0_max_der: 0.12
+  v1.0.0_max_der: 0.08

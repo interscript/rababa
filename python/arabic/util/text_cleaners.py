@@ -1,6 +1,6 @@
 import re
-from util.constants import VALID_ARABIC, BASIC_HARAQAT, ALL_POSSIBLE_HARAQAT
-from diacritization_evaluation import util
+
+from util.constants import ALL_POSSIBLE_HARAQAT, BASIC_HARAQAT, VALID_ARABIC
 
 _whitespace_re = re.compile(r"\s+")
 
@@ -9,14 +9,17 @@ def collapse_whitespace(text):
     text = re.sub(_whitespace_re, " ", text)
     return text
 
+
 def basic_cleaners(text):
     text = collapse_whitespace(text)
     return text.strip()
 
+
 def valid_arabic_cleaners(text):
     text = filter(lambda char: char in VALID_ARABIC, text)
-    text = collapse_whitespace(''.join(list(text)))
+    text = collapse_whitespace("".join(list(text)))
     return text.strip()
+
 
 def extract_stack(stack, correct_reversed: bool = True):
     """
@@ -34,15 +37,16 @@ def extract_stack(stack, correct_reversed: bool = True):
     elif reversed_full_haraqah in ALL_POSSIBLE_HARAQAT and correct_reversed:
         out = reversed_full_haraqah
     else:
-        #raise ValueError(stack)
+        # raise ValueError(stack)
 
-        #raise ValueError(
+        # raise ValueError(
         #    f"""The chart has the following haraqat which are not found in
-        #all possible haraqat: {'|'.join([ALL_POSSIBLE_HARAQAT[diacritic]
+        # all possible haraqat: {'|'.join([ALL_POSSIBLE_HARAQAT[diacritic]
         #                                 for diacritic in full_haraqah ])}"""
-        #)
-        out = ''
+        # )
+        out = ""
     return out
+
 
 def extract_haraqat(text: str, correct_reversed: bool = True):
     """
@@ -61,9 +65,8 @@ def extract_haraqat(text: str, correct_reversed: bool = True):
     for char in text:
         # if chart is a diacritic, then extract the stack and empty it
         if char not in BASIC_HARAQAT.keys():
-            stack_content = extract_stack(stack,
-                                          correct_reversed=correct_reversed)
-            #if stack_content != '':
+            stack_content = extract_stack(stack, correct_reversed=correct_reversed)
+            # if stack_content != '':
             haraqat_list.append(stack_content)
             txt_list.append(char)
             stack = []

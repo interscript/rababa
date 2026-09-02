@@ -1,0 +1,37 @@
+# rababa_hebrew_byt5_ft — continued fine-tuning of our ByT5-small checkpoint.
+#
+# Thai umt5 strategy applied to Hebrew: take our already-trained ByT5-small
+# checkpoint and continue fine-tuning with very low LR (5e-5). This is
+# domain adaptation of a domain-adapted model, not from-scratch training.
+#
+# Thai result: 6.37% → 3.31% PER (same strategy, 48% relative improvement)
+# Hebrew target: 16.97% → ~10-12% DER (if proportional improvement)
+
+name: rababa_hebrew_byt5_ft
+description: Hebrew ByT5-small continued fine-tuning (domain adaptation)
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 512
+
+model:
+  arch: byt5_hebrew
+  model_name: /checkpoints/rababa_hebrew_byt5/run-001/best  # load our checkpoint
+  max_len: 512
+
+train:
+  epochs: 10
+  batch_size: 8
+  learning_rate: 5.0e-5  # LOW LR to preserve learned Hebrew knowledge
+  weight_decay: 0.01
+  warmup_steps: 100
+  grad_clip: 1.0
+  label_smoothing: 0.0  # no label smoothing for continued fine-tuning
+
+eval:
+  v0.1.0_max_der: 0.12
+  v0.5.0_max_der: 0.08
+  v1.0.0_max_der: 0.05

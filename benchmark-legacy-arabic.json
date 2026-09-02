@@ -1,0 +1,48 @@
+{
+  "onnx_path": "models-data/arabic-model.onnx",
+  "onnx_size_bytes": 60466337,
+  "task": "rababa_arabic",
+  "split": "test",
+  "cleaner": "arabic",
+  "n_examples": 2496,
+  "n_batches": 78,
+  "head_names": [
+    "output"
+  ],
+  "per_head_der": [
+    0.04523230920682607
+  ],
+  "per_head_per_example_accuracy": [
+    0.08854166666666667
+  ],
+  "der_aggregate": 0.04522024147126379,
+  "der": 0.04522024147126379,
+  "per_example_accuracy": 0.08854166666666667,
+  "io_contract": {
+    "input_names": [
+      "src",
+      "lengths"
+    ],
+    "input_shapes": [
+      [
+        32,
+        "src_dynamic_axes_1"
+      ],
+      [
+        32
+      ]
+    ],
+    "output_names": [
+      "output"
+    ],
+    "output_shapes": [
+      [
+        32,
+        "output_dynamic_axes_1",
+        17
+      ]
+    ],
+    "has_lengths_input": true,
+    "fixed_batch_size": 32
+  }
+}

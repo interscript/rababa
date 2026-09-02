@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>rababa LiteRT.js smoke test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.4rem; }
+    h2 { font-size: 1.1rem; margin-top: 1.5rem; }
+    textarea { width: 100%; font-size: 1rem; padding: 0.5rem; box-sizing: border-box; }
+    input[type=file] { font-size: 0.9rem; }
+    button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
+    .row { display: flex; gap: 1rem; align-items: center; margin: 0.5rem 0; flex-wrap: wrap; }
+    .status { padding: 0.5rem 1rem; background: #f4f4f4; border-radius: 4px; font-family: monospace; font-size: 0.85rem; }
+    .ok { background: #e6f4ea; color: #137333; }
+    .err { background: #fce8e6; color: #c5221f; }
+    .ar { font-size: 1.5rem; direction: rtl; font-family: 'Segoe UI', Tahoma, sans-serif; line-height: 2; }
+    .small { font-size: 0.8rem; color: #666; }
+    code { background: #f4f4f4; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h1>rababa LiteRT.js smoke test</h1>
+  <p class="small">
+    Loads a <code>.tflite</code> rababa model via
+    <a href="https://www.npmjs.com/package/@litertjs/core" target="_blank">@litertjs/core</a>,
+    accepts Arabic input, runs inference, and shows diacritized output.
+    Verify the LiteRT.js pipeline works end-to-end in a real browser.
+  </p>
+
+  <h2>1. Pick model</h2>
+  <div class="row">
+    <input type="file" id="model-file" accept=".tflite" />
+    <span class="small" id="model-info"></span>
+  </div>
+  <div class="row">
+    <label class="small">Accelerator:</label>
+    <select id="accelerator">
+      <option value="webgpu" selected>webgpu (default)</option>
+      <option value="wasm">wasm (CPU fallback)</option>
+      <option value="webnn">webnn (experimental)</option>
+    </select>
+  </div>
+  <div class="status" id="load-status">No model loaded.</div>
+
+  <h2>2. Type Arabic text</h2>
+  <textarea id="input" rows="4" dir="rtl" class="ar" placeholder="اكتب نصا بالعربية">قطر شمس الكتاب</textarea>
+  <div class="row">
+    <button id="diacritize">Diacritize</button>
+    <span class="small" id="timing"></span>
+  </div>
+
+  <h2>3. Result</h2>
+  <div class="status ar" id="output">—</div>
+
+  <script type="module">
+    // ---- rababa constants (inlined for self-contained page) ----
+    // Matches src/rababa/constants.py and src/ml/models/rababa/haraqat.ts exactly.
+
+    const HARAQAT = ["ْ", "ّ", "ٌ", "ٍ", "ِ", "ً", "َ", "ُ"];
+    const PUNCTUATIONS = [".", "،", ":", "؛", "-", "؟"];
+    const ARAB_CHARS = "ىعظحرسيشضق ثلصطكآماإهزءأفؤغجئدةخوبذتن";
+    const VALID_ARABIC = [...HARAQAT, ...ARAB_CHARS];
+
+    const ALL_POSSIBLE_HARAQAT = {
+      "": "No Diacritic",
+      "َ": "Fatha", "ً": "Fathatah", "ُ": "Damma", "ٌ": "Dammatan",
+      "ِ": "Kasra", "ٍ": "Kasratan", "ْ": "Sukun", "ّ": "Shaddah",
+      "َّ": "Shaddah+Fatha", "ًّ": "Shaddah+Fathatah", "ُّ": "Shaddah+Damma",
+      "ٌّ": "Shaddah+Dammatan", "ِّ": "Shaddah+Kasra", "ٍّ": "Shaddah+Kasratan",
+    };
+
+    // Target vocab: [PAD, *haraqat keys, ""].  Index 0 = pad, 1..15 = haraqat, 16 = unused.
+    const ID_TO_HARAAQAT = ["P", ...Object.keys(ALL_POSSIBLE_HARAQAT), ""];
+
+    // Input vocab: [PAD, *input chars, MASK].  Matches the new model's INPUT_VOCAB.
+    const INPUT_CHARS = "بض.غىهظخة؟:طس،؛فندؤلوئآك-يذاصشحزءمأجإ ترقعث";
+    const INPUT_VOCAB = ["P", ...INPUT_CHARS, "M"];  // M = MASK
+    const INPUT_SYMBOL_TO_ID = Object.fromEntries(INPUT_VOCAB.map((s, i) => [s, i]));
+
+    function cleanArabic(text) {
+      return [...text].filter(c => VALID_ARABIC.includes(c)).join("").replace(/\s+/g, " ").trim();
+    }
+
+    function encode(text) {
+      return [...text].map(c => INPUT_SYMBOL_TO_ID[c]).filter(x => x !== undefined);
+    }
+
+    // Decode per-position predictions into diacritized text.
+    // Each char gets the predicted haraqat appended.
+    function decode(inputText, predictedIds) {
+      const cleaned = cleanArabic(inputText);
+      const chars = [...cleaned];
+      let out = "";
+      for (let i = 0; i < chars.length; i++) {
+        out += chars[i];
+        const pred = predictedIds[i];
+        if (pred != null && pred > 0 && pred < ID_TO_HARAAQAT.length) {
+          const mark = ID_TO_HARAAQAT[pred];
+          if (mark && mark !== "P") out += mark;
+        }
+      }
+      return out;
+    }
+
+    // ---- model lifecycle ----
+    let model = null;
+    let modelName = "(none)";
+
+    const LITERT_WASM_CDN = "https://cdn.jsdelivr.net/npm/@litertjs/core@2.5.2/wasm/";
+
+    async function loadLitert() {
+      const mod = await import("https://cdn.jsdelivr.net/npm/@litertjs/core@2.5.2/+esm");
+      return mod;
+    }
+
+    async function loadModel(file, accelerator) {
+      const litert = await loadLitert();
+      await litert.loadLiteRt(LITERT_WASM_CDN, { jspi: accelerator === "webnn" });
+      const buf = new Uint8Array(await file.arrayBuffer());
+      // Blob URL — LiteRT.js needs a URL, not raw bytes.
+      const blobUrl = URL.createObjectURL(new Blob([buf], { type: "application/octet-stream" }));
+      const m = await litert.loadAndCompile(blobUrl, { accelerator });
+      return { litert, model: m, blobUrl };
+    }
+
+    // ---- UI wiring ----
+    const fileInput = document.getElementById("model-file");
+    const accelSelect = document.getElementById("accelerator");
+    const loadStatus = document.getElementById("load-status");
+    const modelInfo = document.getElementById("model-info");
+    const diacritizeBtn = document.getElementById("diacritize");
+    const inputArea = document.getElementById("input");
+    const outputArea = document.getElementById("output");
+    const timingEl = document.getElementById("timing");
+
+    let sessionState = null;
+
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const accel = accelSelect.value;
+      modelInfo.textContent = `${file.name} — ${(file.size / 1e6).toFixed(1)} MB`;
+      loadStatus.textContent = `Loading ${file.name} with accelerator=${accel}...`;
+      loadStatus.className = "status";
+      try {
+        sessionState = await loadModel(file, accel);
+        loadStatus.textContent = `Loaded. Inputs: ${sessionState.model.inputNames?.join(", ") ?? "(?)"} · Outputs: ${sessionState.model.outputNames?.join(", ") ?? "(?)"}`;
+        loadStatus.className = "status ok";
+      } catch (err) {
+        loadStatus.textContent = `FAILED: ${err.message}`;
+        loadStatus.className = "status err";
+        console.error(err);
+      }
+    });
+
+    diacritizeBtn.addEventListener("click", async () => {
+      if (!sessionState) {
+        outputArea.textContent = "Load a model first.";
+        return;
+      }
+      const input = inputArea.value;
+      const cleaned = cleanArabic(input);
+      if (!cleaned) {
+        outputArea.textContent = "(empty input after cleaning)";
+        return;
+      }
+      const ids = encode(cleaned);
+      // Pad to fixed seq_len=200 (matches model export shape).
+      const seqLen = 200;
+      const batchSize = 32;
+      const src = new BigInt64Array(batchSize * seqLen);
+      for (let i = 0; i < ids.length && i < seqLen; i++) src[i] = BigInt(ids[i]);
+      const lengths = new BigInt64Array(batchSize).fill(BigInt(seqLen));
+      timingEl.textContent = "running...";
+      try {
+        const t0 = performance.now();
+        const srcTensor = new sessionState.litert.Tensor(src, [batchSize, seqLen]);
+        const lengthsTensor = new sessionState.litert.Tensor(lengths, [batchSize]);
+        let results;
+        try {
+          results = await sessionState.model.run([srcTensor, lengthsTensor]);
+        } catch (multiErr) {
+          // Try single-tensor form (some LiteRT versions prefer it)
+          results = await sessionState.model.run(srcTensor);
+        }
+        const t1 = performance.now();
+        timingEl.textContent = `${(t1 - t0).toFixed(0)} ms`;
+        // First output tensor is the haraqat head.
+        const out = results[0];
+        const moved = await out.moveTo("wasm");
+        const arr = await moved.toTypedArray();
+        // arr is a flat TypedArray of length batchSize * seqLen * 17. Walk positions [0, seqLen).
+        const vocabSize = ID_TO_HARAAQAT.length;  // 17
+        const preds = [];
+        for (let i = 0; i < ids.length; i++) {
+          let bestIdx = 0;
+          let bestVal = -Infinity;
+          for (let v = 0; v < vocabSize; v++) {
+            const val = arr[i * vocabSize + v];
+            if (val > bestVal) { bestVal = val; bestIdx = v; }
+          }
+          preds.push(bestIdx);
+        }
+        outputArea.textContent = decode(input, preds);
+        moved.delete();
+        results.delete();
+      } catch (err) {
+        outputArea.textContent = `FAILED: ${err.message}`;
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

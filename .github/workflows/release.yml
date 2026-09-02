@@ -9,12 +9,12 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-ruby@v1
+      - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.7'
-          architecture: 'x64'
+          ruby-version: '3.3'
+          bundler-cache: true
 
       - run: bundle install --jobs 4 --retry 3
 
@@ -23,14 +23,10 @@ jobs:
 
       - name: Publish to rubygems.org
         env:
-          RUBYGEMS_API_KEY: ${{secrets.INTERSCRIPT_RUBYGEMS_API_KEY}}
+          RUBYGEMS_API_KEY: ${{ secrets.INTERSCRIPT_RUBYGEMS_API_KEY }}
         run: |
-          gem install gem-release
-          touch ~/.gem/credentials
-          cat > ~/.gem/credentials << EOF
-          ---
-          :rubygems_api_key: ${RUBYGEMS_API_KEY}
-          EOF
+          mkdir -p ~/.gem
+          printf -- "---\n:rubygems_api_key: %s\n" "$RUBYGEMS_API_KEY" > ~/.gem/credentials
           chmod 0600 ~/.gem/credentials
-          git status
+          gem install gem-release
           gem release

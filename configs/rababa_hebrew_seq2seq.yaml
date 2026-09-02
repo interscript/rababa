@@ -1,0 +1,53 @@
+# rababa_hebrew_seq2seq — PROPER Hebrew diacritization via seq2seq.
+#
+# ARCHITECTURE CHANGE: Encoder-decoder Transformer (not encoder-only).
+# The decoder generates diacritized text autoregressively, capturing
+# niqqud dependencies within words. This is what Nakdimon (SOTA, ~8% DER)
+# and Dicta (~2% DER) use.
+#
+# Previous encoder-only + per-position classification approach got DER=66%
+# because it can't model the dependency between niqqud choices.
+#
+# Model: 6L encoder + 6L decoder, 384 dim, 6 heads, ~24M params.
+# Vocabulary: 158 chars (Hebrew consonants + niqqud marks + punctuation).
+# Output: diacritized text generated one char at a time.
+# Optimizer: AdamW (stable, proven for seq2seq fine-tuning).
+
+name: rababa_hebrew_seq2seq
+description: Hebrew diacritization via seq2seq (proper architecture).
+kind: rababa_hebrew
+tier: 1
+
+data:
+  module: nakdimon
+  cleaner: hebrew
+  max_len: 200
+
+model:
+  arch: hebrew_seq2seq
+  dim: 384
+  layers: 6
+  enc_layers: 6
+  dec_layers: 6
+  heads: 6
+  ff_dim: 1536
+  dropout: 0.2
+  max_len: 2048  # large enough for diacritized output
+
+train:
+  epochs: 50
+  batch_size: 32
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 1000
+  grad_clip: 1.0
+  fp16: false
+  label_smoothing: 0.1
+  init_from_pretrain: null
+  optimizer: adamw
+  early_stopping_patience: 8
+
+eval:
+  v0.1.0_max_der: 0.12
+  v0.5.0_max_der: 0.08
+  v1.0.0_max_der: 0.06

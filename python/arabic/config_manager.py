@@ -1,17 +1,14 @@
-from enum import Enum
 import os
-from pathlib import Path
 import shutil
 import subprocess
-from typing import Any, Dict
+from enum import Enum
+from pathlib import Path
+from typing import Any
 
 import ruamel.yaml
 import torch
-
 from models.baseline import BaseLineModel
 from models.cbhg import CBHGModel
-
-
 from options import AttentionType, LossType, OptimizerType
 from util.text_encoders import (
     ArabicEncoderWithStartSymbol,
@@ -33,7 +30,7 @@ class ConfigManager:
         self.config_path = Path(config_path)
         self.model_kind = model_kind
         self.yaml = ruamel.yaml.YAML()
-        self.config: Dict[str, Any] = self._load_config()
+        self.config: dict[str, Any] = self._load_config()
         # self.git_hash = self._get_git_hash()
         self.session_name = ".".join(
             [
@@ -43,12 +40,8 @@ class ConfigManager:
             ]
         )
 
-        self.data_dir = Path(
-            os.path.join(self.config["data_directory"], self.config["data_type"])
-        )
-        self.base_dir = Path(
-            os.path.join(self.config["log_directory"], self.session_name)
-        )
+        self.data_dir = Path(os.path.join(self.config["data_directory"], self.config["data_type"]))
+        self.base_dir = Path(os.path.join(self.config["log_directory"], self.session_name))
         self.log_dir = Path(os.path.join(self.base_dir, "logs"))
         self.prediction_dir = Path(os.path.join(self.base_dir, "predictions"))
         self.plot_dir = Path(os.path.join(self.base_dir, "plots"))
@@ -68,25 +61,17 @@ class ConfigManager:
     @staticmethod
     def _get_git_hash():
         try:
-            return (
-                subprocess.check_output(["git", "describe", "--always"])
-                .strip()
-                .decode()
-            )
+            return subprocess.check_output(["git", "describe", "--always"]).strip().decode()
         except Exception as e:
             print(f"WARNING: could not retrieve git hash. {e}")
 
     def _check_hash(self):
         try:
-            git_hash = (
-                subprocess.check_output(["git", "describe", "--always"])
-                .strip()
-                .decode()
-            )
+            git_hash = subprocess.check_output(["git", "describe", "--always"]).strip().decode()
             if self.config["git_hash"] != git_hash:
                 print(
                     f"""WARNING: git hash mismatch. Current: {git_hash}.
-                    Config hash: {self.config['git_hash']}"""
+                    Config hash: {self.config["git_hash"]}"""
                 )
         except Exception as e:
             print(f"WARNING: could not check git hash. {e}")
@@ -102,9 +87,7 @@ class ConfigManager:
                 recursion_level += 1
                 self._print_dictionary(dictionary[key], recursion_level)
             else:
-                self._print_dict_values(
-                    dictionary[key], key_name=key, level=recursion_level
-                )
+                self._print_dict_values(dictionary[key], key_name=key, level=recursion_level)
 
     def print_config(self):
         print("\nCONFIGURATION", self.session_name)
@@ -189,9 +172,13 @@ class ConfigManager:
         else:
             last_model_path = model_path
 
-        saved_model = torch.load(last_model_path, weights_only=False) if torch.cuda.is_available() else torch.load(last_model_path, map_location=torch.device('cpu'), weights_only=False)
+        saved_model = (
+            torch.load(last_model_path, weights_only=False)
+            if torch.cuda.is_available()
+            else torch.load(last_model_path, map_location=torch.device("cpu"), weights_only=False)
+        )
 
-        out = model.load_state_dict(saved_model["model_state_dict"])
+        model.load_state_dict(saved_model["model_state_dict"])
         # print(out) check...
         global_step = saved_model["global_step"] + 1
         return model, global_step
@@ -244,20 +231,16 @@ class ConfigManager:
         if self.config["text_encoder"] == "BasicArabicEncoder":
             text_encoder = BasicArabicEncoder(cleaner_fn=self.config["text_cleaner"])
         elif self.config["text_encoder"] == "ArabicEncoderWithStartSymbol":
-            text_encoder = ArabicEncoderWithStartSymbol(
-                cleaner_fn=self.config["text_cleaner"]
-            )
+            text_encoder = ArabicEncoderWithStartSymbol(cleaner_fn=self.config["text_cleaner"])
         else:
-            raise Exception(
-                f"the text encoder is not found {self.config['text_encoder']}"
-            )
+            raise Exception(f"the text encoder is not found {self.config['text_encoder']}")
 
         return text_encoder
 
     def get_loss_type(self):
         try:
             loss_type = LossType[self.config["loss_type"]]
-        except:
+        except Exception:
             raise Exception(f"The loss type is not correct {self.config['loss_type']}")
         return loss_type
 

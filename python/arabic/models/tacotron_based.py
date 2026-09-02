@@ -1,5 +1,5 @@
-from typing import List
-from models.seq2seq import Seq2Seq, Decoder as Seq2SeqDecoder
+from models.seq2seq import Decoder as Seq2SeqDecoder
+from models.seq2seq import Seq2Seq
 from modules.tacotron_modules import CBHG, Prenet
 from torch import nn
 
@@ -14,18 +14,16 @@ class Encoder(nn.Module):
         inp_vocab_size: int,
         embedding_dim: int = 512,
         use_prenet: bool = True,
-        prenet_sizes: List[int] = [256, 128],
+        prenet_sizes: list[int] = [256, 128],
         cbhg_gru_units: int = 128,
         cbhg_filters: int = 16,
-        cbhg_projections: List[int] = [128, 128],
+        cbhg_projections: list[int] = [128, 128],
         padding_idx: int = 0,
     ):
-        super(Encoder, self).__init__()
+        super().__init__()
         self.use_prenet = use_prenet
 
-        self.embedding = nn.Embedding(
-            inp_vocab_size, embedding_dim, padding_idx=padding_idx
-        )
+        self.embedding = nn.Embedding(inp_vocab_size, embedding_dim, padding_idx=padding_idx)
         if use_prenet:
             self.prenet = Prenet(embedding_dim, prenet_depth=prenet_sizes)
         self.cbhg = CBHG(

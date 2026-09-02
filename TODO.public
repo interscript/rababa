@@ -1,0 +1,68 @@
+# TODO.public — remaining work after the 2026-08-22 audit
+
+Verdicted and frozen: Arabic r6 (2.5793/1.5317 ID, 19.82/12.46 OOD),
+Thai 1.73% PER, Persian v1 (77.34 homograph), Hebrew s45 16.58 (s46
+verdict pending), Urdu d2 5.77 CER (within-corpus), Khmer v1 59%
+word-acc. No further teacher training on Arabic/Thai/Persian — the
+levers below are the only funded work.
+
+## 1. Khmer: reframe as vowel-restoration (EXPANSION, not marginal)
+The UNGEGN rule map (secryst/data-khmer-translit/ungegn-khmer-system.yaml)
+handles FULL orthography; the real-world problem is Khmer's unwritten
+inherent vowels and reduced homographic orthography, which rules
+cannot restore. Deliverable: a model that romanizes INCOMPLETE input.
+- [ ] Rules-vs-ML audit on the 895-word split (full orthography):
+      run the yaml map, publish both numbers honestly.
+- [x] Vowel-strip augmentation: strip vowel signs/coeng from src,
+      keep full tgt; train Khmer v2 on (full→full) + (stripped→full).
+      This is a new CAPABILITY (restoration), measured by a
+      stripped-input benchmark where rules structurally cannot run.
+      DONE (run-002-restore): stripped 19.22% word_acc / 39.41 CER
+      (rules 0.0%); full 53.18/28.27 (−5.8pp vs v1 58.99).
+- [ ] Ship decision: map for full orthography, v2 for reduced.
+      Recommended exactly that; optional parked lever = v1-init
+      two-stage curriculum to reclaim the 5.8pp.
+
+## 2. Urdu: anchor the claim (zero GPU)
+- [ ] Find the official UDD (gold-standard Urdu diacritization)
+      source — the paper's own release, not a guessed URL. If found:
+      evaluate d2 on it, publish the comparable number. If not
+      found: label the claim "within-corpus, no gold available"
+      everywhere it appears.
+
+## 3. Hebrew s47: transplant the r6 morph template — CLOSED (negative)
+Hebrew's 16.58 residual is plausibly morphology (nikud encodes
+gender/number/agreement) — the same shape as Arabic's iʿrāb residual
+that r6's aux-task fixed. The template is validated; this is its
+first cross-language transplant.
+- [x] Ground a Hebrew morph labeler (Dicta morph disambiguator /
+      HebPipe-class POS+morph) — must run offline-ish on Modal.
+      DONE: dictabert-morph (probe + labels verified).
+- [x] Label knesset + hewiki lines with morph tags (A10G, ~3h).
+      DONE: 200K knesset lines → /datasets/hebrew-morph/train.jsonl
+      (dictabert-morph, segmented src + per-token tags, 100% keep
+      after prefix-split fix; hewiki morph not needed for s47 v1).
+- [x] train_hebrew_s47.py: s45 recipe + TAG-prefixed morph stream
+      (init from s46-best if it beats s45, else s45), aux up x4.
+- [x] Gate: beat s45/s46 DER on the identical beam-4 harness.
+      RESULT (2026-08-23): s47 16.53 vs s46 16.43 — FAILED.
+      r6's aux-task win is not template-portable; Arabic's residual
+      was iʿrāb-shaped, Hebrew's is not. s46 stays canonical; line
+      closed (no s48).
+
+## 4. Arabic r6 beam-4 probe — CLOSED (negative)
+All Arabic numbers are greedy; Hebrew gained 12 DER points from
+beam. If beam helps r6, ship beam — free quality, zero training.
+DONE (2026-08-23): beam-4 Total DER 2.5588 vs greedy 2.5793, Morph
+1.5379 vs 1.5317 — noise both ways. Greedy stays (4x cheaper).
+
+## 5. Delivery (agent-side per manifest; our job: keep teachers stable)
+- [ ] IMF v1 export + index registration: urdu-diac d2, khmer
+      decision after §1, r6 teacher refresh for the agent's
+      ara-diac re-distillation.
+- [ ] secryst.org models page refresh with the verdict table.
+- [ ] Close CI: interscript-ruby #764/#763, maps #181.
+
+## Non-goals (money discipline)
+No r8, no more Thai/Persian, no LLM-teacher experiments (#313
+parked), no Khmer training beyond §1's restoration framing.

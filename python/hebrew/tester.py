@@ -1,18 +1,9 @@
-from config_manager import ConfigManager
-import os
 import torch
-from typing import Dict
-
-from torch import nn
-from tqdm import tqdm
-from tqdm import trange
-
+from config_manager import ConfigManager
 from dataset import load_iterators
+from torch import nn
+from tqdm import trange
 from trainer import GeneralTrainer
-
-from util import nakdimon_dataset
-from util import nakdimon_utils as utils
-from util import nakdimon_hebrew_model as hebrew
 
 
 class DiacritizationTester(GeneralTrainer):
@@ -20,9 +11,7 @@ class DiacritizationTester(GeneralTrainer):
 
         self.config_path = config_path
         self.model_kind = model_kind
-        self.config_manager = ConfigManager(
-            config_path=config_path, model_kind=model_kind
-        )
+        self.config_manager = ConfigManager(config_path=config_path, model_kind=model_kind)
         self.config = self.config_manager.config
         self.pad_idx = 0
         self.criterion = nn.CrossEntropyLoss(ignore_index=self.pad_idx)
@@ -34,11 +23,10 @@ class DiacritizationTester(GeneralTrainer):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = self.model.to(self.device)
 
-        self.load_model(model_path=self.config["test_model_path"],
-                        load_optimizer=False)
-        self.model, opt, self.global_step =  \
-            self.config_manager.load_model(model_path=self.config["test_model_path"],
-                                           load_optimizer=False)
+        self.load_model(model_path=self.config["test_model_path"], load_optimizer=False)
+        self.model, opt, self.global_step = self.config_manager.load_model(
+            model_path=self.config["test_model_path"], load_optimizer=False
+        )
         self.model = self.model.to(self.device)
         self.load_diacritizer()
         self.diacritizer.set_model(self.model)

@@ -1,14 +1,12 @@
-from typing import Dict, List, Optional
-
 # from util import text_cleaners
 
 from util import nakdimon_dataset as dataset
-from util import nakdimon_hebrew_model as hebrew
 
 
 class TextEncoder:
     def __init__(
-        self, config=None,  # Dict[str, Any] = None,
+        self,
+        config=None,  # Dict[str, Any] = None,
     ):
         self.config = config
 

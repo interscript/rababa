@@ -1,0 +1,81 @@
+# rababa_arabic_pro — larger encoder (~50M params) for SOTA-chasing Arabic.
+#
+# Same architectural family as rababa_arabic (char-level Transformer encoder
+# + single haraqat head), but scaled up: 12 layers, 768 dim, 12 heads.
+# Intended to be trained on the Sadeed-style cleaned Tashkeela corpus.
+#
+# Browser-deployment story: at fp32 this is ~200MB ONNX, ~50MB int8.
+# LiteRT.js handles both — see export_tflite and export_onnx.
+
+name: rababa_arabic_pro
+description: Arabic diacritization (Pro) — larger encoder, ~50M params.
+kind: rababa
+tier: 1
+
+data:
+  module: tashkeela
+  cleaner: arabic
+  # Combined Arabic corpus — GPLv2 Tashkeela-full + Sadeed HF + QCRI EMNLP 2025.
+  # Assembled by modal_app.py::fetch_data(task="rababa_arabic_pro") on the
+  # /datasets volume. ~80M words when all three sources are present.
+  root: /datasets/arabic-combined
+
+model:
+  arch: modern
+  # Trimmed from 12L/768d (113M params) to 6L/512d (40M params) so single-A100
+  # pretrain completes in hours not days. Modern stack (RoPE+SDPA+mHC+AttnRes+
+  # RMSNorm+SwiGLU) compensates for depth loss. Still >2x larger than the
+  # original rababa_arabic 6L/384d (5M).
+  dim: 512
+  layers: 6
+  heads: 8
+  ff_dim: 2048
+  dropout: 0.1
+  max_len: 256
+  batch_size: 32
+  with_seg_head: true
+  # ---- v0.6.0 Qwen3 stack ----
+  # GQA: 8 query heads, 2 KV heads (4:1 group size, Qwen3-235B ratio).
+  kv_heads: 2
+  # QK-Norm: RMSNorm on Q/K vectors before attention (Qwen-Max).
+  qk_norm: true
+  # Zero-centered RMSNorm disabled — unstable in our setup (NaN after few epochs).
+  # norm_type: zero_centered
+  norm_type: rmsnorm
+  # ABF: Adjusted Base Frequency for RoPE (Qwen3-S3 recipe).
+  # Base bumped from 10k → 1M for long-context extrapolation.
+  rope_base: 1000000.0
+  # Fine-grained MoE: 16 routed experts, top-2 activated, no shared experts
+  # (Qwen3 recipe, scaled for our 40M-param budget).
+  ffn_type: moe
+  moe:
+    n_experts: 16
+    expert_dim: 512
+    top_k: 2
+    shared_experts: 0
+
+train:
+  epochs: 20
+  batch_size: 16
+  # Muon optimizer for 2D weights (K3/DS4 stack). AdamW handles 1D params.
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  warmup_steps: 1000
+  grad_clip: 1.0
+  fp16: true
+  label_smoothing: 0.1
+  init_from_pretrain: null
+  optimizer: muon
+  muon_lr: 0.02
+  muon_momentum: 0.95
+  ns_steps: 5
+  # QK-Clip (Kimi K2 MuonClip recipe). Anneals attention-logit bound
+  # tau from 8 → 1 over training to prevent logit explosion.
+  qk_clip_every: 50
+  qk_clip_tau_init: 8.0
+  qk_clip_tau_final: 1.0
+
+eval:
+  v0.5.0_max_der: 0.04
+  v1.0.0_max_der: 0.025
+  v1.5.0_max_der: 0.018   # Sadeed-corrected territory

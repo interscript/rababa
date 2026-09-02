@@ -1,0 +1,44 @@
+[project]
+name = "rababa-python"
+version = "0.1.1"
+description = "Middle Eastern language diacritization (Arabic, Hebrew) — Interscript"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "BSD-2-Clause" }
+authors = [{ name = "Ribose Inc.", email = "open.source@ribose.com" }]
+
+# Runtime dependencies are pinned per-language under python/{arabic,hebrew}/requirements.txt
+# because torch and onnxruntime are version-coupled to the trained model weights.
+# Bumping them requires re-validating inference — see TODO.publish/06-dependency-security-decisions.md.
+dependencies = []
+
+[optional-dependencies]
+arabic = []
+hebrew = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["python/**/data", "python/**/log_dir", "python/**/__pycache__"]
+
+[tool.ruff.lint]
+# Conservative starter set — expand as code is cleaned up
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "W",   # pycodestyle warnings
+  "I",   # isort
+  "UP",  # pyupgrade (within reason)
+]
+ignore = [
+  "E501",  # line too long — formatter handles this
+  "E402",  # module-level import not at top — research scripts often configure paths first
+  "E741",  # ambiguous variable names — common in math/ML code
+]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+testpaths = ["python"]
+python_files = ["test_*.py", "*_test.py"]
