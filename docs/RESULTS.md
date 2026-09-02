@@ -433,6 +433,21 @@ behind 5.2 (CI [-18,028, -14,685] error positions). The dedicated-
 model thesis gains its cleanest form: the newest generalist
 generation lost classical-Arabic mark knowledge its predecessor had.
 
+## glm-4.7-flash on SadeedDiac-25 (2026-09-02)
+
+**13.2256/10.3206 zero-skip, 13.0035/10.0510 raw** (Misraj;
+`results/sadeed-glm-4-7-flash/`; 1,200/1,200, zero empties — the
+endpoint sat behind sustained 429s and needed 12 resumable passes,
+sentinels dropping 249 -> ... -> 0). thinking-disabled accepted:
+the last plain-completion GLM row. Worst frontier DER, and the only
+family member regressing on both axes (missing 6.67% — worst of the
+family, NFDW 17.6 — plus wrong 9.01%); U+0670 convention effect
+0.04pp. Bootstrap vs GLM-5.2: +7.945pp, CI [+7.516, +8.370],
+p<1e-4. The regression axis is complete: GLM-5.2 2.5060 raw ->
+GLM-5.3-Flash 8.5721 -> GLM-5.3 9.9760 -> glm-4.7-flash 13.0035 —
+every successor generation lost classical-Arabic mark knowledge its
+predecessor had.
+
 ## Hebrew s46 on the Dicta test corpora (2026-09-01)
 
 The disclosed modern-text gap, measured (eval_hebrew_dicta.py, TODO
@@ -496,6 +511,7 @@ row here does not belong in the paper.
 | GLM-5.2 (2.5060 raw / 2.6911 zero-skip) | same evaluator | temp 0, `thinking.type=disabled` (plain completion) | raw: word-structure skips; zero-skip: projected | yes — script + CSVs (results/sadeed-glm-5-2/) |
 | GLM-5.3-Flash (8.5721 raw / 8.7978 zero-skip) | same evaluator | temp 0, `reasoning_effort=low` (thinking CANNOT be disabled — API 400 code 1210) | same; dagger-alif convention skips; 0 empty responses after sentinel purge | yes — script + CSVs (results/sadeed-glm-5-3-flash/) |
 | GLM-5.3 (9.9760 raw / 9.8971 zero-skip) | same evaluator | temp 0, `reasoning_effort=low` (same 400/1210 rejection) | same; 41 sentinels caught + refetched, 0 empties final | yes — script + CSVs (results/sadeed-glm-5-3/) |
+| glm-4.7-flash (13.0035 raw / 13.2256 zero-skip) | same evaluator | temp 0, `thinking.type=disabled` (still accepted on 4.x) | same; 12 passes past sustained 429s, sentinels 249 -> ... -> 0, 0 empties final | yes — script + CSVs (results/sadeed-glm-4-7-flash/) |
 | Claude-3.7-Sonnet (1.3941) | published number | their protocol, undisclosed to us | unknown | no — vendor-published |
 | Gemini-Flash-2.0 (3.1926) / GPT-4 (3.8645) | published numbers | theirs | unknown | no — vendor-published |
 | Sadeed-1.5B (7.2915) | published, same benchmark | theirs (their repo reports 1.2 under its own split — not comparable) | unknown | partially — paper + code, split differs |
@@ -519,6 +535,7 @@ identical.
 | r7 vs r6 | −0.367 | [−0.467, −0.278] | <1e-4 — improvement is real |
 | r7 vs GLM-5.2 (projected) | +0.539 (GLM worse) | [+0.202, +0.939] | 0.0003 — our teacher leads |
 | GLM-5.3-Flash vs GLM-5.2 (projected) | +7.966 | [+7.520, +8.368] | <1e-4 — the frontier regression is overwhelming |
+| glm-4.7-flash vs GLM-5.2 (projected) | +7.945 | [+7.516, +8.370] | <1e-4 — the axis endpoint; 4.7 regresses on both missing and wrong |
 
 Policy (B1 of the improvement plan): every delta quoted in docs or
 the paper carries its CI or an explicit note that the run predates
