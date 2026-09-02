@@ -87,7 +87,8 @@ jobs:
 
   train:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # the WIP 51-step CPU train needs ~35 min after dataset download
+    timeout-minutes: 60
     env:
       # tensorboard's generated descriptors predate protobuf 4; the pure-python
       # implementation tolerates them without pinning protobuf
