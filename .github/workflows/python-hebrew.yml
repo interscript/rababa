@@ -71,7 +71,8 @@ jobs:
 
   train:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # the WIP 51-step CPU train needs ~36 min after install
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
