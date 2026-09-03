@@ -5,7 +5,7 @@
 \usepackage{hyperref}
 \title{Five Languages, Five Bottlenecks:\\ Diacritization and G2P for Transliteration at Interscript}
 \author{Interscript ML Team}
-\date{August 2026}
+\date{September 2026}
 
 \begin{document}
 \maketitle
@@ -20,27 +20,34 @@ by exactly one resource---data \emph{quality} (Arabic), data \emph{domain}
 (Hebrew), labeled-data \emph{coverage} (Thai), output
 \emph{representation} (Persian, Urdu)---and a fixed ByT5-based framework
 with one surgical fix per language reached or beat the published
-state of the art in each. Results: Arabic \textbf{2.68\% DER} (CE) /
-1.60\% (w/o CE) on the SadeedDiac-25 benchmark with Misraj's own
-evaluator under a zero-skip windowed protocol---2.6$\times$/3.1$\times$
+state of the art in each. Results: Arabic \textbf{2.29\% DER} (CE) /
+1.33\% (w/o CE) on the SadeedDiac-25 benchmark with Misraj's own
+evaluator under a zero-skip windowed protocol---3.2$\times$/4.0$\times$
 better than the 1.5B-parameter Sadeed model, ahead of GPT-4 and
-Gemini-Flash-2.0---and matching or beating our own verified GLM-5.2
-frontier reproduction (2.69\%/1.72\% zero-skip; the published
-Claude-3.7 figure of 1.39\% does not reproduce under a neutral
-protocol)---plus a contamination audit showing the benchmark's public
-source corpus leaks 122 of its own paragraphs, and a three-way RL
-negative result (RAFT, sequence-GRPO, entropy-weighted GRPO) showing
-the residual is knowledge-limited, not policy-limited; Hebrew 17.5\% DER
-on Biblical text where the SOTA model scores 35.6\%; Thai 2.32\% PER
+Gemini-Flash-2.0---plus a frontier regression axis: GLM-5.2 matches our
+dedicated 580M teacher's vowel accuracy to within 0.02pp, while every
+GLM successor we measured is 3--5$\times$ worse (5.3-Flash 8.80,
+5.3 9.90, 4.7-flash 13.23 zero-skip), the loss located by per-position
+attribution in wrong haraqat, not writing convention; a 300M distilled
+client tier at 4.82\% (42\% error reduction) whose lever ladder brackets
+two registered negatives (MTP-auxiliary, register swap) mirroring the
+three-way RL negative (RAFT, sequence-GRPO, entropy-weighted GRPO); a
+contamination audit showing the benchmark's public source corpus leaks
+122 of its own paragraphs; Hebrew 16.4\% DER
+on Biblical text where the SOTA model scores 35.6\%, and strong
+modern/poetry/rabbinic line-level surfaces (0.52/0.24/0.45 DER);
+Thai 2.32\% PER
 via deterministic (non-LLM) augmentation; Persian homograph accuracy
 77.3--89.5\% and diacritization 0.52\% CER from a G2P-only dataset;
 Urdu G2P 14.77\% CER (first learned baseline, 4.1$\times$ over
 rule-based) and diacritization 3.74\% CER from weak supervision. We
 distill cross-cutting lessons for phonological NLP: LLMs are unreliable
-phonological labelers; evaluation domains and input formats silently
-dominate comparisons; ensembling and curricula fail at data-limited
-optima; policy optimization adds nothing at SFT convergence---every
-verified gain came from data curation; and byte-level models are the
+phonological labelers and are \emph{regressing} on classical knowledge
+as their optimization shifts agentic; evaluation domains and input
+formats silently dominate comparisons; ensembling and curricula fail
+at data-limited optima; policy optimization adds nothing at SFT
+convergence---every verified gain came from data or supervision
+curation; and byte-level models are the
 right deployment target for multilingual TS runtimes.
 \end{abstract}
 
@@ -62,8 +69,8 @@ TS inference needs no vocabulary assets) except Arabic, where a compact
 \toprule
 Language & Task & Result & Published reference \\
 \midrule
-Arabic & diacritization & \textbf{2.81/1.69\% DER} & Sadeed 7.29/5.26\%, Gemini 3.19/2.38\% (same benchmark+evaluator) \\
-Hebrew & diacritization & \textbf{17.46\% DER} (Biblical) & DictaBERT 35.6\% (same test) \\
+Arabic & diacritization & \textbf{2.29/1.33\% DER} & Sadeed 7.29/5.26\%, Gemini 3.19/2.38\%, GLM-5.3-Flash 8.80 (same benchmark+evaluator) \\
+Hebrew & diacritization & \textbf{16.43\% DER} (Biblical) & DictaBERT 35.6\% (same test) \\
 Thai & G2P & \textbf{2.32\% PER} & baseline 6.37\% (same test) \\
 Persian & G2P/HA & \textbf{89.5\%} / 77.3\% (SB) & Homo-GE2PE 76.9\% \\
 Persian & diacritization & \textbf{0.52\% CER} & (none existed) \\
@@ -76,10 +83,21 @@ Urdu & diacritization & \textbf{3.74\% CER} & (none existed) \\
 \section{The bottleneck taxonomy}
 \begin{itemize}
   \item \textbf{Arabic --- data quality}: cleaning + 28$\times$ scaling
-        halved DER; a 30M encoder matches a 1.5B LM.
+        halved DER; a 30M encoder matches a 1.5B LM; supervision-side
+        moves (paragraph context, morphological auxiliary, teacher
+        labeled domain mix) then carried the 580M teacher from 2.81 to
+        2.29\%; a distilled 300M client tier reached 4.82\% (42\%
+        error reduction) through a controlled lever ladder whose two
+        registered negatives (MTP-auxiliary $+0.26$pp, register swap
+        $+0.98$pp) bracket it---supervision quality, not technique,
+        moves this task.
   \item \textbf{Hebrew --- data domain}: the SOTA model collapses
         cross-domain (9$\times$); mixed-domain training wins; the teamim
-        input-format effect makes cantillation copy-through.
+        input-format effect makes cantillation copy-through; modern,
+        poetry, and rabbinic line-level surfaces are strong
+        (0.52/0.24/0.45 DER on the public-domain Dicta ACL-2020 test
+        corpora), so the residual is specifically paragraph-level
+        Biblical text.
   \item \textbf{Thai --- labeled coverage}: 10K dictionary $\to$ 60K
         via deterministic phonemizer labels; all architectural fixes
         failed, data fixed it.
@@ -92,9 +110,16 @@ Urdu & diacritization & \textbf{3.74\% CER} & (none existed) \\
 
 \section{Cross-cutting lessons}
 \begin{enumerate}
-  \item \textbf{LLMs cannot label phonology.} Tone and haraqat
-        hallucination mirrors the known diacritization failure; epitran
-        labels are free of it and transfer through fine-tuning.
+  \item \textbf{LLMs cannot label phonology---and are regressing on
+        classical knowledge.} Tone and haraqat hallucination mirrors
+        the known diacritization failure; epitran labels are free of
+        it and transfer through fine-tuning. On SadeedDiac-25 the GLM
+        family regressed 3--5$\times$ across one generation boundary
+        (5.2 at 2.69\% zero-skip vs 5.3-Flash 8.80, 5.3 9.90,
+        4.7-flash 13.23), with the loss attributed to wrong haraqat
+        rather than convention---dedicated distilled models are not
+        nostalgia; they are the only reproducible, protocol-pinned
+        artifacts on the right side of that axis.
   \item \textbf{Input formats and domains are hidden variables.}
         Teamim-preserving inputs and Biblical-vs-modern test domain each
         move DER by more than most modeling choices.
@@ -109,7 +134,10 @@ Urdu & diacritization & \textbf{3.74\% CER} & (none existed) \\
   \item \textbf{Byte-level models are deployment-friendly}: ByT5's
         tokenizer is \texttt{TextEncoder} in TypeScript---no vocab
         files, no WASM sentencepiece---ideal for interscript.org's
-        browser/Node targets.
+        browser/Node targets. Quantization fragility is diagnosable
+        and fixable at the artifact level: the quantized output head,
+        not the body, caused confident flip errors (9.34\% $\to$
+        0.26\% after the head-fp32 repair).
 \end{enumerate}
 
 \section{Deployment}
