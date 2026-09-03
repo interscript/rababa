@@ -1,4 +1,5 @@
 import argparse
+import multiprocessing
 import random
 
 import numpy as np
@@ -31,9 +32,6 @@ def train_parser():
     return parser
 
 
-parser = train_parser()
-args = parser.parse_args()
-
 # Define Experiments using Wandb
 sweep_config = {
     # search method
@@ -64,6 +62,8 @@ sweep_config = {
 
 # train code, with the search preprocessing logic
 def train():
+    parser = train_parser()
+    args = parser.parse_args()
 
     with open("config/train.yml", "rb") as model_yaml:
         config = yaml.load(model_yaml)
@@ -88,16 +88,19 @@ def train():
     trainer.run(config_wandb)
 
 
-##################################
-# MAIN                           #
-##################################
+def main():
+    # Run name
+    run_name = "hyperparams search"
 
-# Run name
-run_name = "hyperparams search"
+    # Init wandb and search
+    wandb.login()
+    sweep_id = wandb.sweep(sweep_config, project=run_name)
 
-# Init wandb and search
-wandb.login()
-sweep_id = wandb.sweep(sweep_config, project=run_name)
+    # Run search
+    wandb.agent(sweep_id, train)
 
-# Run search
-wandb.agent(sweep_id, train)
+
+if __name__ == "__main__":
+    # Fix for Python 3.9+ multiprocessing issues
+    multiprocessing.freeze_support()
+    main()

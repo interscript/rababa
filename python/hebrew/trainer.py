@@ -1,7 +1,6 @@
 import os
 
 import torch
-import wandb
 from config_manager import ConfigManager
 from dataset import load_iterators
 from diacritizer import Diacritizer
@@ -18,6 +17,15 @@ from util.utils import (
     # plot_alignment,
     repeater,
 )
+
+# Make wandb optional
+try:
+    import wandb
+
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+    print("Warning: wandb not available in trainer.py, training will proceed without wandb logging")
 
 
 class Trainer:
@@ -72,7 +80,7 @@ class GeneralTrainer(Trainer):
 
     def load_diacritizer(self):
         if self.model_kind in ["cbhg", "baseline"]:
-            self.diacritizer = Diacritizer(self.config_path, self.model_kind)  # , load_model)
+            self.diacritizer = Diacritizer(self.config_path, self.model_kind)
         else:
             print("model not found")
             exit()
@@ -191,12 +199,6 @@ class GeneralTrainer(Trainer):
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config["CLIP"])
                 self.optimizer.step()
 
-            {
-                "N": float(step_results["N"]),
-                "S": float(step_results["S"]),
-                "D": float(step_results["D"]),
-            }
-
             self.print_losses(step_results, tqdm)
 
             if self.global_step % self.config["model_save_frequency"] == 0:
@@ -218,7 +220,7 @@ class GeneralTrainer(Trainer):
 
                 scores, _ = self.evaluate_with_error_rates(validation_iterator, tqdm_error_rates)
 
-                if config_wandb is not None:
+                if config_wandb is not None and WANDB_AVAILABLE:
                     wandb.log({**d_scores, **scores})
                     print("scores:: ", scores)
 

@@ -1,0 +1,110 @@
+name: Python Hebrew CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'python/hebrew/**'
+      - '.github/workflows/python-hebrew.yml'
+  pull_request:
+    paths:
+      - 'python/hebrew/**'
+      - '.github/workflows/python-hebrew.yml'
+
+# Cancel in-progress runs for the same workflow and branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+
+  infer:
+    runs-on: ubuntu-latest
+    # cold pip cache: the eager torch wheel is ~5GB
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          python/hebrew/requirements.txt
+          python/hebrew/setup.py
+
+    - name: Install requirements
+      working-directory: ./python/hebrew
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade --upgrade-strategy eager -r requirements.txt -e .
+
+    - name: Create model directory
+      working-directory: ./python/hebrew
+      run: |
+        mkdir -p log_dir/base.cbhg/
+
+    - name: Run diacriticization
+      working-directory: ./python/hebrew
+      run: |
+        python diacritize.py --model_kind "cbhg" --config config/cbhg.yml --text 'שלום'
+
+  train:
+    runs-on: ubuntu-latest
+    # the WIP 51-step CPU train needs ~36 min after install
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v7
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: |
+          python/hebrew/requirements.txt
+          python/hebrew/setup.py
+
+    - name: Install requirements
+      working-directory: ./python/hebrew
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade --upgrade-strategy eager -r requirements.txt -e .
+
+    - name: Prepare test data
+      working-directory: ./python/hebrew
+      run: |
+        mkdir -p data/train data/eval
+        printf "שלום עולם\nשלום עולם\nשלום עולם\nשלום עולם\nשלום עולם\n" > data/train/test.txt
+        printf "שלום עולם\nשלום עולם\n" > data/eval/test.txt
+
+    - name: Try training (WIP)
+      working-directory: ./python/hebrew
+      run: |
+        python train.py --model "cbhg" --config config/test_cbhg.yml

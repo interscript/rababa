@@ -173,9 +173,9 @@ class ConfigManager:
             last_model_path = model_path
 
         saved_model = (
-            torch.load(last_model_path)
+            torch.load(last_model_path, weights_only=False)
             if torch.cuda.is_available()
-            else torch.load(last_model_path, map_location=torch.device("cpu"))
+            else torch.load(last_model_path, map_location=torch.device("cpu"), weights_only=False)
         )
 
         model.load_state_dict(saved_model["model_state_dict"])
@@ -240,7 +240,7 @@ class ConfigManager:
     def get_loss_type(self):
         try:
             loss_type = LossType[self.config["loss_type"]]
-        except KeyError:
+        except Exception:
             raise Exception(f"The loss type is not correct {self.config['loss_type']}")
         return loss_type
 

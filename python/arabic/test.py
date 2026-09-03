@@ -1,4 +1,5 @@
 import argparse
+import multiprocessing
 import random
 
 import numpy as np
@@ -22,8 +23,15 @@ def train_parser():
     return parser
 
 
-parser = train_parser()
-args = parser.parse_args()
+def main():
+    parser = train_parser()
+    args = parser.parse_args()
 
-tester = DiacritizationTester(args.config, args.model_kind)
-tester.run()
+    tester = DiacritizationTester(args.config, args.model_kind)
+    tester.run()
+
+
+if __name__ == "__main__":
+    # Fix for Python 3.9+ multiprocessing issues
+    multiprocessing.freeze_support()
+    main()
