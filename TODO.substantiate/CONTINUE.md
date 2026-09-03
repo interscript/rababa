@@ -16,7 +16,7 @@ lands each step). Derive everything else from live state, not memory:
 
 1. GKD (item 03, spec `ara-diac-small-2-gkd`, implemented in
    interscript-ml): if no run dir `rababa_arabic_distill_small/
-   run-011-r7-muon-gkd` exists on the `rababa-checkpoints` volume AND
+   run-012-r7-muon-gkd` exists on the `rababa-checkpoints` volume AND
    fewer than two ephemeral GPU apps are running (`modal app list`),
    launch: `cd /Users/mulgogi/src/interscript/ml-qwen-feat && nohup
    modal run --detach src/gpu/modal_distill.py::main --spec
