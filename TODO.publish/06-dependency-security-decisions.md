@@ -1,9 +1,15 @@
 # 06 — Dependency-security decisions (the 56 Dependabot alerts)
 
-Status: ANALYZED 2026-09-03 — decision memo for the owner. Everything
-below is owner territory (version/requirements contract); nothing was
-executed. Evidence gathered; PRs #51/#52/#53 are the live decision
-vehicles.
+Status: DECIDED + EXECUTED 2026-09-03 — owner picked **C** (root
+floors, PR #78 merged: torch>=2.6, onnx>=1.22, tqdm>=4.66.3) plus a
+full open-PR triage: #48 Modernize modernized (main merged in,
+workflows fixed green, rebase-merged); dependabot #51/#52/#53 CLOSED
+(superseded — exact-pin jumps break the Ruby goldens; #48's ranges
+are the chosen path); #26 CLOSED (superseded by the spec split,
+goldens already carried). Residual expectation: alerts against the
+legacy python/*/requirements.txt pins stay open (ranges admit old
+versions by design); eventual closure is option-A dismissal — an
+owner act. Dependabot rescans on its own schedule.
 
 ## Where the alerts live
 
