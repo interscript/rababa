@@ -5,7 +5,7 @@
 \usepackage{hyperref}
 \title{Hebrew Diacritization Is Domain-Bound: Beating the SOTA Model\\ on Biblical Text and the Teamim Input-Format Effect}
 \author{Interscript ML Team}
-\date{August 2026}
+\date{September 2026}
 
 \begin{document}
 \maketitle
@@ -16,14 +16,25 @@ modern-Hebrew test sets, where DictaBERT-large-char-menaked reports
 near-SOTA error rates. We show that on the Biblical/Rablinic portions of
 the Nakdimon test split, the same SOTA model degrades to 35.6\% diacritization
 error rate (DER), while a ByT5-base seq2seq model trained on a mixed-domain
-50K-pair corpus reaches 17.5\%---an 18-point margin. Error analysis shows
-the vowel-pointing accuracy of our model at aligned positions is 97.1\%,
+corpus reaches \textbf{16.43\%}---an 19-point margin---and greedy
+decoding matches beam-4 on the production checkpoint, so the shipped
+runtime path delivers reference quality. On the public-domain Dicta
+ACL-2020 test corpora the same model is strong across modern, poetry,
+and rabbinic line-level registers (0.52/0.24/0.45 DER), localizing the
+weak surface specifically to paragraph-level Biblical text---register
+coverage, not a general modern-text gap; we note D-Nikud, the recent
+open TavBERT+Bi-LSTM system, publishes no numbers on these corpora.
+Error analysis shows the vowel-pointing accuracy of our model at
+aligned positions is 97.1\%,
 with \emph{zero} cantillation (teamim) errors: we identify a previously
 unreported input-format effect in which standard preprocessing leaves
 teamim in the model input, making cantillation a copy-through task. We
 further report negative results: 2.3$\times$ data scaling yields no DER
-change, and character-level output-vote ensembling \emph{increases} DER
-despite reducing per-character vowel errors.
+change; character-level output-vote ensembling \emph{increases} DER
+despite reducing per-character vowel errors; and transplanting the
+Arabic campaign's morphological-auxiliary win to Hebrew is flat
+(16.53 vs 16.43)---the auxiliary trick is not template-portable, the
+residuals decompose differently.
 \end{abstract}
 
 \section{Introduction}
@@ -84,8 +95,12 @@ are invalid.
 \section{Model and Training}
 ByT5-base (580M), seq2seq, undiacritized$\to$diacritized. 3 epochs,
 batch 8, LR $3{\times}10^{-4}$, label smoothing 0.1, beam 4 at
-inference. Four checkpoints: v2 (22K corpus), v4 (50K corpus), s43, s44
-(seed replicas of v4).
+inference. Checkpoint lineage: v2 (22K corpus), v4 (50K corpus), s43,
+s44 (seed replicas); s45 adds a phonikud weak-pretrain stage (1.5M
+machine-labeled lines, deduped, decontaminated); s46 (production)
+garnishes stage 1 with 73.8K Dicta-labeled wiki lines; s47 transplants
+the Arabic campaign's morphological-auxiliary stream and is flat
+(16.53 vs init 16.43)---the Hebrew teacher line is closed at s46.
 
 \section{Experiments}
 \subsection{Main results}
@@ -96,7 +111,10 @@ inference. Four checkpoints: v2 (22K corpus), v4 (50K corpus), s43, s44
 System & DER & Notes \\
 \midrule
 DictaBERT-large (SOTA) & 35.63\% & our run, native bare-text input \\
-\textbf{s43 (ours)} & \textbf{17.46\%} & teamim-preserving input \\
+\textbf{s46 (ours, production)} & \textbf{16.43\%} & beam-4; greedy 16.44\% \\
+s47 (ours, morph-aux transplant) & 16.53\% & negative vs init s46 \\
+s45 (ours, phonikud curriculum) & 16.58\% & \\
+s43 (ours) & 17.46\% & teamim-preserving input \\
 s44 (ours) & 17.65\% & \\
 v4 (ours, 50K) & 17.78\% & \\
 v2 (ours, 22K) & 17.3\% & original recipe \\
@@ -104,7 +122,8 @@ beam-1 variant & 29.0\% & decoding ablation \\
 3-way vote ensemble & 21.52\% & \emph{worse} than singles \\
 \bottomrule
 \end{tabular}
-\caption{Nakdimon test (Biblical/Rablinic), beam 4 unless noted.}
+\caption{Nakdimon test (Biblical/Rablinic), 5{,}095 examples, beam 4
+unless noted.}
 \end{table}
 
 \subsection{Error decomposition}
@@ -122,6 +141,32 @@ length mismatch (artifact) & 186,634 & --- \\
 \end{tabular}
 \caption{v4 predictions, per-consonant analysis.}
 \end{table}
+
+\subsection{Modern-text surfaces: the Dicta ACL-2020 corpora}
+The public-domain Dicta ACL-2020 test corpora (Modern/HebrewWiki,
+Poetry, Rabbinic; densely vocalized at ${\sim}$0.8 marks/letter)
+measure whether the model generalizes beyond the Biblical test:
+
+\begin{tabular}{lcc}
+\toprule
+Corpus & s46 greedy DER & Examples \\
+\midrule
+Modern (HebrewWiki) & 0.5209\% & 253 \\
+Poetry & 0.2377\% & 959 \\
+Rabbinic (Bet Yosef) & 0.4523\% & 164 \\
+\bottomrule
+\end{tabular}
+
+Protocol: line-level units ($\leq$512 chars), greedy, the same
+seq2seq DER harness as the Nakdimon row. The weak surface is thus
+specifically Nakdimon-style \emph{paragraph-level} Biblical text---not
+a general modern-text gap. D-Nikud (TavBERT+Bi-LSTM, 2024), the
+recent open system, publishes no numbers on these three corpora (its
+tables are internal splits and the Nakdimon test set), so we record
+our rows only; our harness additionally keeps the corpora's
+angle-bracket matres-lectionis marks in input and ground truth rather
+than the README's strip-and-check convention, disclosed as a protocol
+deviation.
 
 \subsection{Ablations}
 \begin{itemize}

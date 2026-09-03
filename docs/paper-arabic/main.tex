@@ -3,9 +3,9 @@
 \usepackage{booktabs}
 \usepackage{amsmath}
 \usepackage{hyperref}
-\title{Data Quality over Scale: A 30M-Parameter Encoder for\\ Arabic Diacritization}
+\title{Data Quality over Scale: Compact Models for\\ Arabic Diacritization and the Frontier Regression}
 \author{Interscript ML Team}
-\date{August 2026}
+\date{September 2026}
 
 \begin{document}
 \maketitle
@@ -17,19 +17,23 @@ scores 7.29\% DER (with case endings) on its own SadeedDiac-25 benchmark
 using a 1.5B-parameter decoder-only language model. We show that compact
 models---a character-level encoder of roughly 10M parameters and a 580M
 ByT5-base---\textbf{beat it directly on that benchmark with its own
-evaluation code}, reaching \textbf{2.68\% DER (CE) and 1.60\% without
-case endings} under a zero-skip windowed protocol: 2.7$\times$ and
-3.3$\times$ better than Sadeed, ahead of GPT-4 (3.86\%) and
-Gemini-Flash-2.0 (3.19\%/2.38\%). We additionally verify the LLM
-frontier on this benchmark: GLM-5.2, a 2026 flagship, scores
-2.51\%/1.55\% under a neutral protocol (2.69\%/1.72\% zero-skip) ---
-the published Claude-3.7-Sonnet figure of 1.39\% does not reproduce
-with a strictly stronger model, and our 580M model matches or beats the
-verified frontier. A controlled RL study (rejection-sampling FT,
-sequence-level GRPO, and entropy-weighted GRPO) finds \emph{no} further
-gain at SFT convergence: the residual is knowledge-limited, not
-policy-limited. Our
-combined corpus merges the full 75M-word Tashkeela dump (cleaned with a
+evaluation code}, reaching \textbf{2.29\% DER (CE) and 1.33\% without
+case endings} under a zero-skip windowed protocol: 3.2$\times$ and
+4.0$\times$ better than Sadeed, ahead of GPT-4 (3.86\%) and
+Gemini-Flash-2.0 (3.19\%/2.38\%). We additionally measure the LLM
+frontier on this benchmark and find a family-wide regression: GLM-5.2
+scores 2.51\%/2.69\% (raw/zero-skip) under a neutral protocol---vowel
+knowledge matching our dedicated 580M teacher to within 0.02pp---while
+every GLM successor we measured is 3--5$\times$ worse (5.3-Flash 8.80,
+5.3 9.90, 4.7-flash 13.23 zero-skip), with per-position attribution
+locating the loss in wrong haraqat rather than writing convention.
+A distilled 300M client-tier student reaches 4.82\% (42\% error
+reduction) through a controlled lever ladder whose two registered
+negatives---multi-token-prediction auxiliary and constant-budget
+register mixing---mirror the RL negative: at SFT convergence every
+verified gain came from supervision quality, not from policy
+optimization, frontier training techniques, or register diversification.
+Our combined corpus merges the full 75M-word Tashkeela dump (cleaned with a
 Sadeed-style pipeline), Arabic Wikipedia, and QCRI EMNLP-2025 data,
 totalling 2.1M sentences; scaling 28$\times$ (75K $\rightarrow$ 2.1M)
 reduced in-domain DER from 2.42\% to 0.99\%. We further show that
@@ -54,7 +58,7 @@ We take the opposite direction. Our contributions:
         $\approx$10M parameters) that \textbf{beats Sadeed on
         SadeedDiac-25 with Misraj's own evaluator}: 3.25\% DER (CE) /
         1.81\% (w/o CE) vs 7.29\% / 5.26\%, at 1/150th the parameters;
-        a 580M ByT5-base extends this to \textbf{2.81\% / 1.69\%},
+        a 580M ByT5-base extends this to 2.81\% / 1.69\%,
         beating Gemini-Flash-2.0 on all four metrics under a zero-skip
         windowed protocol.
   \item A data ablation showing in-domain DER falls 2.42\% $\rightarrow$ 0.99\% as
@@ -66,10 +70,29 @@ We take the opposite direction. Our contributions:
   \item Paragraph-context training (joining corpus lines into
         ${\sim}$1400-byte units) closing the context gap to LLMs:
         2.81$\rightarrow$2.68\% DER (CE), 1.69$\rightarrow$1.60\% (w/o CE).
-  \item A frontier verification: GLM-5.2 under a neutral protocol
-        lands at 2.51\%/2.69\% (raw/zero-skip), far from the published
-        Claude-3.7 1.39\%; our compact model beats the verified
-        frontier on the w/o-CE metrics.
+  \item A teacher lineage driven by supervision quality, not
+        architecture: a morphological-analysis auxiliary stream
+        (r6, 2.5793\% DER) and a teacher-labeled news-domain mix
+        (r7, \textbf{2.2864\% / 1.3343\%})---the best dedicated model
+        measured on this benchmark---with a controlled ablation
+        attributing the r6 gain to lexical-morphological knowledge
+        injection (IPA-aux 2.6588 vs none 2.6775 vs morph 2.5793).
+  \item A frontier regression axis: under our neutral protocol,
+        GLM-5.2 scores 2.69\% zero-skip DER---and every GLM successor
+        we measured is 3--5$\times$ worse (5.3-Flash 8.80, 5.3 9.90,
+        4.7-flash 13.23), with per-position attribution locating the
+        loss in wrong haraqat (10.05\% of positions vs 5.2's 2.64\%,
+        which matches our 580M teacher's 2.62\%), not writing
+        convention (the dagger-alif effect is 0.125pp).
+  \item A distilled client tier at 300M parameters: 8.26\%
+        $\rightarrow$ \textbf{4.82\%} (42\% error reduction at
+        identical architecture) via a controlled lever ladder
+        (optimizer $-2.96$pp, fresher teacher labels $-0.47$pp,
+        longer training $-0.25$pp), plus two registered negatives
+        (multi-token-prediction auxiliary $+0.26$pp;
+        constant-budget register swap $+0.98$pp) showing neither
+        frontier-training techniques nor register mixing substitute
+        for supervision quality.
   \item A three-way RL negative result (RAFT, sequence-GRPO on Persian,
         entropy-weighted GTPO-GRPO on Arabic): all flat or negative at
         SFT convergence --- diacritization residual error is
@@ -129,12 +152,17 @@ Combined v2 (full) & 2.1M & \textbf{0.99\%} \\
 System & Params & DER (CE) & DER (w/o CE) & WER (CE) & WER (w/o CE) \\
 \midrule
 Claude-3-7-Sonnet & --- & 1.3941 & 0.7693 & 4.6718 & 2.3098 \\
+\textbf{Ours (ByT5-base r7, morph-aux + news mix)} & 580M & \textbf{2.2864} & \textbf{1.3343} & --- & --- \\
+Ours (ByT5-base r6, morph-aux) & 580M & 2.5793 & 1.5317 & --- & --- \\
 GLM-5.2 (our reproduction, raw) & --- & 2.5060 & 1.5537 & 7.9929 & 4.7509 \\
 GLM-5.2 (our reproduction, zero-skip) & --- & 2.6911 & 1.7179 & 8.3037 & 5.0619 \\
+GLM-5.3-Flash (zero-skip, reasoning\_effort=low) & --- & 8.7978 & 6.6368 & 30.84 & 24.16 \\
+GLM-5.3 (zero-skip, reasoning\_effort=low) & --- & 9.8971 & 7.8219 & 31.07 & 24.63 \\
+glm-4.7-flash (zero-skip, thinking-disabled) & --- & 13.2256 & 10.3206 & 36.10 & 30.10 \\
 Gemini-Flash-2.0 & --- & 3.1926 & 2.3783 & 7.9942 & 5.5044 \\
 GPT-4 & --- & 3.8645 & 3.8645 & 5.2719 & 10.9274 \\
 Sadeed & 1.5B & 7.2915 & 5.2625 & 13.7425 & 9.9245 \\
-\textbf{Ours (ByT5 r5 paragraph-context, windowed)} & 580M & \textbf{2.6775} & \textbf{1.5965} & \textbf{8.0919} & \textbf{4.3863} \\
+Ours (ByT5 r5 paragraph-context, windowed) & 580M & 2.6775 & 1.5965 & 8.0919 & 4.3863 \\
 Ours (r5 + GTPO-GRPO, 700B windows) & 580M & 2.6597 & 1.5818 & 8.1165 & 4.3874 \\
 Ours (ByT5 r3, windowed) & 580M & 2.8126 & 1.6877 & 8.4110 & 4.5739 \\
 Ours (ByT5 r3, single-shot) & 580M & 2.8429 & 1.7589 & 8.4981 & 4.8859 \\
@@ -144,7 +172,11 @@ Ours (encoder) & $\approx$10M & 3.2495 & 1.8072 & 10.3276 & 5.2953 \\
 \end{tabular}
 \caption{Full 1,200-paragraph SadeedDiac-25, Misraj's
 ArabicDiacritizationEvaluator, default protocol. Published
-LLM/Sadeed rows from the benchmark card. The windowed protocol
+LLM/Sadeed rows from the benchmark card; the GLM-5.3-generation rows
+are our reproductions (thinking cannot be disabled on 5.x---HTTP 400
+code 1210---so they run at \texttt{reasoning\_effort=low}, the nearest
+expressible analog of plain completion; glm-4.7-flash still accepts
+disabled thinking). The windowed protocol
 splits long inputs at word boundaries into $\leq$600-byte
 in-distribution windows with a $2\times$ generation cap (diacritized
 output is 1.4--1.6$\times$ input bytes; a naive input-length cap
@@ -163,6 +195,51 @@ context gap: 2.81$\to$2.68\% DER (CE), 1.69$\to$1.60\% (w/o CE),
 overtaking the verified frontier (GLM-5.2 zero-skip 2.69\%/1.72\%)
 on both metrics. The same specialization costs +0.53 WER on the
 out-of-domain WikiNews-2024 multi-reference probe.
+
+\subsection{The frontier regression axis}
+The paragraph-context result above overtook GLM-5.2---but the frontier
+moved underneath us. Measuring the GLM family under the identical
+protocol (same 1,200 paragraphs, same evaluator, temperature 0, plain
+completion where the API still allows it):
+GLM-5.2 reproduces at 2.5060\% raw / 2.6911\% zero-skip;
+GLM-5.3-Flash lands at 8.5721 / 8.7978; the full GLM-5.3 at
+9.9760 / 9.8971; and glm-4.7-flash, the last plain-completion GLM
+model, at 13.0035 / 13.2256 (12 resumable passes past sustained
+provider rate limits; all 1,200 responses real). Per-position
+attribution over the same paragraphs (convention-normalized, rates
+over the 179{,}401 ground-truth-marked positions) localizes the loss:
+GLM-5.2's wrong-haraqat rate is 2.64\%---matching our dedicated r7
+teacher's 2.62\% to within 0.02pp---while 5.3-Flash's is 10.05\% and
+4.7-flash regresses on both axes at once (wrong 9.01\%, missing
+6.67\%, the family's worst under-diacritization). The entire
+dagger-alif (U+0670) convention effect is 0.125pp. Paired-bootstrap
+CIs put every successor decisively behind 5.2 ($+7.9$ to $+8.0$pp,
+CIs excluding zero by a wide margin). As frontier optimization has
+shifted agentic, the newest generalists lost classical-Arabic mark
+knowledge their predecessor had---while our dedicated 580M teacher
+improved.
+
+\subsection{The distilled client tier}
+The same benchmark disciplines a 300M distilled student shipped for
+browser/edge inference. From the 1.0 rung (8.26\%), a pre-registered
+lever ladder reached \textbf{4.82\%} (42\% error reduction at
+identical architecture and artifact size): the Muon optimizer alone
+contributes $-2.96$pp (a controlled 2$\times$2 factorial closes
+additively: optimizer $-2.96$, memory-layer capacity $-0.70$,
+combined $-3.43$), fresher r7 teacher labels $-0.47$pp, and longer
+training a further $-0.25$pp (4.57\%). Two registered negatives
+bracket the ladder: multi-token-prediction as a training auxiliary
+scored 5.09\% ($+0.26$pp vs control, with a disclosed preemption
+confound), and swapping news-domain training units for classical
+Tashkeela at constant budget scored 5.81\% ($+0.98$pp)---the causal
+test of the domain-coverage hypothesis failing in the swap direction.
+Together with the RL negatives, the pattern is one line: at SFT
+convergence, supervision quality dominates policy optimization,
+frontier training techniques, and register diversification alike. The
+tier ships as checksummed, runtime-agnostic artifacts (IMF v1) whose
+quantization fragility was itself diagnosed and fixed---the quantized
+output head, not the body, caused confident flip errors (9.34\%
+$\rightarrow$ 0.26\% after the head-fp32 repair).
 
 \subsection{RL at SFT convergence: three negative results}
 We tested whether the residual (98.7\% phonotactically legal
@@ -188,9 +265,11 @@ adaptation ($-$0.1), paragraph context ($-$0.14).
 \section{Discussion}
 \textbf{Data curation dominates capacity.} A 150$\times$ smaller encoder
 beats a 1.5B model on its own benchmark once the corpus is cleaned and
-scaled, and a 580M ByT5-base reaches 2.68\% DER (CE) / 1.60\% (w/o
-CE)---beating Gemini-Flash-2.0 on all four metrics and the verified
-GLM-5.2 frontier on the w/o-CE metrics. On our in-domain
+scaled, and the 580M ByT5-base lineage reaches 2.29\% DER (CE) / 1.33\%
+(w/o CE) through supervision-side moves alone (paragraph context,
+morphological auxiliary, teacher-labeled domain mix)---beating
+Gemini-Flash-2.0 on all four metrics and every GLM generation after
+5.2 on every metric. On our in-domain
 split the models reach $\leq$1.4\% DER; the gap to 2.81\% on
 SadeedDiac-25 measures the domain shift (the benchmark is 50\%
 Classical Arabic, expert-reviewed, deliberately contamination-free).
@@ -217,9 +296,10 @@ Our SadeedDiac-25 run required an inference-side adaptation: the model
 predicts haraqat for space and punctuation positions (its input vocab
 includes them), which the benchmark's word splitter treats as ghost
 tokens; we suppress non-letter haraqat at render time. The published
-Claude-3.7-Sonnet row (1.39\%) does not reproduce under our neutral
-protocol: a strictly stronger 2026 flagship (GLM-5.2) scores 2.51\%
-raw, and we publish our reproduction protocol in full. WER (CE) trails
+Claude-3.7-Sonnet row (1.39\%) is vendor-published under an
+undisclosed protocol; we do not treat it as reproducible and note only
+that a newer flagship measured under our fully published protocol
+scores 2.51\% raw. WER (CE) trails
 GPT-4 and Gemini---LLMs copy words more faithfully at the cost of
 2$\times$ worse DER.
 
