@@ -18,9 +18,12 @@ lands each step). Derive everything else from live state, not memory:
    interscript-ml): if no run dir `rababa_arabic_distill_small/
    run-012-r7-muon-gkd` exists on the `rababa-checkpoints` volume AND
    fewer than two ephemeral GPU apps are running (`modal app list`),
-   launch: `cd /Users/mulgogi/src/interscript/ml-qwen-feat && nohup
-   modal run --detach src/gpu/modal_distill.py::main --spec
-   ara-diac-small-2-gkd > /Users/mulgogi/gkd_distill.log 2>&1 &`. If the
+   launch (retry-wrapped — preemptions self-heal from checkpoints,
+   bounded at 20 attempts): `cd /Users/mulgogi/src/interscript/ml-qwen-feat
+   && nohup bash -c 'for i in $(seq 1 20); do modal run --detach
+   src/gpu/modal_distill.py::main --spec ara-diac-small-2-gkd && break;
+   echo "[retry $i]"; sleep 120; done' >
+   /Users/mulgogi/gkd_distill.log 2>&1 &`. If the
    run dir exists with a best/ checkpoint but no final_eval.json
    (training complete, eval unchained), run
    `::evaluate_der --spec-id ara-diac-small-2-gkd` the same way
