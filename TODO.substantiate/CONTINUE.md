@@ -20,7 +20,7 @@ lands each step). Derive everything else from live state, not memory:
    fewer than two ephemeral GPU apps are running (`modal app list`),
    launch: `cd /Users/mulgogi/src/interscript/ml-qwen-feat && nohup
    modal run --detach src/gpu/modal_distill.py::main --spec
-   ara-diac-small-2-gkd > /tmp/gkd_distill.log 2>&1 &`. If the run dir
+   ara-diac-small-2-gkd > /Users/mulgogi/gkd_distill.log 2>&1 &`. If the run dir
    exists and training is past step 11073 but no `final_eval.json`,
    run `::evaluate_der --spec-id ara-diac-small-2-gkd` the same way
    (main does not chain it). When final_eval.json exists, verdict vs
