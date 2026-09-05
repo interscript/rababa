@@ -58,7 +58,7 @@ transliterated unambiguously. The models described here supply the
 vocalization that makes interscript.org's maps deterministic.
 
 \section{System and results}
-Common framework: ByT5 seq2seq (byte-level; tokenizer = UTF-8 bytes, so
+Common framework: ByT5~\cite{byt5} seq2seq (byte-level; tokenizer = UTF-8 bytes, so
 TS inference needs no vocabulary assets) except Arabic, where a compact
 30M char-level encoder won on cost.
 
@@ -69,8 +69,8 @@ TS inference needs no vocabulary assets) except Arabic, where a compact
 \toprule
 Language & Task & Result & Published reference \\
 \midrule
-Arabic & diacritization & \textbf{2.29/1.33\% DER} & Sadeed 7.29/5.26\%, Gemini 3.19/2.38\%, GLM-5.3-Flash 8.80 (same benchmark+evaluator) \\
-Hebrew & diacritization & \textbf{16.43\% DER} (Biblical) & DictaBERT 35.6\% (same test) \\
+Arabic & diacritization & \textbf{2.29/1.33\% DER} & Sadeed~\cite{sadeed} 7.29/5.26\%, Gemini 3.19/2.38\%, GLM-5.3-Flash 8.80 (same benchmark+evaluator) \\
+Hebrew & diacritization & \textbf{16.43\% DER} (Biblical) & DictaBERT~\cite{dictabert} 35.6\% (same test) \\
 Thai & G2P & \textbf{2.32\% PER} & baseline 6.37\% (same test) \\
 Persian & G2P/HA & \textbf{89.5\%} / 77.3\% (SB) & Homo-GE2PE 76.9\% \\
 Persian & diacritization & \textbf{0.52\% CER} & (none existed) \\
@@ -150,5 +150,12 @@ Per-language repositories (\texttt{rababa}, \texttt{rababa-farsi},
 \texttt{rababa-urdu}, \texttt{secryst}) contain training pipelines,
 evaluation harnesses, \texttt{docs/RESULTS.md} ground truth, and the
 five companion papers in \texttt{docs/paper-*/}.
+
+\begin{thebibliography}{9}
+\bibitem{sadeed} Sadeed: Arabic Diacritization. arXiv:2504.21635, 2025.
+\bibitem{byt5} Xue et al. ByT5: Towards a token-free future with
+  pre-trained byte-to-byte models. TACL, 2022. arXiv:2105.13626.
+\bibitem{dictabert} DictaBERT-large-char-menaked. Dicta, 2023--2024.
+\end{thebibliography}
 
 \end{document}

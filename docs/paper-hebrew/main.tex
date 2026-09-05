@@ -22,7 +22,7 @@ runtime path delivers reference quality. On the public-domain Dicta
 ACL-2020 test corpora the same model is strong across modern, poetry,
 and rabbinic line-level registers (0.52/0.24/0.45 DER), localizing the
 weak surface specifically to paragraph-level Biblical text---register
-coverage, not a general modern-text gap; we note D-Nikud, the recent
+coverage, not a general modern-text gap; we note D-Nikud~\cite{dnikud}, the recent
 open TavBERT+Bi-LSTM system, publishes no numbers on these corpora.
 Error analysis shows the vowel-pointing accuracy of our model at
 aligned positions is 97.1\%,
@@ -204,8 +204,14 @@ released for exact reanalysis.
 
 \begin{thebibliography}{9}
 \bibitem{dictabert} DictaBERT-large-char-menaked. Dicta, 2023--2024.
-\bibitem{nakdimon} Elazar et al. Nakdimon. 2020.
-\bibitem{byt5} Xue et al. ByT5: Towards a Token-Free Future. 2022.
+\bibitem{nakdimon} Elazar Gershuni and Yuval Pinter. Restoring Hebrew
+  Diacritics Without a Dictionary (Nakdimon). Findings of NAACL, 2022.
+  arXiv:2105.05209.
+\bibitem{byt5} Xue et al. ByT5: Towards a token-free future with
+  pre-trained byte-to-byte models. TACL, 2022. arXiv:2105.13626.
+\bibitem{dnikud} Adi Rosenthal and Nadav Shaked. D-Nikud: Enhancing
+  Hebrew Diacritization with LSTM and Pretrained Models. arXiv:2402.00075,
+  2024.
 \end{thebibliography}
 
 \end{document}

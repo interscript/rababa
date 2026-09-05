@@ -58,7 +58,7 @@ We take the opposite direction. Our contributions:
         $\approx$10M parameters) that \textbf{beats Sadeed on
         SadeedDiac-25 with Misraj's own evaluator}: 3.25\% DER (CE) /
         1.81\% (w/o CE) vs 7.29\% / 5.26\%, at 1/150th the parameters;
-        a 580M ByT5-base extends this to 2.81\% / 1.69\%,
+        a 580M ByT5-base~\cite{byt5} extends this to 2.81\% / 1.69\%,
         beating Gemini-Flash-2.0 on all four metrics under a zero-skip
         windowed protocol.
   \item A data ablation showing in-domain DER falls 2.42\% $\rightarrow$ 0.99\% as
@@ -225,19 +225,19 @@ improved.
 The same benchmark disciplines a 300M distilled student shipped for
 browser/edge inference. From the 1.0 rung (8.26\%), a pre-registered
 lever ladder reached \textbf{4.82\%} (42\% error reduction at
-identical architecture and artifact size): the Muon optimizer alone
+identical architecture and artifact size): the Muon optimizer~\cite{muon} alone
 contributes $-2.96$pp (a controlled 2$\times$2 factorial closes
 additively: optimizer $-2.96$, memory-layer capacity $-0.70$,
 combined $-3.43$), fresher r7 teacher labels $-0.47$pp, and longer
 training a further $-0.25$pp (4.57\%). Four registered negatives
-bracket the ladder: multi-token-prediction as a training auxiliary
+bracket the ladder: multi-token-prediction~\cite{mtp} as a training auxiliary
 scored 5.09\% ($+0.26$pp vs control, with a disclosed preemption
 confound); swapping news-domain training units for classical
 Tashkeela at constant budget scored 5.81\% ($+0.98$pp); adding
 18k classical units on top at matched epochs scored 4.82\%---flat
 against the 3-epoch control and 0.25pp behind news-only training at
 the same epochs, the add canceling the epoch gain entirely; and
-on-policy generalized distillation (reverse-KL on student-sampled
+on-policy generalized distillation~\cite{gkd} (reverse-KL on student-sampled
 sequences scored by the frozen teacher) scored 6.00\% ($+1.18$pp,
 the worst rung measured)---the domain-coverage hypothesis failing
 in every direction it was tested. Together with the RL negatives,
@@ -260,8 +260,8 @@ alternates) can be sharpened by policy optimization:
         G2P the best checkpoint \emph{lost} 2 points on SentenceBench
         homographs (77.34$\to$75.37\%), with dev reward degrading
         monotonically past step 200.
-  \item \textbf{GTPO-GRPO} (entropy-weighted per-token credit,
-        arXiv:2508.04349; graded alignment-based reward): dev curve
+  \item \textbf{GTPO-GRPO} (entropy-weighted per-token
+        credit~\cite{gtpo}; graded alignment-based reward): dev curve
         \emph{exactly} flat (5.9692\% at steps 0/100/150); the final
         benchmark equals the teacher within protocol noise.
 \end{itemize}
@@ -318,6 +318,11 @@ IDs).
 
 \begin{thebibliography}{9}
 \bibitem{sadeed} Sadeed: Arabic Diacritization. arXiv:2504.21635, 2025.
+\bibitem{byt5} Xue et al. ByT5: Towards a token-free future with pre-trained byte-to-byte models. TACL, 2022. arXiv:2105.13626.
+\bibitem{muon} Liu et al. Muon is Scalable for LLM Training. arXiv:2502.16982, 2025.
+\bibitem{mtp} Gloeckle et al. Better \& Faster Large Language Models via Multi-token Prediction. arXiv:2404.19737, 2024.
+\bibitem{gkd} Agarwal et al. On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes. ICLR, 2024. arXiv:2306.13649.
+\bibitem{gtpo} Tan et al. GTPO and GRPO-S: Token and Sequence-Level Reward Shaping with Policy Entropy. arXiv:2508.04349, 2025.
 \end{thebibliography}
 
 \end{document}
