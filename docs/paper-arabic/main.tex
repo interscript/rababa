@@ -88,10 +88,12 @@ We take the opposite direction. Our contributions:
         $\rightarrow$ \textbf{4.82\%} (42\% error reduction at
         identical architecture) via a controlled lever ladder
         (optimizer $-2.96$pp, fresher teacher labels $-0.47$pp,
-        longer training $-0.25$pp), plus two registered negatives
-        (multi-token-prediction auxiliary $+0.26$pp;
-        constant-budget register swap $+0.98$pp) showing neither
-        frontier-training techniques nor register mixing substitute
+        longer training $-0.25$pp), plus four registered negatives
+        (multi-token-prediction auxiliary $+0.26$pp; register swap
+        $+0.98$pp; register add flat-with-epochs-cancelled at 4.82;
+        on-policy GKD $+1.18$pp, the worst rung) showing that neither
+        frontier-training techniques, register mixing in either
+        direction, nor on-policy exposure substitute
         for supervision quality.
   \item A three-way RL negative result (RAFT, sequence-GRPO on Persian,
         entropy-weighted GTPO-GRPO on Arabic): all flat or negative at
@@ -227,15 +229,21 @@ identical architecture and artifact size): the Muon optimizer alone
 contributes $-2.96$pp (a controlled 2$\times$2 factorial closes
 additively: optimizer $-2.96$, memory-layer capacity $-0.70$,
 combined $-3.43$), fresher r7 teacher labels $-0.47$pp, and longer
-training a further $-0.25$pp (4.57\%). Two registered negatives
+training a further $-0.25$pp (4.57\%). Four registered negatives
 bracket the ladder: multi-token-prediction as a training auxiliary
 scored 5.09\% ($+0.26$pp vs control, with a disclosed preemption
-confound), and swapping news-domain training units for classical
-Tashkeela at constant budget scored 5.81\% ($+0.98$pp)---the causal
-test of the domain-coverage hypothesis failing in the swap direction.
-Together with the RL negatives, the pattern is one line: at SFT
-convergence, supervision quality dominates policy optimization,
-frontier training techniques, and register diversification alike. The
+confound); swapping news-domain training units for classical
+Tashkeela at constant budget scored 5.81\% ($+0.98$pp); adding
+18k classical units on top at matched epochs scored 4.82\%---flat
+against the 3-epoch control and 0.25pp behind news-only training at
+the same epochs, the add canceling the epoch gain entirely; and
+on-policy generalized distillation (reverse-KL on student-sampled
+sequences scored by the frozen teacher) scored 6.00\% ($+1.18$pp,
+the worst rung measured)---the domain-coverage hypothesis failing
+in every direction it was tested. Together with the RL negatives,
+the pattern is one line: at SFT convergence, supervision quality
+dominates policy optimization, frontier training techniques,
+on-policy exposure, and register diversification alike. The
 tier ships as checksummed, runtime-agnostic artifacts (IMF v1) whose
 quantization fragility was itself diagnosed and fixed---the quantized
 output head, not the body, caused confident flip errors (9.34\%
