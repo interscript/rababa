@@ -72,9 +72,9 @@ Language & Task & Result & Published reference \\
 Arabic & diacritization & \textbf{2.29/1.33\% DER} & Sadeed~\cite{sadeed} 7.29/5.26\%, Gemini 3.19/2.38\%, GLM-5.3-Flash 8.80 (same benchmark+evaluator) \\
 Hebrew & diacritization & \textbf{16.43\% DER} (Biblical) & DictaBERT~\cite{dictabert} 35.6\% (same test) \\
 Thai & G2P & \textbf{2.32\% PER} & baseline 6.37\% (same test) \\
-Persian & G2P/HA & \textbf{89.5\%} / 77.3\% (SB) & Homo-GE2PE 76.9\% \\
+Persian & G2P/HA & \textbf{89.5\%} / 77.3\% (SB) & Homo-GE2PE~\cite{homoge2pe} 76.9\% \\
 Persian & diacritization & \textbf{0.52\% CER} & (none existed) \\
-Urdu & G2P & \textbf{14.77\% CER} & epitran 60.0\% \\
+Urdu & G2P & \textbf{14.77\% CER} & epitran~\cite{epitran} 60.0\% \\
 Urdu & diacritization & \textbf{3.74\% CER} & (none existed) \\
 \bottomrule
 \end{tabular}
@@ -156,6 +156,10 @@ five companion papers in \texttt{docs/paper-*/}.
 \bibitem{byt5} Xue et al. ByT5: Towards a token-free future with
   pre-trained byte-to-byte models. TACL, 2022. arXiv:2105.13626.
 \bibitem{dictabert} DictaBERT-large-char-menaked. Dicta, 2023--2024.
+\bibitem{homoge2pe} Qharabagh et al. Rethinking G2P with Rich Data and
+  Rule-Based Models. arXiv:2505.12973, 2025.
+\bibitem{epitran} David R. Mortensen, Siddharth Dalmia, and Patrick
+  Littell. Epitran: Precision G2P for Many Languages. \emph{LREC}, 2018.
 \end{thebibliography}
 
 \end{document}
