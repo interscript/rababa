@@ -29,7 +29,7 @@ dedicated 580M teacher's vowel accuracy to within 0.02pp, while every
 GLM successor we measured is 3--5$\times$ worse (5.3-Flash 8.80,
 5.3 9.90, 4.7-flash 13.23 zero-skip), the loss located by per-position
 attribution in wrong haraqat, not writing convention; a 300M distilled
-client tier at 4.82\% (42\% error reduction) whose lever ladder brackets
+client tier at 4.57\% (45\% error reduction) whose lever ladder brackets
 two registered negatives (MTP-auxiliary, register swap) mirroring the
 three-way RL negative (RAFT, sequence-GRPO, entropy-weighted GRPO); a
 contamination audit showing the benchmark's public source corpus leaks
@@ -86,10 +86,10 @@ Urdu & diacritization & \textbf{3.74\% CER} & (none existed) \\
         halved DER; a 30M encoder matches a 1.5B LM; supervision-side
         moves (paragraph context, morphological auxiliary, teacher
         labeled domain mix) then carried the 580M teacher from 2.81 to
-        2.29\%; a distilled 300M client tier reached 4.82\% (42\%
+        2.29\%; a distilled 300M client tier reached 4.57\% (45\%
         error reduction) through a controlled lever ladder whose two
-        registered negatives (MTP-auxiliary $+0.26$pp, register swap
-        $+0.98$pp) bracket it---supervision quality, not technique,
+        registered negatives (MTP-auxiliary level with control and far
+        from its gate; register swap $+0.72$pp) bracket it---supervision quality, not technique,
         moves this task.
   \item \textbf{Hebrew --- data domain}: the SOTA model collapses
         cross-domain (9$\times$); mixed-domain training wins; the teamim
