@@ -27,7 +27,7 @@ knowledge matching our dedicated 580M teacher to within 0.02pp---while
 every GLM successor we measured is 3--5$\times$ worse (5.3-Flash 8.80,
 5.3 9.90, 4.7-flash 13.23 zero-skip), with per-position attribution
 locating the loss in wrong haraqat rather than writing convention.
-A distilled 300M client-tier student reaches 4.82\% (42\% error
+A distilled 300M client-tier student reaches 4.57\% (45\% error
 reduction) through a controlled lever ladder whose two registered
 negatives---multi-token-prediction auxiliary and constant-budget
 register mixing---mirror the RL negative: at SFT convergence every
@@ -85,15 +85,16 @@ We take the opposite direction. Our contributions:
         which matches our 580M teacher's 2.62\%), not writing
         convention (the dagger-alif effect is 0.125pp).
   \item A distilled client tier at 300M parameters: 8.26\%
-        $\rightarrow$ \textbf{4.82\%} (42\% error reduction at
+        $\rightarrow$ \textbf{4.57\%} (45\% error reduction at
         identical architecture) via a controlled lever ladder
-        (optimizer $-2.96$pp, fresher teacher labels $-0.47$pp,
-        longer training $-0.25$pp), plus four registered negatives
-        (multi-token-prediction auxiliary $+0.26$pp; register swap
-        $+0.98$pp; register add flat-with-epochs-cancelled at 4.82;
-        on-policy GKD $+1.18$pp, the worst rung) showing that neither
-        frontier-training techniques, register mixing in either
-        direction, nor on-policy exposure substitute
+        (optimizer $-2.96$pp, fresher teacher labels $-0.21$pp,
+        longer training $-0.51$pp), plus four registered negatives
+        (multi-token-prediction auxiliary level with control and far
+        from its gate; register swap $+0.72$pp; register add flat
+        against news-only training; on-policy GKD $+1.43$pp over the
+        rung it was meant to improve, the worst measured) showing that
+        neither frontier-training techniques, register mixing in
+        either direction, nor on-policy exposure substitute
         for supervision quality.
   \item A three-way RL negative result (RAFT, sequence-GRPO on Persian,
         entropy-weighted GTPO-GRPO on Arabic): all flat or negative at
@@ -224,21 +225,28 @@ improved.
 \subsection{The distilled client tier}
 The same benchmark disciplines a 300M distilled student shipped for
 browser/edge inference. From the 1.0 rung (8.26\%), a pre-registered
-lever ladder reached \textbf{4.82\%} (42\% error reduction at
+lever ladder reached \textbf{4.57\%} (45\% error reduction at
 identical architecture and artifact size): the Muon optimizer~\cite{muon} alone
 contributes $-2.96$pp (a controlled 2$\times$2 factorial closes
 additively: optimizer $-2.96$, memory-layer capacity $-0.70$,
-combined $-3.43$), fresher r7 teacher labels $-0.47$pp, and longer
-training a further $-0.25$pp (4.57\%). Four registered negatives
+combined $-3.43$), fresher r7 teacher labels $-0.21$pp, and longer
+training a further $-0.51$pp. (The 2.0 rung's originally published
+4.8218 did not reproduce---two independent later measurements,
+including one at the artifact level on the exact released bytes,
+agree on 5.08; the figure was withdrawn and the ladder restated on
+the corrected number.) Four registered negatives
 bracket the ladder: multi-token-prediction~\cite{mtp} as a training auxiliary
-scored 5.09\% ($+0.26$pp vs control, with a disclosed preemption
+scored 5.09\% (level with the corrected control and far from its
+pre-registered 4.52 gate, with a disclosed preemption
 confound); swapping news-domain training units for classical
-Tashkeela at constant budget scored 5.81\% ($+0.98$pp); adding
-18k classical units on top at matched epochs scored 4.82\%---flat
-against the 3-epoch control and 0.25pp behind news-only training at
-the same epochs, the add canceling the epoch gain entirely; and
+Tashkeela at constant budget scored 5.81\% ($+0.72$pp over the
+corrected control); adding 18k classical units on top at matched
+epochs scored 4.82\%---statistically flat against news-only training
+at the same epochs (4.57, intervals overlapping) and sitting between
+the corrected 3-epoch control and the news-only rung; and
 on-policy generalized distillation~\cite{gkd} (reverse-KL on student-sampled
-sequences scored by the frozen teacher) scored 6.00\% ($+1.18$pp,
+sequences scored by the frozen teacher) scored 6.00\% ($+1.43$pp over
+the off-policy rung it was meant to improve,
 the worst rung measured)---the domain-coverage hypothesis failing
 in every direction it was tested. Together with the RL negatives,
 the pattern is one line: at SFT convergence, supervision quality
