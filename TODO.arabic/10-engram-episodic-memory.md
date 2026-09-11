@@ -46,3 +46,29 @@ Engram store is updated during training (FIFO + importance sampling).
 
 ## Open questions
 - Capacity: 10K is from the paper. For our smaller model, sweep 1K/5K/10K.
+
+## CORRECTION (2026-09-11, from the DeepSeek-V4.1-Flash report §2.4.2)
+
+The mechanism described above (retrieving similar past training
+examples) is NOT Engram. The actual design (arXiv:2601.07372):
+hash-addressed n-gram embedding tables summed into the forward pass —
+no example retrieval, no similarity search, no FIFO store.
+
+- addresses = n-gram hashes of the input token sequence
+- orders {2,3,4}, 8 hash heads, 2048-dim per order
+- table sizes are distinct primes (~16M entries per head in DS's
+  196B-parameter deployment)
+- FP8 storage, modules placed at layers 1 and 14
+- 5x learning rate for the tables; table updates use the
+  Sinkhorn-balanced momentum rule (momentum + alternating row/col
+  normalization), not Adam
+- effect: memorization decoupled from compute — deterministic lookup,
+  prefetchable, no bandwidth interaction with attention
+
+The class-imbalance rationale above (rare haraqat reinforced by
+retrieval) does not transfer to the real mechanism; the applicable
+rationale is lexical idiom: haraqat are strongly n-gram-driven, and a
+lookup table captures idiosyncratic lexical patterns without
+compute. Any wire-in must be rebuilt against the real design; the
+browser size ceiling (int8 4M x 64-dim ~ 64 MB) bounds the table.
+Tracked at TODO.impl/10.
