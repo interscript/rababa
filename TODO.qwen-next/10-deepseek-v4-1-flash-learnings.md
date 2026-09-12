@@ -23,18 +23,20 @@ greedy verification the verifier's argmax is authoritative, so outputs
 are byte-identical to non-speculative greedy — no parity story needed,
 just a speed one.
 
-- Step 1 (no training, CPU-only): acceptance probe on golden-v1 rows.
-  Run both models, measure per-position argmax agreement and the
-  distribution of first-divergence offsets. Consonant positions should
-  agree ~100% (copy-through dominates); disagreement concentrates on
-  haraqat near-ties — the same margins that flip under quantization.
-  Net speedup = agreement rate × (drafter cost / verifier cost); the
-  int4 190M vs int8 300M ratio is favorable.
-- Step 2 (if step 1 clears ~80% agreement): K-draft batch-verify in
-  the runtime KV decoder (TS worker first, it has the latency story).
 - Honest scope: this speeds the 2.1 tier. The lite tier stays as the
   standalone fast path; speculative decode is a middle tier that only
   pays when users want 2.1 quality at lower latency.
+- Step 1 RESULT (2026-09-11, complete, 25/25 golden rows):
+  mean acceptance **0.9886** (min 0.955, median 0.991),
+  **8.85 tokens per verifier pass** at K=8 (incl. bonus tokens).
+  Exactness: all 18 rows checked against the verifier's plain-path
+  greedy are byte-identical (spec_loop == verifier greedy, the
+  output-preservation theorem holds on real quantized artifacts);
+  plain==KV on every checked row. Gate (>=0.9 acceptance) cleared
+  decisively. Runtime implementation: interscript-ts PR #77 (merged)
+  - SpeculativeModel exported from interscript/ml, tiny-fixture +
+  real-pair e2e green. Remaining: playground/API tier exposure.
+
 
 ## 2. Multi-teacher domain-routed distillation — cheap untested lever
 

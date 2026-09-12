@@ -50,6 +50,13 @@ everywhere, consistent with the 0.036% near-tie flip measurement.
 ## Status
 
 - [x] Probe v1 written; EOS-acceptance and index bugs found and fixed
-- [ ] Probe rerun to completion
-- [ ] Runtime implementation
-- [ ] Tier exposure decision
+- [x] Probe rerun to completion: 25/25 rows, mean acceptance 0.9886
+      (min 0.955), 8.85 tokens/verify at K=8; all 18 exactness-checked
+      rows byte-identical to the verifier's plain-path greedy
+      (results: ~/ml-logs/spec_probe/results.json)
+- [x] Runtime implementation: interscript-ts PR #77 (merged) -
+      SpeculativeModel + acceptBlock exported from interscript/ml;
+      unit tests + tiny-fixture session + real-pair e2e green
+- [ ] Tier exposure: expose SpeculativeModel in the playground/API
+      surface (acceptance threshold cleared; site wiring pending)
+- [x] Numbers recorded in TODO.qwen-next/10 and RESULTS.md
