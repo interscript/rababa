@@ -24,7 +24,7 @@ Priorities:
 | 08 | golden-closeout.md | golden test PR, paper-c wording, release README note | P0 | closed 2026-09-12 (PR #211 merged) |
 | 09 | doc-corrections.md | Engram mechanism fix, mHC single-pass note | P2 | landed in PR #95 |
 | 10 | engram-lexical-memory.md | hashed n-gram memory module | P3 | gated behind 04 |
-| 11 | static-int8-framing.md | static activation scales: fix framing at the source | P0 | pre-registered; experiment running |
+| 11 | static-int8-framing.md | static scales as the framing fix | P0 | closed: node-kernel finding; static stays open on speed |
 
 Standing rules that apply to every item: full-set measurement or no
 claim; quantized parity is quality-level, not byte-level; LLM teachers
