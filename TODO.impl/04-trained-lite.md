@@ -36,8 +36,21 @@ a cost of one run. If it fails, the lite frontier is recipe-bound and
 - [ ] Full-set verdict with intervals recorded in RESULTS.md
 - [ ] Decision: lite tier replaced or negative recorded
 
+## Verdict (2026-09-12): NEGATIVE — 7.1402 vs run-009's 5.78
+
+Same recipe, same canonical labels (sha e70ce991), same teacher
+(re-scores 2.2921 in-run); the single variable - layer-drop init from
+the trained 2.1 instead of generic byt5-small - made the student
+1.36pp WORSE. Reading: generic pretraining keeps layers redundant;
+task adaptation co-specializes them, and deleting half a co-adapted
+stack breaks more computation. The depth axis now reads 2-of-3
+negative (Hebrew generic-init collapse; Arabic adapted-init collapse;
+run-009's generic-init 5.78 stands). The lite tier is unchanged; the
+remaining architecture lever is /10 (lexical memory), still gated.
+
 ## Status
 
-- [ ] Build init on volume
-- [ ] Launch
-- [ ] Verdict
+- [x] Build init on volume (the layer_drop bridge, student_init=2.1)
+- [x] Launch (checkpoint-resumed once; canonical labels seeded after
+      catching the re-labeling hazard)
+- [x] Verdict: negative, recorded in RESULTS.md

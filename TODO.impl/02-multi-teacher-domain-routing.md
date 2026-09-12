@@ -56,9 +56,17 @@ available teachers can beat plain r7 supervision. The residual is
 student-side (news/wiki rows), not teacher-selection. Remaining
 levers: 04 (trained-lite), 10 (lexical memory), 01 (runtime).
 
+## Soup postscript (2026-09-12): also negative
+
+The r6+r7 50/50 weight soup scored 2.4188 full-set (r6 2.5997,
+r7 2.289) — same-basin (functional model, linear connectivity
+confirmed) but strictly between the parents on every domain slice.
+r7 remains the best available teacher; supervision unchanged.
+
 ## Status
 
 - [x] r7 per-domain slice (from released predictions, zero GPU)
 - [x] r6 preds on volume, fetched, sliced
 - [x] Verdict: negative, recorded in TODO.qwen-next/10 §2
 - [x] No routed launch (nothing to route)
+- [x] Soup probe: negative (RESULTS.md 2026-09-12)

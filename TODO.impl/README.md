@@ -14,16 +14,17 @@ Priorities:
 
 | # | file | deliverable | priority | status |
 |---|---|---|---|---|
-| 01 | speculative-runtime.md | acceptance probe + TS SpeculativeSession + tier decision | P0 | probe running; runtime pending |
-| 02 | multi-teacher-domain-routing.md | r6/r7 per-domain slice + routed distill verdict | P0 | r6 preds running on Modal |
-| 03 | headwise-muon.md | per-head Muon wire-in for Q/K | P1 | module built, wire-in pending |
-| 04 | trained-lite.md | lite-2.0: distill-trained 6-layer encoder | P1 | spec + launch |
+| 01 | speculative-runtime.md | probe + runtime + framing verdict (tier pulled) | P0 | closed 2026-09-12: framing finding; see 11 |
+| 02 | multi-teacher-domain-routing.md | r6/r7 per-domain slice + routed distill verdict | P0 | closed negative 2026-09-11 |
+| 03 | headwise-muon.md | per-head Muon wire-in for Q/K | P1 | implemented + tested; awaits next teacher run |
+| 04 | trained-lite.md | lite-2.0: init the cut from the trained student | P1 | closed negative 2026-09-12 (7.14 vs 5.78) |
 | 05 | kv-int8-runtime.md | int8 KV cache in the decode path | P2 | spec; IMF contract gate |
-| 06 | sinkhorn-update.md | Sinkhorn-balanced optimizer for embedding/head | P2 | implement + unit spec |
+| 06 | sinkhorn-update.md | Sinkhorn-balanced optimizer for embedding/head | P2 | implemented + tested; run optional |
 | 07 | diacritization-depth-knob.md | depth-conditioned vocalization | P3 | product decision |
-| 08 | golden-closeout.md | golden test PR, paper-c wording, release README note | P0 | fix staged locally |
-| 09 | doc-corrections.md | Engram mechanism fix, mHC single-pass note | P2 | quick edits |
-| 10 | engram-lexical-memory.md | hashed n-gram memory module | P3 | gated behind 02/04 |
+| 08 | golden-closeout.md | golden test PR, paper-c wording, release README note | P0 | closed 2026-09-12 (PR #211 merged) |
+| 09 | doc-corrections.md | Engram mechanism fix, mHC single-pass note | P2 | landed in PR #95 |
+| 10 | engram-lexical-memory.md | hashed n-gram memory module | P3 | gated behind 04 |
+| 11 | static-int8-framing.md | static activation scales: fix framing at the source | P0 | pre-registered; experiment running |
 
 Standing rules that apply to every item: full-set measurement or no
 claim; quantized parity is quality-level, not byte-level; LLM teachers
