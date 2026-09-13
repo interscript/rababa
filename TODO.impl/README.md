@@ -23,8 +23,8 @@ Priorities:
 | 07 | diacritization-depth-knob.md | depth-conditioned vocalization | P3 | product decision |
 | 08 | golden-closeout.md | golden test PR, paper-c wording, release README note | P0 | closed 2026-09-12 (PR #211 merged) |
 | 09 | doc-corrections.md | Engram mechanism fix, mHC single-pass note | P2 | landed in PR #95 |
-| 10 | engram-lexical-memory.md | hashed n-gram memory module | P3 | gated behind 04 |
-| 11 | static-int8-framing.md | static scales as the framing fix | P0 | closed: node-kernel finding; static stays open on speed |
+| 10 | engram-lexical-memory.md | hashed n-gram memory module | P3 | gate opened; module + export probe landed (PR #215); run owner-gated |
+| 11 | static-int8-framing.md | static scales as the framing fix | P0 | framing closed (node-kernel); speed branch POSITIVE (4.6241, +8%) |
 
 Standing rules that apply to every item: full-set measurement or no
 claim; quantized parity is quality-level, not byte-level; LLM teachers

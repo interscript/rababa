@@ -57,6 +57,16 @@ published byte parity is unaffected; framing is the parity variable
 of mixed-shape serving (why the speculative tier degraded and was
 pulled — TODO.impl/01).
 
+## Speed branch: POSITIVE (2026-09-12, full-set)
+
+The static artifact's quality gate PASSED: **4.6241** full-set (n=1200)
+vs the shipped dynamic's 4.5701 — +0.054pp, the artifact-drift band —
+while carrying +8% CPU decode speed (78 vs 72 tok/s). Re-exporting all
+quantized artifacts through the static path is a release decision:
+modal_export gains the calibration stage, index-v6, golden regen, and
+the gate re-runs with --out so the delta ships with a CI. Point
+estimate recorded in RESULTS.md.
+
 ## Status
 
 - [x] Pre-registered (this file)
