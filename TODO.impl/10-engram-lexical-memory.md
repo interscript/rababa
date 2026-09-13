@@ -19,21 +19,54 @@ a hashed n-gram lookup table is a direct fit for the idiom memory a
 - Corrected mechanism per 09: hash-addressed tables in the forward
   pass (DeepSeek config), not example retrieval.
 
+## Gate: OPENED (2026-09-12)
+
+02 (teacher mixture) and 04 (trained-init lite) both closed negative;
+by this file's own pre-registered condition, the lexical-memory lever
+is now the remaining architecture move for the student-side residual
+(news/wiki-skewed, interaction-level).
+
 ## If built
 
 - Table as a parameter module (addresses = n-gram hashes of the input
-  bytes; embeddings summed at the two chosen layers); trained with
-  the distill recipe; Sinkhorn-balanced table updates (06) are the
-  natural pairing, as in the report.
-- Export probe first: a table-augmented student exported to ONNX with
-  decode-health smoke before any quality run.
+  BYTES - the corpus is byte-level, so orders {2,3,4} are byte
+  n-grams); embeddings summed into the encoder stream at ONE layer
+  (DeepSeek uses two at 552B; at 300M one is the proportionate dose).
+- Table updates pair with the Sinkhorn-balanced rule (06), as in the
+  report.
 
-## Acceptance (only after the gate)
+## Size budget (honest arithmetic, int8 storage)
 
-- [ ] Size/latency budget for the browser tier documented
-- [ ] Table module + export probe
-- [ ] One run, full-set verdict with intervals
+| table | size |
+|---|---|
+| 1M entries x 64-dim int8 | 64 MiB |
+| 2M entries x 32-dim int8 | 64 MiB |
+| 4M entries x 64-dim int8 | 256 MiB (over budget) |
+
+The browser tier ships 95 MB today (lite int4). A 64 MiB table on top
+is a ~168 MB tier - a NEW tier between lite and 2.1-int8 (264 MB),
+defensible. Ceiling: ONE table, <= 64 MiB, int8-in-zip (fp16 at
+inference, dequantized at load: the zip stays small, RAM grows 2x).
+Primary config: 2M x 32 int8 (more lexical coverage per byte).
+
+## Export feasibility probe (before any training)
+
+Gather ops over an embedding table must survive torch.onnx.export ->
+ORT -> the IMF zip pipeline. Probe: tiny table (1k x 8) attached to
+the tiny T5 fixture, exported, loaded in ORT, decode-health smoke.
+
+## Acceptance
+
+- [x] Size/latency budget documented (above)
+- [x] Table module (src/gpu/engram.py) + 6 unit tests (PR #215)
+- [x] Export probe: gather graph survives ONNX+ORT within 1e-4; the
+      hash becomes a per-runtime 20-line function (addresses as an
+      IMF input); int64 remainder addressing (primes available)
+- [ ] One distill run, full-set verdict with intervals (GPU spend:
+      owner call on the run, the module and probe are free)
 
 ## Status
 
-- [ ] Gated behind 02/04 results; not built
+- [x] Gate opened (02 and 04 closed negative)
+- [x] Module + probe landed
+- [ ] Run (owner-gated)
