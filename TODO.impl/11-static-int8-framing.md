@@ -67,6 +67,15 @@ modal_export gains the calibration stage, index-v6, golden regen, and
 the gate re-runs with --out so the delta ships with a CI. Point
 estimate recorded in RESULTS.md.
 
+## Release bar MET (2026-09-17): the paired CI
+
+Both artifacts scored with per-row preds (dynamic 4.5619; static
+4.5952). Sentence-level paired bootstrap: static - dynamic = +2.71pp,
+CI95 [-1.54, +7.11] — crosses zero, NOT separated. Quality-
+indistinguishable at our power; +8% speed stands. The export path is
+merged (modal_export::static, PR #217); the re-export is a version
+decision with nothing left to measure.
+
 ## Status
 
 - [x] Pre-registered (this file)
