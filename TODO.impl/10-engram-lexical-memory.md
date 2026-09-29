@@ -88,3 +88,8 @@ depth ✗✗, memory ✗ flat, on-policy ✗, routing ✗, soup ✗. 2.1
       preemptions; two eval traps caught: dropped-table load, wrong
       harness, tied-alias strictness — all fixed in PR #222)
 - [x] Verdict recorded in RESULTS.md (PR #223)
+- Post-verdict routing defect (2026-09-29, found while wiring the
+      sinkhorn arm): split_parameters also handed the table to Muon —
+      double-stepped beside the Sinkhorn side-opt for this whole run.
+      The FLAT verdict stands as measured with that wiring; fixed in
+      interscript-ml PR #225 for future arms.

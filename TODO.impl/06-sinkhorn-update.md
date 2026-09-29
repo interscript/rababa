@@ -36,6 +36,17 @@ carries to the row/col normalizations here if magnitudes get small).
 
 ## Status
 
-- [ ] Implementation
-- [ ] Tests
-- [ ] Optional run decision
+- [x] Implementation (gpu/sinkhorn_update.py: SinkhornUpdate +
+      sinkhorn_balance, log-domain — the mHC NaN lesson)
+- [x] Tests green on real tensors
+- [x] Recipe arm LAUNCHED 2026-09-29: ara-diac-small-2-1-skembed ->
+      run-015-skembed (2.1 recipe + sinkhorn_embed; the 4 2D
+      embedding-like tensors — tied table + heads — routed from AdamW
+      to SinkhornUpdate at 2.6e-4 via the _engram_table_opt side-opt
+      hook; canonical r7 labels pre-seeded). Watchdog armed. Gate on
+      landing: full-set CER vs 2.1's 4.5701.
+- Routing defect found while wiring: split_parameters handed
+      _engram.table.weight to Muon AND the Sinkhorn side-opt
+      (double-stepped) in the completed run-013-engram. That verdict
+      stands as measured; fixed so future engram/sinkhorn arms route
+      each tensor exactly once.

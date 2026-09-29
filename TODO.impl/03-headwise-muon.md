@@ -34,6 +34,12 @@ not an architecture change — single-variable, cheap to ablate.
 
 ## Status
 
-- [ ] Inspect muon.py for the built module's exact API
-- [ ] Implementation + tests
-- [ ] Smoke run
+- [x] Module built (gpu/muon.py: add_headwise_group, per-slice
+      Newton–Schulz via _muon_step_headwise)
+- [x] Implementation + tests (tests/test_muon_headwise.py: headwise ==
+      per-slice vanilla at h=1, differs for heterogeneous heads)
+- [x] Recipe arm LAUNCHED 2026-09-29: ara-diac-small-2-1-hwmuon ->
+      run-014-hwmuon (2.1 recipe + headwise_muon; 40 headwise q/k
+      routed, 88 matrices stay whole-matrix; canonical r7 labels
+      e70ce991 pre-seeded, labels trusted). Watchdog armed. Gate on
+      landing: full-set CER vs 2.1's 4.5701.
