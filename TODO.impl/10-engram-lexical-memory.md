@@ -70,3 +70,21 @@ the tiny T5 fixture, exported, loaded in ORT, decode-health smoke.
 - [x] Gate opened (02 and 04 closed negative)
 - [x] Module + probe landed
 - [ ] Run (owner-gated)
+
+## Verdict (2026-09-29): FLAT — 4.6679, not separated from 2.1
+
+Full-set n=1200, canonical labels (sha e70ce991), with-table eval via
+load_student_with_engram (the vanilla loader drops the memory — PKM
+lesson; first eval scored the control). Delta vs 2.1 (+0.10pp) inside
+the drift band, paired bootstrap does not separate. The encoder
+absorbed the capacity without converting it to frontier movement on
+the news/wiki residual. The architecture ledger closes complete:
+depth ✗✗, memory ✗ flat, on-policy ✗, routing ✗, soup ✗. 2.1
+(4.5701) stands. Remaining levers: recipe (r8) and release (static).
+
+## Status update
+
+- [x] Run (launched under the standing directive, resumed 7× through
+      preemptions; two eval traps caught: dropped-table load, wrong
+      harness, tied-alias strictness — all fixed in PR #222)
+- [x] Verdict recorded in RESULTS.md (PR #223)
