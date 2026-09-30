@@ -76,6 +76,18 @@ indistinguishable at our power; +8% speed stands. The export path is
 merged (modal_export::static, PR #217); the re-export is a version
 decision with nothing left to measure.
 
+## SHIPPED (2026-09-30)
+
+ara-diac-small-int8static-2.1 is live: release tag + canonical asset
+(-int8.zip), models.yaml (PR #227), golden fixture on golden-v1 (PR
+#228), index-v6, npm 5.5.1 (registry pin #90), site dep (#205),
+tag-protection rulesets on both repos. Gates: parity cer_delta
+0.1038pp / 2,480 samples, flip rate 0.032%, confident flips 0.000000,
+491 MiB. Built locally from the verified release fp32 bytes (the
+volume staging copy tore; repaired from the release asset) on the
+banked v2 reference decode. The positive branch of this item is
+closed.
+
 ## Status
 
 - [x] Pre-registered (this file)
