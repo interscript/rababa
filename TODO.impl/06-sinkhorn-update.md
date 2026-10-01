@@ -34,6 +34,13 @@ carries to the row/col normalizations here if magnitudes get small).
 - [ ] Spec entry (off by default) for the optional measurement run
 - [ ] No change to any shipped run's reproducibility
 
+## VERDICT (2026-10-01): FLAT — 4.5547, not separated from 2.1's 4.5701
+
+Paired delta -0.0903pp, CI95 [-0.267, +0.069], p=0.858. The
+Sinkhorn-balanced embedding update is indistinguishable from AdamW on
+the tied tables at this scale. The module stands (Engram side-opt);
+the recipe lever is closed.
+
 ## Status
 
 - [x] Implementation (gpu/sinkhorn_update.py: SinkhornUpdate +
