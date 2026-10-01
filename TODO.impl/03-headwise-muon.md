@@ -32,6 +32,14 @@ not an architecture change — single-variable, cheap to ablate.
 - [ ] Flag-on path exercised end-to-end in a smoke run
 - [ ] TODO.arabic/18 updated to point here
 
+## VERDICT (2026-10-01): NEGATIVE — separated. 4.8164 vs 2.1's 4.5701
+
+Full-set windowed protocol, teacher 2.2890 reproduced exactly, labels
+e70ce991. Paired between-students bootstrap on final_preds: delta
++0.2267pp, CI95 [+0.016, +0.411], p=0.017. Head-wise Muon (positive
+at DeepSeek's 671B) is significantly HARMFUL on a 300M byte-student
+distillation — scale-boundary recorded. 2.1 stands.
+
 ## Status
 
 - [x] Module built (gpu/muon.py: add_headwise_group, per-slice
