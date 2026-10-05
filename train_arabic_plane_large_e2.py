@@ -116,7 +116,10 @@ def train() -> dict:
     datasets_volume.reload()
     checkpoints_volume.reload()
 
-    done_marker = Path("/checkpoints") / RUN / "EVAL_DONE_E2"  # epoch-2 extension: new marker, same run dir (resume from step-*)
+    # E2B: the first E2 eval silently reused epoch-1's eval_progress.jsonl
+    # (all windows "saved" -> zero regeneration -> re-scored epoch-1 preds).
+    # Fresh marker + per-marker progress file so each eval round regenerates.
+    done_marker = Path("/checkpoints") / RUN / "EVAL_DONE_E2B"
     if done_marker.exists():
         return {"run": RUN, "status": "already-done"}
 
@@ -291,7 +294,7 @@ def train() -> dict:
         all_windows.extend(ws)
     print(f"[eval] {len(inputs)} paragraphs -> {len(all_windows)} windows", flush=True)
 
-    prog = ck_dir / "eval_progress.jsonl"
+    prog = ck_dir / f"eval_progress_{done_marker.name}.jsonl"
     saved: dict[int, str] = {}
     if prog.exists():
         for line in prog.read_text(encoding="utf-8").splitlines():
