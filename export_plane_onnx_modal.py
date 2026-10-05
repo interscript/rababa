@@ -61,6 +61,7 @@ def export() -> dict:
             "class_logits": {0: "batch", 1: "seq"},
         },
         opset_version=14,
+        dynamo=False,
     )
     print(f"exported {fp32} ({fp32.stat().st_size / 1e6:.1f} MB)", flush=True)
 
