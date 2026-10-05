@@ -29,7 +29,7 @@ checkpoints_volume = modal.Volume.from_name("rababa-checkpoints", create_if_miss
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
-    .pip_install("torch", "transformers", "onnx", "onnxruntime", "numpy")
+    .pip_install("torch", "transformers", "onnx", "onnxruntime", "onnxscript", "numpy")
     .add_local_file(Path(__file__).parent / "export_plane_onnx.py", "/opt/export_plane_onnx.py", copy=True)
 )
 
