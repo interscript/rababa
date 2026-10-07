@@ -100,11 +100,23 @@ def word_matches(sys_word: str, ref_alt: str, skip_last: bool) -> tuple[bool, in
         return False, 0, n
     end = n - 1 if skip_last else n
     correct = 0
-    for j in range(end):
+    j = 0
+    while j < end:
         (rc, rd), (sc, sd) = r[j], s[j]
         d1 = sd if not rd else rd  # empty ref diac accepts anything
+        # EvalDiac FATHATAN swap: اِلْتِماساً vs اِلْتِمَاسًا — tanwin on
+        # this letter + empty next vs empty here + tanwin next
+        if (
+            rd == "FN" and sd == ""
+            and j + 1 < n
+            and r[j + 1][1] == "" and s[j + 1][1] == "FN"
+        ):
+            correct += 2
+            j += 2
+            continue
         if d1 == sd or (rd == "SH" and sd.startswith("SH")):
             correct += 1
+        j += 1
     matched = correct == end or end == 0
     return matched, correct, end
 
