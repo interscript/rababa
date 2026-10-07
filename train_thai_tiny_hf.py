@@ -239,6 +239,7 @@ def main() -> None:
 
     # ---- greedy decode kaikki-test, corpus PER ----
     model.eval()
+    inv = {v: k for k, v in vocab.items()}
     preds = []
     with torch.no_grad():
         for i in range(0, len(test), 64):
@@ -266,7 +267,6 @@ def main() -> None:
             for row in ys[:, 1:].tolist():
                 toks = [c for c in row if c not in (pad, eos)]
                 preds.append("".join(inv[t] for t in toks))
-    inv = {v: k for k, v in vocab.items()}
     per = corpus_per(list(zip(preds, [t for _, t in test])))
     print(f"[gate] val PER (greedy, corpus) = {per:.4f}% gate<={GATE_PER}%", flush=True)
 
