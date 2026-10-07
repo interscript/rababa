@@ -23,6 +23,7 @@ Usage:
       -v hf://buckets/Interscript/isx-training:/ckpt:rw \
       -v /tmp/isx-hf-code:/code:ro \
       train_hebrew_plane_hf.py
+    # arms via env: HEB_RUN / HEB_BACKBONE / HEB_EPOCHS / HEB_K / HEB_BS / HEB_ACCUM
 """
 
 from __future__ import annotations
@@ -36,16 +37,19 @@ from pathlib import Path
 sys.path.insert(0, "/code")
 sys.path.insert(0, "/code/src")
 
+import os
+
 DATA = Path("/train_data")
 CKPT = Path("/ckpt")
-RUN = "run-022-heb-plane-base"
+RUN = os.environ.get("HEB_RUN", "run-022-heb-plane-base")
+BACKBONE = os.environ.get("HEB_BACKBONE", "google/byt5-base")
+EPOCHS = int(os.environ.get("HEB_EPOCHS", "4"))
+K_PASSES = int(os.environ.get("HEB_K", "3"))
+MICRO_BS = int(os.environ.get("HEB_BS", "8"))
+GRAD_ACCUM = int(os.environ.get("HEB_ACCUM", "2"))
 UNIT_BYTES = 1400
 N_VAL = 2_000
-EPOCHS = 4
 MAX_LINES = 600_000
-K_PASSES = 3
-MICRO_BS = 8
-GRAD_ACCUM = 2
 
 import torch
 import torch.nn as nn
@@ -113,7 +117,7 @@ def main() -> None:
 
     labels_digest = hashlib.sha256(inv_path.read_bytes()).hexdigest()[:12]
 
-    tok = AutoTokenizer.from_pretrained("google/byt5-base")
+    tok = AutoTokenizer.from_pretrained(BACKBONE)
 
     def encode_unit(text: str):
         skel, labels = NP.split_planes(text)
@@ -159,7 +163,7 @@ def main() -> None:
     print(f"[data] train={len(train_units)} val={len(val_rows)} steps={total_steps} "
           f"classes={n_classes}", flush=True)
 
-    backbone = AutoModelForSeq2SeqLM.from_pretrained("google/byt5-base")
+    backbone = AutoModelForSeq2SeqLM.from_pretrained(BACKBONE)
     encoder = backbone.encoder.cuda().train()
     d_model = encoder.config.d_model
 
