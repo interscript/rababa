@@ -44,11 +44,11 @@ CKPT = Path(f"/ckpt/run-024-arabic-r8-{MIX}")
 RUN = f"run-024-arabic-r8-{MIX}"
 WINDOW = 600
 GOLD_CAP = 400_000
-PSEUDO_CAP = 200_000
+PSEUDO_CAP = int(os.environ.get("R8_PSEUDO_CAP", "200_000"))
 MICRO_BS = 16
 GRAD_ACCUM = 2
 EPOCHS = 1
-LR = 5e-5
+LR = float(os.environ.get("R8_LR", "5e-5"))
 WARMUP = 500
 
 DIACRITICS_RE = re.compile("[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]")
