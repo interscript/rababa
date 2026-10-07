@@ -177,9 +177,13 @@ def main() -> None:
     test_srcs = {s for s, _ in test}
     pairs = [(s, t) for s, t in pairs if s not in test_srcs]
 
-    model = TinyG2P(vocab).cuda().train()
+    model = TinyG2P(vocab).cuda()
     n_params = sum(p.numel() for p in model.parameters())
     print(f"[model] params={n_params / 1e6:.1f}M", flush=True)
+    if (CKPT / "student.pt").exists():
+        model.load_state_dict(torch.load(CKPT / "student.pt", map_location="cuda", weights_only=True))
+        print("[resume] student loaded; skipping training", flush=True)
+    model.train()
 
     pad, bos, eos = vocab["<pad>"], vocab["<bos>"], vocab["<eos>"]
 
@@ -229,6 +233,10 @@ def main() -> None:
             if step % 200 == 0:
                 print(f"[train] {step}/{total} loss={float(loss):.4f}", flush=True)
 
+    # save before decode: a decode bug must never cost the training run
+    torch.save(model.state_dict(), CKPT / "student.pt")
+    print("[ckpt] student saved", flush=True)
+
     # ---- greedy decode kaikki-test, corpus PER ----
     model.eval()
     preds = []
@@ -243,7 +251,7 @@ def main() -> None:
             src = src.cuda()
             mem = model.enc(model.emb(src), src_key_padding_mask=(src == pad))
             ys = torch.full((len(batch), 1), bos, dtype=torch.long, device="cuda")
-            done = torch.zeros(len(batch), dtype=torch.bool)
+            done = torch.zeros(len(batch), dtype=torch.bool, device="cuda")
             for _ in range(MAX_SRC):
                 mask = nn.Transformer.generate_square_subsequent_mask(
                     ys.size(1), device="cuda")
