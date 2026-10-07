@@ -173,6 +173,9 @@ def main() -> None:
     tok = AutoTokenizer.from_pretrained(TEACHER)
 
     class DS(Dataset):
+        def __len__(self):
+            return len(units)
+
         def __getitem__(self, i):
             src, tgt = units[i]
             e = tok(src, truncation=True, max_length=WINDOW)
