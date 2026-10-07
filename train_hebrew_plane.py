@@ -41,7 +41,7 @@ image = (
         "tqdm",
     )
     .add_local_file("nikud_planes.py", "/opt/rababa/nikud_planes.py", copy=True)
-    .add_local_file("src/rababa/evaluate.py", "/opt/rababa/evaluate.py", copy=True)
+    .add_local_dir("src/rababa", "/opt/rababa/rababa", copy=True)
     .workdir("/opt/rababa")
     .env({"PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"})
 )
@@ -82,7 +82,7 @@ def train() -> dict:
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, get_cosine_schedule_with_warmup
 
     import nikud_planes as NP
-    from evaluate import seq2seq_der
+    from rababa.evaluate import seq2seq_der
 
     datasets_volume.reload()
     checkpoints_volume.reload()
