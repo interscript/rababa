@@ -36,7 +36,7 @@ TEACHER = Path("/ckpt/r7-best")
 UNIT_BYTES = 1400
 MARGIN_NAT = 1.0
 KEEP_FRAC = 0.9
-MAX_UNITS = 400_000
+MAX_UNITS = 12_000
 
 
 def window(text: str, budget: int = UNIT_BYTES) -> list[str]:
@@ -87,31 +87,33 @@ def main() -> None:
                       max_length=1450).to(device)
             with torch.autocast("cuda", torch.bfloat16):
                 gen = model.generate(**enc, max_new_tokens=1500, num_beams=1,
-                                     return_dict_in_generate=True, output_scores=False)
+                                     return_dict_in_generate=True, output_scores=True)
             seqs = gen.sequences
             texts = tok.batch_decode(seqs, skip_special_tokens=True)
 
-            # teacher-forced margin pass on the generated tokens
-            dec = seqs[:, :-1]
-            dec_mask = dec != tok.pad_token_id
-            with torch.autocast("cuda", torch.bfloat16):
-                sc = model(**{k: enc[k] for k in ("input_ids", "attention_mask")},
-                           decoder_input_ids=dec, decoder_attention_mask=dec_mask)
-            logits = sc.logits.float()
-            top2 = logits.topk(2, dim=-1).values
-            margins = (top2[..., 0] - top2[..., 1])
-            conf = (margins > MARGIN_NAT) & dec_mask
-            frac = conf.sum(-1).float() / dec_mask.sum(-1).clamp(min=1)
+            # margins straight from generate's per-step scores (one pass)
+            dec_len = seqs.size(1) - 1
+            if dec_len > 0 and len(gen.scores) == dec_len:
+                logits = torch.stack(gen.scores, dim=1).float()  # [B, T, V]
+                top2 = logits.topk(2, dim=-1).values
+                margins = top2[..., 0] - top2[..., 1]
+                real = seqs[:, 1:] != tok.pad_token_id
+                conf = (margins > MARGIN_NAT) & real
+                frac = conf.sum(-1).float() / real.sum(-1).clamp(min=1)
+            else:
+                frac = torch.ones(len(texts), device=seqs.device)
 
             srcs = tok.batch_decode(enc.input_ids, skip_special_tokens=True)
             for src, text, f in zip(srcs, texts, frac.tolist()):
                 done += 1
+                # every unit is written (keep_frac field); the train-time
+                # loader applies the KEEP_FRAC filter - resume stays exact
+                out.write(json.dumps({"src": src, "tgt": text,
+                                      "keep_frac": round(f, 4)},
+                                     ensure_ascii=False) + "\n")
                 if f >= KEEP_FRAC:
                     kept += 1
-                    out.write(json.dumps({"src": src, "tgt": text,
-                                          "keep_frac": round(f, 4)},
-                                         ensure_ascii=False) + "\n")
-            if (i // 8) % 50 == 0:
+            if (i // 32) % 20 == 0:
                 out.flush()
                 rate = done / max(1, time.time() - t0)
                 print(f"[gen] {done}/{len(units)} kept={kept} "

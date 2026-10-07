@@ -37,9 +37,11 @@ from pathlib import Path
 sys.path.insert(0, "/code")
 
 DATA = Path("/train_data")
-CKPT = Path("/ckpt/run-024-arabic-r8-noisy")
 TEACHER = Path("/ckpt/r7-best")
-RUN = "run-024-arabic-r8-noisy"
+import os
+MIX = os.environ.get("R8_MIX", "arwiki")  # arwiki | qcri | both
+CKPT = Path(f"/ckpt/run-024-arabic-r8-{MIX}")
+RUN = f"run-024-arabic-r8-{MIX}"
 WINDOW = 600
 GOLD_CAP = 400_000
 PSEUDO_CAP = 200_000
@@ -119,19 +121,50 @@ def main() -> None:
     print(f"[data] gold={len(gold)}", flush=True)
 
     pseudo: list[tuple[str, str]] = []
-    ppath = Path("/ckpt/r8-pseudo/arwiki-pseudo.jsonl")
-    if ppath.exists():
-        for line in ppath.read_text(encoding="utf-8").splitlines():
-            if not line.strip():
-                continue
-            r = json.loads(line)
-            src = DIACRITICS_RE.sub("", r["tgt"]).strip()
-            if len(src) < 5 or len(src.encode()) > WINDOW - 50:
-                continue
-            pseudo.append((src, r["tgt"]))
+
+    def add_silver(tgt: str) -> None:
+        tgt = tgt.strip()
+        src = DIACRITICS_RE.sub("", tgt).strip()
+        if len(src) >= 5 and len(src.encode()) <= WINDOW - 50:
+            pseudo.append((src, tgt))
+
+    if MIX in ("arwiki", "both"):
+        ppath = Path("/ckpt/r8-pseudo/arwiki-pseudo.jsonl")
+        if ppath.exists():
+            for line in ppath.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                r = json.loads(line)
+                if r.get("keep_frac", 1.0) < 0.9:
+                    continue
+                add_silver(r["tgt"])
+                if len(pseudo) >= PSEUDO_CAP:
+                    break
+    if MIX in ("qcri", "both") and len(pseudo) < PSEUDO_CAP:
+        qpath = DATA / "qcri-wiki.jsonl"
+        # QCRI silver (Wikipedia_20240420.diac.jsonl, their BiLSTM labels,
+        # published with EMNLP 2025) - windowed to the 600-byte protocol
+        rng2 = random.Random(7)
+        articles = qpath.read_text(encoding="utf-8").splitlines()
+        rng2.shuffle(articles)
+        for aline in articles:
             if len(pseudo) >= PSEUDO_CAP:
                 break
-    print(f"[data] pseudo={len(pseudo)}", flush=True)
+            if not aline.strip():
+                continue
+            art = json.loads(aline).get("text", "")
+            for para in art.split("\n"):
+                para = para.strip()
+                if not para:
+                    continue
+                if len(para.encode()) <= WINDOW - 50:
+                    add_silver(para)
+                else:
+                    for w in split_windows(para, WINDOW - 50):
+                        add_silver(w)
+                if len(pseudo) >= PSEUDO_CAP:
+                    break
+    print(f"[data] pseudo={len(pseudo)} (mix={MIX})", flush=True)
 
     units = gold + pseudo
     rng.shuffle(units)
@@ -268,6 +301,41 @@ def main() -> None:
     (CKPT / "sadeed_preds_r8.csv").write_text(csv_path.read_text(), encoding="utf-8")
     (CKPT / "EVAL_DONE").write_text("ok\n")
     print("[done] EVAL_DONE", flush=True)
+
+    # ---- surface 2: WikiNews-2024 multiref (the register gate) ----
+    import eval_wikinews_multiref as WN
+
+    bench = (DATA / "wikinews/WikiNews_2024_Multi_Ref.txt.diac").read_text(
+        encoding="utf-8").splitlines()
+    bench = [l for l in bench if l.strip()]
+    winputs = [DIACRITICS_RE.sub("", l) for l in bench]
+    wwindows, wcounts = [], []
+    for text in winputs:
+        ws = split_windows(text)
+        wcounts.append(len(ws))
+        wwindows.extend(ws)
+    wpreds = []
+    with torch.no_grad():
+        for i in range(0, len(wwindows), 32):
+            batch = wwindows[i:i + 32]
+            enc = tok(batch, return_tensors="pt", padding=True, truncation=True,
+                      max_length=WINDOW).to("cuda")
+            with torch.autocast("cuda", torch.bfloat16):
+                gen = model.generate(**enc, max_new_tokens=WINDOW * 2, num_beams=1)
+            wpreds.extend(tok.batch_decode(gen, skip_special_tokens=True))
+            if (i // 32) % 5 == 0:
+                print(f"[wgen] {i + len(batch)}/{len(wwindows)}", flush=True)
+    k = 0
+    wparas = []
+    for text, c in zip(winputs, wcounts):
+        wparas.append(" ".join(wpreds[k:k + c]))
+        k += c
+    wscore = WN.score(wparas, bench, skip_last=False)
+    print(json.dumps({"run": RUN, "surface": "wikinews-2024-multiref", **wscore},
+                     ensure_ascii=False), flush=True)
+    (CKPT / "wikinews_multiref.json").write_text(
+        json.dumps({"run": RUN, **wscore}, ensure_ascii=False, indent=1))
+    (CKPT / "EVAL_DONE").touch()
 
 
 if __name__ == "__main__":
