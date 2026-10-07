@@ -308,14 +308,27 @@ def train() -> dict:
                 print(f"[gen] {len(saved)}/{len(all_windows)} (committed)", flush=True)
     checkpoints_volume.commit()
 
+    # stitch with ORIGINAL separators: " ".join collapses double
+    # spaces/newlines, shifting every unit after the first anomaly
+    # (run-021 first verdict: 32.64% from this bug; true DER 12.48%)
+    import re as _re
+
     k = 0
     total_wrong = 0.0
     total_positions = 0
     preds_rows = []
     for tgt, c in zip(targets, counts_w):
-        pred = " ".join(saved[i] for i in range(k, k + c))
-        k += c
-        der, n = seq2seq_der(pred, tgt.strip())
+        text = tgt.strip()
+        words = text.split()
+        seps = _re.findall(r"\s+", text)
+        sep_for = {i: (seps[i] if i < len(seps) else "") for i in range(len(words))}
+        rebuilt: list[str] = []
+        for _g in range(c):
+            pred = saved[k]; k += 1
+            for w in pred.split():
+                wi = sum(len(part.split()) for part in rebuilt)
+                rebuilt.append(w + sep_for.get(wi, " "))
+        pred = "".join(rebuilt)
         total_wrong += der * n
         total_positions += n
         preds_rows.append({"gt": tgt, "pred": pred, "der": der, "n": n})
