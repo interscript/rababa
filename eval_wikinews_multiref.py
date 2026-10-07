@@ -22,10 +22,12 @@ import json
 import re
 from pathlib import Path
 
-import modal
+try:
+    import modal
+except ImportError:  # pure-function import (HF Jobs, local harnesses)
+    modal = None
 
-datasets_volume = modal.Volume.from_name("rababa-datasets", create_if_missing=True)
-checkpoints_volume = modal.Volume.from_name("rababa-checkpoints", create_if_missing=True)
+
 
 MODEL_DIR = "/checkpoints/rababa_arabic_byt5/run-003-domain/best"
 TAG = "r3"
@@ -33,13 +35,19 @@ BENCH = "WikiNews_2024_Multi_Ref.txt.diac"
 
 DIACRITICS_RE = re.compile("[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]")
 
-image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install("torch==2.5.1", "transformers==4.46.3", "pandas", "tqdm")
-    .env({"PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"})
-)
 
-app = modal.App("rababa-wikinews-multiref", image=image)
+
+
+if modal is not None:
+    import modal
+    datasets_volume = modal.Volume.from_name("rababa-datasets", create_if_missing=True)
+    checkpoints_volume = modal.Volume.from_name("rababa-checkpoints", create_if_missing=True)
+    image = (
+        modal.Image.debian_slim(python_version="3.11")
+        .pip_install("torch==2.5.1", "transformers==4.46.3", "pandas", "tqdm")
+        .env({"PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"})
+    )
+    app = modal.App("rababa-wikinews-multiref", image=image)
 
 # ---- Java removeDefaultDiac port (order matters) ----
 _DEFAULT_RULES = [
@@ -152,56 +160,57 @@ def score(preds: list[str], refs: list[str], skip_last: bool) -> dict:
     }
 
 
-@app.function(
-    gpu="A100",
-    timeout=2 * 60 * 60,
-    volumes={"/datasets": datasets_volume, "/checkpoints": checkpoints_volume},
-)
-def run(model_dir: str = MODEL_DIR, tag: str = TAG, bench: str = BENCH) -> dict:
-    import torch
-    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+if modal is not None:
+    @app.function(
+        gpu="A100",
+        timeout=2 * 60 * 60,
+        volumes={"/datasets": datasets_volume, "/checkpoints": checkpoints_volume},
+    )
+    def run(model_dir: str = MODEL_DIR, tag: str = TAG, bench: str = BENCH) -> dict:
+        import torch
+        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-    datasets_volume.reload()
-    checkpoints_volume.reload()
+        datasets_volume.reload()
+        checkpoints_volume.reload()
 
-    lines = [
-        l.strip()
-        for l in Path(f"/datasets/wikinews/{bench}").read_text(encoding="utf-8").splitlines()
-        if l.strip()
-    ]
-    inputs = [DIACRITICS_RE.sub("", l) for l in lines]
-    print(f"[data] {bench}: {len(lines)} lines", flush=True)
+        lines = [
+            l.strip()
+            for l in Path(f"/datasets/wikinews/{bench}").read_text(encoding="utf-8").splitlines()
+            if l.strip()
+        ]
+        inputs = [DIACRITICS_RE.sub("", l) for l in lines]
+        print(f"[data] {bench}: {len(lines)} lines", flush=True)
 
-    tokenizer = AutoTokenizer.from_pretrained(model_dir)
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_dir).to("cuda").eval()
-    device = next(model.parameters()).device
+        tokenizer = AutoTokenizer.from_pretrained(model_dir)
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_dir).to("cuda").eval()
+        device = next(model.parameters()).device
 
-    preds: list[str] = []
-    with torch.no_grad():
-        for i in range(0, len(inputs), 8):
-            batch = inputs[i : i + 8]
-            enc = tokenizer(batch, return_tensors="pt", padding=True, truncation=True,
-                            max_length=1024).to(device)
-            with torch.autocast("cuda", torch.bfloat16):
-                gen = model.generate(**enc, max_new_tokens=2048, num_beams=1)
-            preds.extend(tokenizer.batch_decode(gen, skip_special_tokens=True))
-            if (i // 8) % 20 == 0:
-                print(f"[gen] {i + len(batch)}/{len(inputs)}", flush=True)
+        preds: list[str] = []
+        with torch.no_grad():
+            for i in range(0, len(inputs), 8):
+                batch = inputs[i : i + 8]
+                enc = tokenizer(batch, return_tensors="pt", padding=True, truncation=True,
+                                max_length=1024).to(device)
+                with torch.autocast("cuda", torch.bfloat16):
+                    gen = model.generate(**enc, max_new_tokens=2048, num_beams=1)
+                preds.extend(tokenizer.batch_decode(gen, skip_special_tokens=True))
+                if (i // 8) % 20 == 0:
+                    print(f"[gen] {i + len(batch)}/{len(inputs)}", flush=True)
 
-    out: dict = {"model": tag, "bench": bench}
-    for skip_last, mode in ((False, "full"), (True, "no_case_ending")):
-        out[mode] = score(preds, lines, skip_last)
-    print(json.dumps(out, ensure_ascii=False, indent=1), flush=True)
+        out: dict = {"model": tag, "bench": bench}
+        for skip_last, mode in ((False, "full"), (True, "no_case_ending")):
+            out[mode] = score(preds, lines, skip_last)
+        print(json.dumps(out, ensure_ascii=False, indent=1), flush=True)
 
-    out_dir = Path("/checkpoints") / "/".join(model_dir.strip("/").split("/")[1:-1])
-    (out_dir / f"wikinews_preds_{tag}_{bench}.txt").write_text(
-        "\n".join(preds), encoding="utf-8")
-    (out_dir / f"wikinews_multiref_{tag}.json").write_text(
-        json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
-    checkpoints_volume.commit()
-    return out
+        out_dir = Path("/checkpoints") / "/".join(model_dir.strip("/").split("/")[1:-1])
+        (out_dir / f"wikinews_preds_{tag}_{bench}.txt").write_text(
+            "\n".join(preds), encoding="utf-8")
+        (out_dir / f"wikinews_multiref_{tag}.json").write_text(
+            json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+        checkpoints_volume.commit()
+        return out
 
 
-@app.local_entrypoint()
-def main(model_dir: str = MODEL_DIR, tag: str = TAG, bench: str = BENCH):
-    run.remote(model_dir=model_dir, tag=tag, bench=bench)
+    @app.local_entrypoint()
+    def main(model_dir: str = MODEL_DIR, tag: str = TAG, bench: str = BENCH):
+        run.remote(model_dir=model_dir, tag=tag, bench=bench)
