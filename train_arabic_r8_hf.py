@@ -40,6 +40,8 @@ DATA = Path("/train_data")
 TEACHER = Path("/ckpt/r7-best")
 import os
 MIX = os.environ.get("R8_MIX", "arwiki")  # arwiki | qcri | both
+BACKBONE = os.environ.get("R8_BACKBONE", "google/byt5-base")
+CORPUS = os.environ.get("R8_CORPUS", "tashkeela")  # tashkeela | r5
 RUN = os.environ.get("R8_RUN", f"run-024-arabic-r8-{MIX}")
 CKPT = Path(f"/ckpt/{RUN}")
 WINDOW = 600
@@ -101,6 +103,33 @@ def main() -> None:
     rng = random.Random(42)
 
     gold: list[tuple[str, str]] = []
+    if CORPUS == "r5":
+        # the r7 lineage corpus (r5 units + news), no silver
+        for name in ("domain.txt", "replay.txt"):
+            p = DATA / name
+            if not p.exists():
+                continue
+            for line in p.read_text(encoding="utf-8").splitlines():
+                tgt = line.strip()
+                if not tgt:
+                    continue
+                src = DIACRITICS_RE.sub("", tgt).strip()
+                if len(src) < 5 or len(src.encode()) > WINDOW - 50:
+                    continue
+                gold.append((src, tgt))
+                if len(gold) >= GOLD_CAP * 2:
+                    break
+            if len(gold) >= GOLD_CAP * 2:
+                break
+        for line in (DATA / "news.txt").read_text(encoding="utf-8").splitlines()[:120_000]:
+            tgt = line.strip()
+            if not tgt:
+                continue
+            src = DIACRITICS_RE.sub("", tgt).strip()
+            if len(src) < 5 or len(src.encode()) > WINDOW - 50:
+                continue
+            gold.append((src, tgt))
+        print(f"[data] r5-corpus gold={len(gold)}", flush=True)
     gold_files = ("tashkeela-full/train-001.txt", "tashkeela-full/train-002.txt",
                   "tashkeela-full/train-003.txt", "tashkeela-full/val-001.txt")
     if os.environ.get("R8_GOLD", "tashkeela") == "none":
@@ -173,7 +202,7 @@ def main() -> None:
     rng.shuffle(units)
     rng.shuffle(gold)
 
-    tok = AutoTokenizer.from_pretrained(TEACHER)
+    tok = AutoTokenizer.from_pretrained(BACKBONE if os.environ.get("R8_SCRATCH") == "1" else TEACHER)
 
     class DS(Dataset):
         def __len__(self):
@@ -203,7 +232,12 @@ def main() -> None:
     total_steps = (len(loader) // GRAD_ACCUM) * EPOCHS
     print(f"[data] units={len(units)} steps={total_steps}", flush=True)
 
-    model = AutoModelForSeq2SeqLM.from_pretrained(TEACHER, torch_dtype=torch.float32)
+    if os.environ.get("R8_SCRATCH") == "1":
+        init_from = BACKBONE
+    else:
+        init_from = TEACHER
+    print(f"[init] from {init_from}", flush=True)
+    model = AutoModelForSeq2SeqLM.from_pretrained(init_from, torch_dtype=torch.float32)
     model = model.cuda().train()
     model.gradient_checkpointing_enable()
     model.config.use_cache = False
