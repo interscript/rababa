@@ -93,6 +93,21 @@ def main() -> None:
         if not t or len(t.encode("utf-8")) > 1450:
             continue
         units.append(t)
+    pseudo_path = os.environ.get("HEB_PSEUDO", "")
+    if pseudo_path:
+        cap = int(os.environ.get("HEB_PSEUDO_CAP", "40000"))
+        min_frac = float(os.environ.get("HEB_PSEUDO_MIN_FRAC", "0.9"))
+        added = 0
+        for row in load_jsonl(Path(pseudo_path)):
+            if added >= cap:
+                break
+            if row.get("keep_frac", 1.0) < min_frac:
+                continue
+            t = row["tgt"].strip()
+            if t and len(t.encode("utf-8")) <= 1450:
+                units.append(t)
+                added += 1
+        print(f"[data] pseudo added={added}", flush=True)
     random.Random(42).shuffle(units)
     units = units[:MAX_LINES]
     print(f"[data] units={len(units)}", flush=True)
