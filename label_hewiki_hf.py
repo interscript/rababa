@@ -3,6 +3,7 @@
 # dependencies = [
 #   "onnxruntime==1.20.1",
 #   "numpy<2",
+#   "pyyaml>=6",
 # ]
 # ///
 """WO26 stage 1: heb-diac-plane-2.0 pseudo-labels hewiki (Hebrew
