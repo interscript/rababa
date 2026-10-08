@@ -47,7 +47,7 @@ GOLD_CAP = 400_000
 PSEUDO_CAP = int(os.environ.get("R8_PSEUDO_CAP", "200_000"))
 MICRO_BS = 16
 GRAD_ACCUM = 2
-EPOCHS = 1
+EPOCHS = int(os.environ.get("R8_EPOCHS", "1"))
 LR = float(os.environ.get("R8_LR", "5e-5"))
 WARMUP = 500
 
@@ -101,8 +101,11 @@ def main() -> None:
     rng = random.Random(42)
 
     gold: list[tuple[str, str]] = []
-    for name in ("tashkeela-full/train-001.txt", "tashkeela-full/train-002.txt",
-                 "tashkeela-full/train-003.txt", "tashkeela-full/val-001.txt"):
+    gold_files = ("tashkeela-full/train-001.txt", "tashkeela-full/train-002.txt",
+                  "tashkeela-full/train-003.txt", "tashkeela-full/val-001.txt")
+    if os.environ.get("R8_GOLD", "tashkeela") == "none":
+        gold_files = ()
+    for name in gold_files:
         p = DATA / name
         if not p.exists():
             continue
