@@ -40,8 +40,8 @@ DATA = Path("/train_data")
 TEACHER = Path("/ckpt/r7-best")
 import os
 MIX = os.environ.get("R8_MIX", "arwiki")  # arwiki | qcri | both
-CKPT = Path(f"/ckpt/run-024-arabic-r8-{MIX}")
-RUN = f"run-024-arabic-r8-{MIX}"
+RUN = os.environ.get("R8_RUN", f"run-024-arabic-r8-{MIX}")
+CKPT = Path(f"/ckpt/{RUN}")
 WINDOW = 600
 GOLD_CAP = 400_000
 PSEUDO_CAP = int(os.environ.get("R8_PSEUDO_CAP", "200_000"))
