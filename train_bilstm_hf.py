@@ -159,9 +159,12 @@ def main() -> None:
     for _ep in range(EPOCHS):
         for ids, lab in loader:
             ids, lab = ids.cuda(), lab.cuda()
-            with torch.autocast("cuda", torch.bfloat16):
-                logits = model(ids)
+            logits = model(ids)  # fp32: LSTMs NaN-collapse under bf16 autocast
             loss = ce(logits.reshape(-1, n_classes), lab.reshape(-1))
+            if not torch.isfinite(loss):
+                print(f"[nan] step {step}: non-finite loss, skipping batch", flush=True)
+                opt.zero_grad()
+                continue
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
@@ -186,8 +189,7 @@ def main() -> None:
         skel, _ = HP.split_planes(text)
         ids = [vocab.get(ch, 1) for ch in skel] or [0]
         t = torch.tensor([ids], device="cuda")
-        with torch.autocast("cuda", torch.bfloat16):
-            logits = model(t)
+        logits = model(t)
         preds = logits[0].argmax(-1).tolist()
         return "".join(ch + (classes[preds[i]] if i < len(preds) else "")
                        for i, ch in enumerate(skel))
