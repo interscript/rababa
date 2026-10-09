@@ -1,3 +1,4 @@
+import haraqat_planes
 """Tests for the haraqat plane decomposition (Stoicheia WO, run-017).
 
 A diacritized Arabic string factors into two aligned planes:
@@ -81,3 +82,26 @@ class TestRoundTripOnBenchmarkCorpus(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_split_planes_mark_only_text_returns_empty():
+    """QCRI silver windows can be pure combining marks — must not crash."""
+    assert haraqat_planes.split_planes("\u064e\u064b\u064f") == ("", [])
+    assert haraqat_planes.split_planes("\u0651\u0652") == ("", [])
+
+
+def test_split_planes_leading_marks_ride_first_letter():
+    skel, labels = haraqat_planes.split_planes("\u0651\u0628")
+    assert skel == "\u0628"
+    assert labels[0].startswith("\u0651")
+
+def test_split_planes_mark_only_text_returns_empty():
+    """QCRI silver windows can be pure combining marks — must not crash."""
+    assert haraqat_planes.split_planes("\u064e\u064b\u064f") == ("", [])
+    assert haraqat_planes.split_planes("\u0651\u0652") == ("", [])
+
+
+def test_split_planes_leading_marks_ride_first_letter():
+    skel, labels = haraqat_planes.split_planes("\u0651\u0628")
+    assert skel == "\u0628"
+    assert labels[0].startswith("\u0651")

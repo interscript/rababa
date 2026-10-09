@@ -55,7 +55,11 @@ def split_planes(text: str) -> tuple[str, list[str]]:
         else:
             leading += pending
     if leading:
-        labels[0] = "".join(leading) + "\x00" + labels[0]
+        if labels:
+            labels[0] = "".join(leading) + "\x00" + labels[0]
+        else:
+            # mark-only text (no base letters): nothing to diacritize
+            return "", []
     return "".join(skeleton), labels
 
 
