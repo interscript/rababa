@@ -200,6 +200,9 @@ def main() -> None:
 
     backbone = AutoModelForSeq2SeqLM.from_pretrained(BACKBONE)
     encoder = backbone.encoder.cuda().train()
+    if os.environ.get("PLANE_CHECKPOINT") == "1":
+        encoder.gradient_checkpointing_enable()
+        encoder.config.use_cache = False
     d_model = encoder.config.d_model
     plane_emb = nn.Embedding(n_classes + 1, d_model).cuda().train()
     nn.init.normal_(plane_emb.weight, std=0.02)
