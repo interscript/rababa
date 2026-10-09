@@ -53,14 +53,16 @@ import haraqat_planes as HP
 DATA = Path("/train_data")
 RUN = os.environ.get("PLANE_RUN", "run-028-plane-transfer")
 SILVER_CAP = int(os.environ.get("PLANE_SILVER_CAP", "0"))
+BACKBONE = os.environ.get("PLANE_BACKBONE", "google/byt5-small")
+MAX_LINES = int(os.environ.get("PLANE_MAX_LINES", "600000"))
+EPOCHS = int(os.environ.get("PLANE_EPOCHS", "2"))
+K_PASSES = int(os.environ.get("PLANE_K", "2"))
+MICRO_BS = int(os.environ.get("PLANE_BS", "16"))
+REGIME = os.environ.get("PLANE_REGIME", "full")  # full | news-pure
 NEWS_UPSAMPLE = 3
 GOLD_UPSAMPLE = 4
 UNIT_BYTES = 1400
 N_VAL = 2_000
-EPOCHS = 2
-MAX_LINES = 600_000
-K_PASSES = 2
-MICRO_BS = 16
 
 DIACRITICS_RE = re.compile("[ؐ-ًؚ-ٰٟۖ-ۜ۟-۪ۨ-ۭ]")
 CKPT = Path("/ckpt") / RUN
@@ -103,7 +105,9 @@ def main() -> None:
 
     # ---- corpus: benchmark-convention running text + optional silver ----
     lines: list[str] = []
-    for name in ("domain.txt", "replay.txt", "tashkeela-scale.txt"):
+    base_files = ("domain.txt", "replay.txt", "tashkeela-scale.txt") \
+        if REGIME == "full" else ()
+    for name in base_files:
         p = DATA / name
         if p.exists():
             lines += [l for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
@@ -152,7 +156,7 @@ def main() -> None:
 
     labels_digest = hashlib.sha256(inv_path.read_bytes()).hexdigest()[:12]
 
-    tok = AutoTokenizer.from_pretrained("google/byt5-small")
+    tok = AutoTokenizer.from_pretrained(BACKBONE)
 
     def encode_unit(text: str):
         skel, labels = HP.split_planes(text)
@@ -194,7 +198,7 @@ def main() -> None:
     print(f"[data] train={len(train_rows)} val={len(val_rows)} steps={total_steps} "
           f"classes={n_classes}", flush=True)
 
-    backbone = AutoModelForSeq2SeqLM.from_pretrained("google/byt5-small")
+    backbone = AutoModelForSeq2SeqLM.from_pretrained(BACKBONE)
     encoder = backbone.encoder.cuda().train()
     d_model = encoder.config.d_model
     plane_emb = nn.Embedding(n_classes + 1, d_model).cuda().train()
